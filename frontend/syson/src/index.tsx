@@ -41,10 +41,15 @@ import './dodaf-views.css';
 import ReactDOM from 'react-dom/client';
 import React from 'react';
 import DoDAFGanttTimeline from './views/DoDAFGanttTimeline';
+import DoDAFMatrixView from './views/DoDAFMatrixView';
 
 (window as any).renderDoDAFGantt = (container: HTMLElement) => {
   const root = ReactDOM.createRoot(container);
   root.render(React.createElement(DoDAFGanttTimeline));
+};
+(window as any).renderDoDAFMatrix = (container: HTMLElement) => {
+  const root = ReactDOM.createRoot(container);
+  root.render(React.createElement(DoDAFMatrixView));
 };
 
 if (process.env.NODE_ENV !== 'production') {
