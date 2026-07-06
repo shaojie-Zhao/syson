@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.eclipse.syson.standard.diagrams.view.services.DoDAFGanttDataService;
+import org.eclipse.syson.standard.diagrams.view.services.DoDAFMatrixDataService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -90,6 +91,27 @@ public class SysONApplication {
                 .DELETE("/api/gantt/{repId}/tasks/{taskId}", request -> {
                     DoDAFGanttDataService.deleteTask(request.pathVariable("repId"), request.pathVariable("taskId"));
                     return ServerResponse.ok().build();
+                })
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> matrixRoutes(DoDAFMatrixDataService matrixDataService) {
+        return RouterFunctions.route()
+                .GET("/api/matrix/{repId}/element-id", request -> {
+                    var ctxId = request.param("ctxId").orElse("");
+                    var objectId = request.param("objectId").orElse("");
+                    var elementId = matrixDataService.getElementIdByObjectId(ctxId, objectId);
+                    return ServerResponse.ok().body(Map.of("elementId", elementId != null ? elementId : ""));
+                })
+                .POST("/api/matrix/{repId}/rename-by-sirius", request -> {
+                    @SuppressWarnings("unchecked")
+                    var body = (Map<String,String>) request.body(Map.class);
+                    var ctxId = body.getOrDefault("ctxId", "");
+                    var siriusId = body.getOrDefault("siriusId", "");
+                    var newName = body.getOrDefault("newName", "");
+                    boolean ok = matrixDataService.renameBySiriusId(ctxId, siriusId, newName);
+                    return ServerResponse.ok().body(Map.of("result", ok ? "ok" : "failed"));
                 })
                 .build();
     }

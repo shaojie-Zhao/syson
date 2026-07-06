@@ -409,7 +409,7 @@
         var allDivs = document.querySelectorAll('div');
         for (var i = 0; i < allDivs.length; i++) {
           var cn = allDivs[i].className;
-          if (typeof cn === 'string' && cn.indexOf('ganttContainer') >= 0) {
+          if (cn && typeof cn === 'string' && cn.indexOf('ganttContainer') >= 0) {
             injectGanttApp(allDivs[i]);
             return true;
           }

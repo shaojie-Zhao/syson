@@ -5,98 +5,30 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-/**
- * REST controllers for DoDAF Gantt and Matrix views.
- */
 @RestController
 public class DoDAFGanttController {
-
     private static final Logger log = LoggerFactory.getLogger(DoDAFGanttController.class);
-    private final DoDAFMatrixDataService matrixDataService;
+    private final DoDAFMatrixDataService s;
 
-    public DoDAFGanttController(DoDAFMatrixDataService matrixDataService) {
-        this.matrixDataService = matrixDataService;
+    public DoDAFGanttController(DoDAFMatrixDataService s) { this.s = s; }
+
+    @GetMapping("/api/gantt/{repId}/tasks") public List<DoDAFGanttDataService.GanttTaskData> getTasks(@PathVariable String repId) { return DoDAFGanttDataService.getTasks(repId); }
+    @PostMapping("/api/gantt/{repId}/tasks") public DoDAFGanttDataService.GanttTaskData createTask(@PathVariable String repId, @RequestParam(defaultValue="") String parentId) { return DoDAFGanttDataService.createTask(repId, parentId.isEmpty()?null:parentId); }
+    @PutMapping("/api/gantt/{repId}/tasks/{taskId}") public DoDAFGanttDataService.GanttTaskData updateTask(@PathVariable String repId, @PathVariable String taskId, @RequestBody DoDAFGanttDataService.GanttTaskData u) { return DoDAFGanttDataService.updateTask(repId, u); }
+    @DeleteMapping("/api/gantt/{repId}/tasks/{taskId}") public void deleteTask(@PathVariable String repId, @PathVariable String taskId) { DoDAFGanttDataService.deleteTask(repId, taskId); }
+
+    @GetMapping("/api/matrix/{repId}/elements") public List<Map<String,Object>> getElements(@PathVariable String repId, @RequestParam(defaultValue="ALL") String types, @RequestParam(defaultValue="") String scope, @RequestParam(defaultValue="") String ctxId) { return s.getElements(types,ctxId,scope,""); }
+    @GetMapping("/api/matrix/{repId}/target-object-id") public Map<String,String> getTargetObjectId(@PathVariable String repId, @RequestParam String ctxId) { return Map.of("targetObjectId",s.getTargetObjectId(ctxId,repId),"editingContextId",s.getEditingContextId(ctxId)); }
+    @GetMapping("/api/matrix/{repId}/scope-name") public Map<String,String> getScopeName(@PathVariable String repId, @RequestParam String id, @RequestParam(defaultValue="") String ctxId) { return Map.of("id",id,"name",s.getPackageName(ctxId,id)); }
+    @GetMapping("/api/matrix/{repId}/element-id") public Map<String,String> getElementId(@PathVariable String repId, @RequestParam String ctxId, @RequestParam String objectId) { return Map.of("elementId",s.getElementIdByObjectId(ctxId,objectId)); }
+    @PostMapping("/api/matrix/{repId}/rename-by-sirius")
+    public Map<String,String> renameBySirius(@PathVariable String repId, @RequestBody Map<String,String> b) {
+        return Map.of("result",s.renameBySiriusId(b.get("ctxId"),b.get("siriusId"),b.get("newName"))?"ok":"failed");
     }
-
-    // ===== Gantt API =====
-
-    @GetMapping("/api/gantt/{repId}/tasks")
-    public List<DoDAFGanttDataService.GanttTaskData> getTasks(@PathVariable String repId) {
-        return DoDAFGanttDataService.getTasks(repId);
-    }
-
-    @PostMapping("/api/gantt/{repId}/tasks")
-    public DoDAFGanttDataService.GanttTaskData createTask(@PathVariable String repId, @RequestParam(defaultValue = "") String parentId) {
-        return DoDAFGanttDataService.createTask(repId, parentId.isEmpty() ? null : parentId);
-    }
-
-    @PutMapping("/api/gantt/{repId}/tasks/{taskId}")
-    public DoDAFGanttDataService.GanttTaskData updateTask(@PathVariable String repId, @PathVariable String taskId,
-            @RequestBody DoDAFGanttDataService.GanttTaskData updated) {
-        return DoDAFGanttDataService.updateTask(repId, updated);
-    }
-
-    @DeleteMapping("/api/gantt/{repId}/tasks/{taskId}")
-    public void deleteTask(@PathVariable String repId, @PathVariable String taskId) {
-        DoDAFGanttDataService.deleteTask(repId, taskId);
-    }
-
-    // ===== Matrix API =====
-
-    @GetMapping("/api/matrix/{repId}/elements")
-    public List<Map<String, Object>> getMatrixElements(@PathVariable String repId,
-            @RequestParam(defaultValue = "ALL") String types,
-            @RequestParam(defaultValue = "") String scope,
-            @RequestParam(defaultValue = "") String ctxId) {
-        log.info("GET /api/matrix/{}/elements types={} scope={} ctxId={}", repId, types, scope, ctxId);
-        var result = matrixDataService.getElements(types, ctxId, scope, "");
-        // Attach scope name as the first element (special marker entry)
-        if (scope != null && !scope.isBlank() && !result.isEmpty()) {
-            String scopeName = matrixDataService.getPackageName(ctxId, scope);
-            // Prepend a __meta__ entry with scope name
-            Map<String, Object> meta = new java.util.LinkedHashMap<>();
-            meta.put("id", "__scope_meta__");
-            meta.put("name", scopeName);
-            meta.put("type", "__meta__");
-            meta.put("parentPath", scope);
-            result.add(0, meta);
-        }
-        return result;
-    }
-
-    @GetMapping("/api/matrix/{repId}/scope-name")
-    public Map<String, String> getScopeName(@PathVariable String repId,
-            @RequestParam String id,
-            @RequestParam(defaultValue = "") String ctxId) {
-        log.info("GET /api/matrix/{}/scope-name id={} ctxId={}", repId, id, ctxId);
-        String name = matrixDataService.getPackageName(ctxId, id);
-        return Map.of("id", id, "name", name);
-    }
-
-    @GetMapping("/api/matrix/{repId}/relations")
-    public List<Map<String, Object>> getRelations(@PathVariable String repId) {
-        return matrixDataService.getRelations();
-    }
-
-    @PostMapping("/api/matrix/{repId}/relations")
-    public Map<String, Object> createRelation(@PathVariable String repId, @RequestBody Map<String, Object> rel) {
-        return matrixDataService.createRelation(
-                (String) rel.get("sourceId"),
-                (String) rel.get("targetId"),
-                (String) rel.get("relationType"));
-    }
-
-    @DeleteMapping("/api/matrix/{repId}/relations/{relId}")
-    public void deleteRelation(@PathVariable String repId, @PathVariable String relId) {
-        matrixDataService.deleteRelation(relId);
-    }
+    @PostMapping("/api/matrix/{repId}/rename") public Map<String,String> renameElement(@PathVariable String repId, @RequestBody Map<String,String> b) { return Map.of("result",s.renameElement(b.get("ctxId"),b.get("elementId"),b.get("newName"))?"ok":"failed"); }
+    @GetMapping("/api/matrix/{repId}/relations") public List<Map<String,Object>> getRelations(@PathVariable String repId) { return s.getRelations(); }
+    @PostMapping("/api/matrix/{repId}/relations") public Map<String,Object> createRelation(@PathVariable String repId, @RequestBody Map<String,Object> r) { return s.createRelation((String)r.get("sourceId"),(String)r.get("targetId"),(String)r.get("relationType")); }
+    @DeleteMapping("/api/matrix/{repId}/relations/{relId}") public void deleteRelation(@PathVariable String repId, @PathVariable String relId) { s.deleteRelation(relId); }
 }
