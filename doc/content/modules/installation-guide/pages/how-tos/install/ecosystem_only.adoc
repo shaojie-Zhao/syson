@@ -64,7 +64,7 @@ java -jar path\to\your\syson-application-YEAR.MONTH.0.jar \
 [#openwebbrowser]
 == Open your web browser
 
-Navigate to `http://localhost:8080` to experience {product}.
+Navigate to `http://192.168.3.111:8080` to experience {product}.
 
 [TIP]
 ====

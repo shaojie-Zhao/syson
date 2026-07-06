@@ -85,7 +85,7 @@ Once your Docker up, go directly to the <<openwebbrowser>>[Open your web browser
 [#openwebbrowser]
 == Open your web browser
 
-Navigate to `http://localhost:8080` to experience {product}.
+Navigate to `http://192.168.3.111:8080` to experience {product}.
 
 [CAUTION]
 ====

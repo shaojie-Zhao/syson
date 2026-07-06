@@ -9,7 +9,7 @@
 import argparse
 
 def init_sysmlv2_api():
-    host =  "http://localhost:8080/api/rest" # Replace with your actual API host URL # <1>
+    host =  "http://192.168.3.111:8080/api/rest" # Replace with your actual API host URL # <1>
     return host
 
 def parse_arguments():

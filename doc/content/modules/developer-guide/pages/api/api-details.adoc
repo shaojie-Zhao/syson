@@ -18,7 +18,7 @@ The API for creating additional commits isn't functional in the current implemen
 [TIP]
 ====
 To test the API on your local server, navigate to:
-http://localhost:8080/swagger-ui/index.html
+http://192.168.3.111:8080/swagger-ui/index.html
 
 This URL opens the Swagger UI, an interactive documentation tool for APIs.
 The interface provides an overview of API endpoints, supports testing with input parameters, and displays responses for better understanding.

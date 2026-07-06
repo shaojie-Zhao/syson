@@ -189,7 +189,7 @@ def parse_arguments():
     args = parser.parse_args()
 
     if len(args.arguments) == 2:
-        args.url = "http://localhost:8080"
+        args.url = "http://192.168.3.111:8080"
         args.file_path = Path(args.arguments[0])
         args.project_id = args.arguments[1]
     elif len(args.arguments) == 3:

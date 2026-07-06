@@ -23,7 +23,7 @@ export default defineConfig({
   viewportWidth: 1920,
   viewportHeight: 1080,
   env: {
-    baseAPIUrl: 'http://localhost:8080',
+    baseAPIUrl: 'http://192.168.3.111:8080',
   },
   e2e: {
     baseUrl: 'http://localhost:5173',
