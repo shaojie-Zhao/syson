@@ -18,8 +18,11 @@ const HIDE_RIGHT_PANEL_STYLE_ID = 'ov1-blank-hide-right-panel';
 
 const CREATE_CHILD = '\n  mutation createChild($input: CreateChildInput!) {\n    createChild(input: $input) {\n      __typename\n      ... on CreateChildSuccessPayload { object { id } }\n      ... on ErrorPayload { message }\n    }\n  }';
 
-var symbolToPartUsageMap: Record<string, string> = {};   // _symbolId → EMF elementId
-var symbolToSiriusMap: Record<string, string> = {};       // _symbolId → Sirius object ID (for tree matching)
+var instanceMaps: Record<string, { sirius: Record<string,string>, partUsage: Record<string,string> }> = {};
+function getMaps(repId: string) {
+  if (!instanceMaps[repId]) instanceMaps[repId] = { sirius: {}, partUsage: {} };
+  return instanceMaps[repId];
+}
 
 function callGraphQL(query: string, variables: any) {
   return fetch('http://localhost:8080/api/graphql', {
@@ -48,7 +51,7 @@ export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref
             fetch(PLOTTING_ORIGIN + '/api/mapping/' + encodeURIComponent(representationId))
               .then(function(r) { return r.json(); })
               .then(function(mapping: any) {
-                for (var k in mapping) { symbolToSiriusMap[k] = mapping[k]; }
+                for (var k in mapping) { getMaps(representationId).sirius[k] = mapping[k]; }
               }).catch(function(){});
             console.log('[OV-1] parentId resolved:', parentId, 'pending:', pendingSymbols.length);
             for (var p = 0; p < pendingSymbols.length; p++) {
@@ -79,13 +82,13 @@ export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref
         var obj = result && result.data && result.data.createChild && result.data.createChild.object;
         if (obj && obj.id) {
           if (sid) {
-            symbolToSiriusMap[sid] = obj.id;
-            symbolToPartUsageMap[sid] = obj.id;
+            getMaps(representationId).sirius[sid] = obj.id;
+            getMaps(representationId).partUsage[sid] = obj.id;
             // Persist mapping and names for closed-state cleanup + sequence tracking
             var puName = symbolMsg.name || '';
             fetch(PLOTTING_ORIGIN + '/api/mapping/' + encodeURIComponent(representationId), {
               method: 'PUT', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(symbolToSiriusMap),
+              body: JSON.stringify(getMaps(representationId).sirius),
             }).catch(function(){});
             // Append name to saved PartUsage names list
             if (puName) {
@@ -103,11 +106,17 @@ export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref
             fetch(PLOTTING_ORIGIN + '/api/elementId/' + encodeURIComponent(editingContextId) + '/' + encodeURIComponent(obj.id))
               .then(function(r) { if (r.ok) return r.json(); throw new Error('no mapping'); })
               .then(function(data: any) {
-                if (data.elementId) symbolToPartUsageMap[sid] = data.elementId;
+                if (data.elementId) getMaps(representationId).partUsage[sid] = data.elementId;
                 console.log('[OV-1] EMF elementId resolved:', data.elementId);
               }).catch(function(){});
           }
           console.log('[OV-1] PartUsage created:', (symbolMsg.name || '(default)'), obj.id);
+          // Save symbol metadata (position, properties) to PartUsage Documentation
+          var meta = { libID: symbolMsg.libID, code: symbolMsg.code, position: symbolMsg.position, name: symbolMsg.name, _symbolId: symbolMsg._symbolId };
+          fetch(PLOTTING_ORIGIN + '/api/partUsage/metadata', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ editingContextId: editingContextId, elementId: obj.id, metadata: meta }),
+          }).catch(function(){});
         } else {
           console.warn('[OV-1] createChild failed', JSON.stringify(result));
         }
@@ -135,7 +144,7 @@ export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref
 
       if (msg.type === 'deleteSymbol') {
         console.info('[OV-1] deleteSymbol received, symbolId=' + msg.symbolId);
-        var puId = symbolToPartUsageMap[msg.symbolId];
+        var puId = getMaps(representationId).partUsage[msg.symbolId];
         console.info('[OV-1] deleteSymbol mapped PartUsage=' + puId);
         // deleteOv1PartUsage mutation (goes through proper Sirius event pipeline)
         var elId = puId || msg.symbolId;
@@ -147,7 +156,7 @@ export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref
           if (payload && payload.__typename === 'ErrorPayload') {
             console.warn('[OV-1] deleteOv1PartUsage failed', payload.message);
           } else {
-            if (puId) delete symbolToPartUsageMap[msg.symbolId];
+            if (puId) delete getMaps(representationId).partUsage[msg.symbolId];
             console.info('[OV-1] delete OK');
           }
         }).catch(function(e: any) { console.warn('[OV-1] delete error', e); });
@@ -160,14 +169,14 @@ export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref
     // Instead, expose a callback on window for Apollo Link to call when deleteTreeItem succeeds.
     (window as any).__ov1OnDeleteItem = function(treeItemId: string) {
       // Match by Sirius object ID (tree uses this, not EMF elementId)
-      for (var sid in symbolToSiriusMap) {
-        if (symbolToSiriusMap[sid] === treeItemId) {
-          delete symbolToSiriusMap[sid];
-          delete symbolToPartUsageMap[sid];
-          // Update persisted mapping
+      var siriusMap = getMaps(representationId).sirius;
+      for (var sid in siriusMap) {
+        if (siriusMap[sid] === treeItemId) {
+          delete siriusMap[sid];
+          delete getMaps(representationId).partUsage[sid];
           fetch(PLOTTING_ORIGIN + '/api/mapping/' + encodeURIComponent(representationId), {
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(symbolToSiriusMap),
+            body: JSON.stringify(siriusMap),
           }).catch(function(){});
           // Remove from saved names too
           if (sid) {
@@ -188,6 +197,10 @@ export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref
     };
 
     return function() {
+      // Notify iframe to save camera state before closing
+      if (iframeRef.current && iframeRef.current.contentWindow) {
+        iframeRef.current.contentWindow.postMessage({ type: 'saveAndClose' }, PLOTTING_ORIGIN);
+      }
       delete (window as any).__ov1OnDeleteItem;
       var el = document.getElementById(HIDE_RIGHT_PANEL_STYLE_ID);
       if (el) el.remove();

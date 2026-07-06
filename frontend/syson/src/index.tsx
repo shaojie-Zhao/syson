@@ -65,9 +65,11 @@ sysONExtensionRegistry.putData(representationFactoryExtensionPoint, {
   identifier: `syson_${representationFactoryExtensionPoint.identifier}`,
   data: [
     (representationMetadata: any): any => {
-      if (representationMetadata?.label?.includes('OV-1')) {
-        return Ov1BlankView;
-      }
+      if (representationMetadata?.label?.includes('OV-1')) return Ov1BlankView;
+      // Match by description sourceId for manually created OV-1 views
+      // DoDAFOV1ViewDiagramDescriptionProvider has viewId="DoDAFOV1ViewDiagram" → UUID is deterministic
+      var descId = representationMetadata?.description?.id || '';
+      if (descId.indexOf('5058ff41-3a74-3fad-93f4-0854893bd3b6') >= 0) return Ov1BlankView;
       return null;
     },
   ],
