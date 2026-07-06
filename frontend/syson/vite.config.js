@@ -77,6 +77,11 @@ export default defineConfig(({ mode }) => ({
         target: 'http://192.168.3.111:8080',
         changeOrigin: true,
       },
+      '/subscriptions': {
+        target: 'ws://192.168.3.111:8080',
+        ws: true,
+        changeOrigin: true,
+      },
     },
   },
   //We define the process.env to avoid 'Uncaught ReferenceError: process is not defined'.

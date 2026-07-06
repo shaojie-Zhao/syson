@@ -28,6 +28,7 @@ export default function DoDAFMatrixView() {
   const [rowEls, setRowEls] = useState<Elem[]>([]);
   const [colEls, setColEls] = useState<Elem[]>([]);
   const [rels, setRels] = useState<Rel[]>([]);
+  const siriusIdMap = useRef<Record<string, string>>({}); // relId → siriusId for delete sync
   const [rowT, setRowT] = useState<Set<string>>(() =>
     saved?.rowT ? new Set(saved.rowT) : new Set(['Capability', 'OperationalNode', 'SystemNode', 'Organization', 'InformationExchange']));
   const [colT, setColT] = useState<Set<string>>(() =>
@@ -37,7 +38,7 @@ export default function DoDAFMatrixView() {
   const [colScope, setColScope] = useState<string>(saved?.colScope || '');
   const [colScopeName, setColScopeName] = useState<string>(saved?.colScopeName || '');
   const [typePicker, setTypePicker] = useState<'row' | 'col' | null>(null);
-  const [rt, setRt] = useState(['Satisfy', 'Allocate', 'Trace']);
+  const [rt, setRt] = useState('Satisfy');
   const [tr, setTr] = useState(false);
   const [cfg, setCfg] = useState(true);
   const [sel, setSel] = useState<{ row: string; col: string } | null>(null);
@@ -145,9 +146,86 @@ export default function DoDAFMatrixView() {
   };
 
   const addOrRemoveRel = async (ri: string, ci: string) => {
+    console.log('[Matrix] addOrRemoveRel rt=' + rt, 'exLen=' + gcr(ri, ci).length);
+    setUndo(p => [...p, [...rels]]); setRedo([]);
     const ex = gcr(ri, ci);
-    if (ex.length > 0) { for (const r of ex) await fetch(API + '/relations/' + r.id, { method: 'DELETE' }); }
-    else if (rt.length > 0) { await fetch(API + '/relations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sourceId: ri, targetId: ci, relationType: rt[0] }) }); }
+    if (ex.length > 0) {
+      for (const r of ex) {
+        await fetch(API + '/relations/' + r.id, { method: 'DELETE' });
+        // Sync delete in Explorer tree
+        const sId = siriusIdMap.current[r.id];
+        if (sId) {
+          try {
+            const ctxId = getEditingContextId();
+            const toRes = await fetch(API + '/target-object-id?ctxId=' + ctxId);
+            const { editingContextId: realCtxId } = await toRes.json();
+            const mapRes = await fetch(API + '/element-id?ctxId=' + realCtxId + '&objectId=' + sId);
+            const { elementId } = await mapRes.json().catch(() => ({}));
+            if (elementId) {
+              await fetch('/api/graphql', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  query: 'mutation deleteFromModel($input: DeleteFromModelInput!) { deleteFromModel(input: $input) { __typename ... on ErrorPayload { message } } }',
+                  variables: { input: { id: crypto.randomUUID?.() || 'x', editingContextId: realCtxId, elementIds: [elementId] } }
+                })
+              });
+            }
+            delete siriusIdMap.current[r.id];
+          } catch (e) { console.warn('[Matrix] deleteFromModel failed:', e); }
+        }
+      }
+    }
+    else if (rt) {
+      await fetch(API + '/relations', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceId: ri, targetId: ci, relationType: rt, siriusId: '' }) });
+      // Create model element in Explorer tree via GraphQL createChild
+      try {
+        const ctxId = getEditingContextId();
+        const toRes = await fetch(API + '/target-object-id?ctxId=' + ctxId);
+        const { targetObjectId, editingContextId: realCtxId } = await toRes.json();
+        if (targetObjectId && realCtxId) {
+          const typeMap: Record<string, string> = {
+            Satisfy: 'SysMLv2EditService-SatisfyRequirementUsage',
+            Allocate: 'SysMLv2EditService-AllocationUsage',
+            Trace: 'SysMLv2EditService-Subclassification',
+            Dependency: 'SysMLv2EditService-Dependency',
+            Derive: 'SysMLv2EditService-Subclassification',
+          };
+          const childType = typeMap[rt] || 'SysMLv2EditService-PartUsage';
+          const srcName = rows.find(r => r.id === ri)?.name || ri.substring(0,8);
+          const tgtName = cols.find(c => c.id === ci)?.name || ci.substring(0,8);
+          const elName = srcName + '-' + tgtName;
+          console.log('[Matrix] Calling createChild:', { realCtxId, targetObjectId, childType, elName });
+          const uuid = crypto.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); });
+          const gqlRes = await fetch('/api/graphql', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              query: 'mutation createChild($input: CreateChildInput!) { createChild(input: $input) { __typename ... on CreateChildSuccessPayload { object { id } } ... on ErrorPayload { message } } }',
+              variables: { input: { id: uuid, editingContextId: realCtxId, objectId: targetObjectId, childCreationDescriptionId: childType } }
+            })
+          });
+          const gqlData = await gqlRes.json();
+          console.log('[Matrix] createChild result:', gqlData);
+          const siriusId = gqlData?.data?.createChild?.object?.id;
+          // Store for later deletion
+          const relData = await fetch(API + '/relations', { method: 'GET' }).then(r => r.json());
+          const lastRel = relData[relData.length - 1];
+          if (lastRel && siriusId) siriusIdMap.current[lastRel.id] = siriusId;
+          if (siriusId) {
+            const srcN = rows.find(r => r.id === ri)?.name || ri.substring(0,8);
+            const tgtN = cols.find(c => c.id === ci)?.name || ci.substring(0,8);
+            const elName = srcN + '-' + tgtN;
+            await fetch(API + '/rename-by-sirius', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ctxId: realCtxId, siriusId, newName: elName })
+            });
+            console.log('[Matrix] renamed to:', elName);
+          }
+        } else {
+          console.warn('[Matrix] No targetObjectId, skipping createChild');
+        }
+      } catch (e) { console.warn('[Matrix] createChild failed:', e); }
+    }
     load();
   };
 
@@ -245,14 +323,14 @@ export default function DoDAFMatrixView() {
               <button onClick={() => setTypePicker('col')} style={{ ...bs, padding: '4px 8px' }}>...</button>
             </div>
             <h4 style={{ margin: '12px 0 4px', color: '#94a3b8', fontSize: 12 }}>关联</h4>
-            {Object.keys(C).map(t => (
+            {(['Satisfy', 'Allocate', 'Dependency']).map(t => (
               <label key={t} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3, cursor: 'pointer', fontSize: 12 }}>
-                <input type="checkbox" checked={rt.includes(t)} onChange={() => setRt(p => p.includes(t) ? p.filter(x => x !== t) : [...p, t])} />
+                <input type="radio" name="relType" checked={rt === t} onChange={() => setRt(t)} />
                 <span style={{ width: 10, height: 10, background: C[t], borderRadius: 2 }} /><span style={{ color: '#cbd5e1' }}>{t}</span>
               </label>
             ))}
             <h4 style={{ margin: '12px 0 4px', color: '#94a3b8', fontSize: 12 }}>图例</h4>
-            {rt.map(t => <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, marginBottom: 2 }}><span style={{ color: C[t], fontWeight: 700 }}>{S[t]}</span><span style={{ width: 10, height: 10, background: C[t], borderRadius: 2 }} /><span style={{ color: '#94a3b8' }}>{t}</span></div>)}
+            {(['Satisfy', 'Allocate', 'Dependency']).map(t => <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, marginBottom: 2, opacity: rt === t ? 1 : 0.4 }}><span style={{ color: C[t], fontWeight: 700 }}>{S[t]}</span><span style={{ width: 10, height: 10, background: C[t], borderRadius: 2 }} /><span style={{ color: '#94a3b8' }}>{t}</span></div>)}
           </div>
         )}
         {/* Matrix: single table with sticky row + col headers */}
