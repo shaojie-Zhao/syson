@@ -18,20 +18,20 @@ mutation = '''mutation {
   }
 }''' % (uid, ctx, target)
 body = json.dumps({'query': mutation})
-req = urllib.request.Request('http://localhost:8080/api/graphql', data=body.encode(), headers={'Content-Type':'application/json'})
+req = urllib.request.Request('http://192.168.3.111:8080/api/graphql', data=body.encode(), headers={'Content-Type':'application/json'})
 resp = json.loads(urllib.request.urlopen(req, timeout=10).read())
 sid = resp.get('data',{}).get('createChild',{}).get('object',{}).get('id','')
 print('Step1 createChild siriusId:', sid)
 
 # Step 2: element-id
 if sid:
-    req2 = urllib.request.Request('http://localhost:8080/api/matrix/default-matrix/element-id?ctxId=%s&objectId=%s' % (ctx, sid))
+    req2 = urllib.request.Request('http://192.168.3.111:8080/api/matrix/default-matrix/element-id?ctxId=%s&objectId=%s' % (ctx, sid))
     eid = json.loads(urllib.request.urlopen(req2, timeout=10).read()).get('elementId','')
     print('Step2 elementId:', eid)
 
     # Step 3: rename
     if eid:
         body3 = json.dumps({'ctxId': ctx, 'siriusId': sid, 'newName': 'TEST-NAME'})
-        req3 = urllib.request.Request('http://localhost:8080/api/matrix/default-matrix/rename-by-sirius', data=body3.encode(), headers={'Content-Type':'application/json'}, method='POST')
+        req3 = urllib.request.Request('http://192.168.3.111:8080/api/matrix/default-matrix/rename-by-sirius', data=body3.encode(), headers={'Content-Type':'application/json'}, method='POST')
         resp3 = json.loads(urllib.request.urlopen(req3, timeout=10).read())
         print('Step3 rename:', resp3.get('result'))
