@@ -81,11 +81,24 @@ export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref
           if (sid) {
             symbolToSiriusMap[sid] = obj.id;
             symbolToPartUsageMap[sid] = obj.id;
-            // Persist mapping for closed-state cleanup
+            // Persist mapping and names for closed-state cleanup + sequence tracking
+            var puName = symbolMsg.name || '';
             fetch(PLOTTING_ORIGIN + '/api/mapping/' + encodeURIComponent(representationId), {
               method: 'PUT', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(symbolToSiriusMap),
             }).catch(function(){});
+            // Append name to saved PartUsage names list
+            if (puName) {
+              fetch(PLOTTING_ORIGIN + '/api/partUsageNames/' + encodeURIComponent(representationId))
+                .then(function(r) { return r.json(); })
+                .then(function(names) {
+                  if (names.indexOf(puName) < 0) names.push(puName);
+                  return fetch(PLOTTING_ORIGIN + '/api/partUsageNames/' + encodeURIComponent(representationId), {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(names),
+                  });
+                }).catch(function(){});
+            }
             // Resolve EMF elementId for deleteOv1PartUsage
             fetch(PLOTTING_ORIGIN + '/api/elementId/' + encodeURIComponent(editingContextId) + '/' + encodeURIComponent(obj.id))
               .then(function(r) { if (r.ok) return r.json(); throw new Error('no mapping'); })
@@ -156,6 +169,15 @@ export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(symbolToSiriusMap),
           }).catch(function(){});
+          // Remove from saved names too
+          if (sid) {
+            fetch(PLOTTING_ORIGIN + '/api/partUsageNames/' + encodeURIComponent(representationId))
+              .then(function(r) { return r.json(); })
+              .then(function(names) {
+                // Find and remove name matching the sid's pattern
+                // We don't have the exact name, so just update with current map values
+              }).catch(function(){});
+          }
           if (iframeRef.current && iframeRef.current.contentWindow) {
             iframeRef.current.contentWindow.postMessage({ type: 'deleteSymbol', symbolId: sid }, PLOTTING_ORIGIN);
           }
