@@ -81,12 +81,12 @@ public class NodeToolSectionNameSwitch extends SysmlEClassSwitch<String> {
 
     @Override
     public String caseAllocationDefinition(AllocationDefinition object) {
-        return ToolConstants.BEHAVIOR;
+        return "Allocate";
     }
 
     @Override
     public String caseAllocationUsage(AllocationUsage object) {
-        return ToolConstants.BEHAVIOR;
+        return "Allocate";
     }
 
     @Override
@@ -141,12 +141,12 @@ public class NodeToolSectionNameSwitch extends SysmlEClassSwitch<String> {
 
     @Override
     public String caseInterfaceDefinition(InterfaceDefinition object) {
-        return ToolConstants.STRUCTURE;
+        return "Interface";
     }
 
     @Override
     public String caseInterfaceUsage(InterfaceUsage object) {
-        return ToolConstants.STRUCTURE;
+        return "Interface";
     }
 
     @Override

@@ -31,6 +31,7 @@ import org.eclipse.sirius.components.core.api.ILabelService;
 import org.eclipse.sirius.components.core.api.IObjectSearchService;
 import org.eclipse.sirius.components.core.api.labels.StyledString;
 import org.eclipse.sirius.components.emf.ResourceMetadataAdapter;
+import org.eclipse.sirius.components.emf.services.api.IEMFEditingContext;
 import org.eclipse.sirius.components.representations.Message;
 import org.eclipse.sirius.components.representations.MessageLevel;
 import org.eclipse.sirius.components.view.emf.IViewRepresentationDescriptionSearchService;
@@ -120,7 +121,49 @@ public class ViewToolService extends ToolService {
         };
     }
 
+    private boolean isDoDAFContext(IEditingContext editingContext) {
+        if (editingContext instanceof IEMFEditingContext emfEditingContext) {
+            var resourceSet = emfEditingContext.getDomain().getResourceSet();
+            for (var resource : resourceSet.getResources()) {
+                var it = resource.getAllContents();
+                while (it.hasNext()) {
+                    EObject obj = it.next();
+                    if (obj instanceof Element e && e.getAliasIds().stream().anyMatch(a -> a.startsWith("dodaf:"))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static final java.util.Set<String> DODAF_ALLOWED_ECLASSES = java.util.Set.of(
+        "PartUsage", "PartDefinition",
+        "ActionUsage", "ActionDefinition",
+        "InterfaceUsage", "InterfaceDefinition",
+        "PortUsage", "PortDefinition",
+        "RequirementUsage", "RequirementDefinition",
+        "SatisfyRequirementUsage",
+        "AllocationUsage", "AllocationDefinition",
+        "Dependency",
+        "ViewUsage", "ViewDefinition",
+        "Package",
+        "Documentation", "Comment", "TextualRepresentation"
+    );
+
+    private boolean toolShouldBeAvailableOnDoDAFView(Element element, EClass domainClass) {
+        if (!DODAF_ALLOWED_ECLASSES.contains(domainClass.getName())) {
+            return false;
+        }
+        if (element == null) return true; // canvas background — allow all DoDAF tools
+        if (element instanceof Package) return true;
+        if (element instanceof Usage && !SysmlPackage.eINSTANCE.getDefinition().isSuperTypeOf(domainClass)) return true;
+        if (element instanceof Definition && !SysmlPackage.eINSTANCE.getDefinition().isSuperTypeOf(domainClass)) return true;
+        return false;
+    }
+
     private boolean toolShouldBeAvailableOnGeneralView(Element element, EClass domainClass) {
+        if (element == null) return true; // empty canvas — allow all tools
         boolean toolShouldBeAvailable = false;
         if (element instanceof Package) {
             toolShouldBeAvailable = true;

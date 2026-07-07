@@ -14,21 +14,8 @@ function storageKey(repId: string): string {
   return 'matrix-cfg-' + repId;
 }
 
-interface Elem {
-  id: string;
-  name: string;
-  type: string;
-  parentPath: string;
-  dodafType?: string;
-  displayType?: string;
-}
-interface Rel {
-  id: string;
-  sourceId: string;
-  targetId: string;
-  relationType: string;
-  createdAt: number;
-}
+interface Elem { id: string; name: string; type: string; parentPath: string; dodafType?: string; displayType?: string; parentChain?: string[]; }
+interface Rel { id: string; sourceId: string; targetId: string; relationType: string; createdAt: number; }
 
 const C: Record<string, string> = {
   Satisfy: '#22c55e',
@@ -82,6 +69,8 @@ export default function DoDAFMatrixView() {
   const [rowScopeName, setRowScopeName] = useState<string>(saved?.rowScopeName || '');
   const [colScope, setColScope] = useState<string>(saved?.colScope || '');
   const [colScopeName, setColScopeName] = useState<string>(saved?.colScopeName || '');
+  const [rowParentChain, setRowParentChain] = useState<string[]>(saved?.rowParentChain || []);
+  const [colParentChain, setColParentChain] = useState<string[]>(saved?.colParentChain || []);
   const [typePicker, setTypePicker] = useState<'row' | 'col' | null>(null);
   const [rt, setRt] = useState('Satisfy');
   const [tr, setTr] = useState(false);
@@ -107,10 +96,11 @@ export default function DoDAFMatrixView() {
         return p;
       };
       const [rowRes, colRes, rel] = await Promise.all([
-        fetch(API + '/elements?' + buildParams(rt, rowScope)).then((r) => r.json()),
-        fetch(API + '/elements?' + buildParams(ct, colScope)).then((r) => r.json()),
-        fetch(API + '/relations').then((r) => r.json()),
+        fetch(API + '/elements?' + buildParams(rt, rowScope)).then(r => r.json()),
+        fetch(API + '/elements?' + buildParams(ct, colScope)).then(r => r.json()),
+        fetch(API + '/relations?ctxId=' + encodeURIComponent(ctxId)).then(r => r.json()),
       ]);
+      // Extract scope meta entries (first element with type=__meta__)
       // Extract scope meta entries (first element with type=__meta__)
       const extractMeta = (data: Elem[]) => {
         const meta = data.find((e) => e.type === '__meta__');
@@ -124,8 +114,8 @@ export default function DoDAFMatrixView() {
       };
       const rowData = extractMeta(rowRes);
       const colData = extractMeta(colRes);
-      if (rowData.meta) setRowScopeName(rowData.meta.name);
-      if (colData.meta) setColScopeName(colData.meta.name);
+      if (rowData.meta) { setRowScopeName(rowData.meta.name); setRowParentChain(rowData.meta.parentChain || []); }
+      if (colData.meta) { setColScopeName(colData.meta.name); setColParentChain(colData.meta.parentChain || []); }
       setRowEls(rowData.elements);
       setRowParentNames(rowData.parent);
       setColEls(colData.elements);
@@ -227,6 +217,13 @@ export default function DoDAFMatrixView() {
     setRedo([]);
     const ex = gcr(ri, ci);
     if (ex.length > 0) {
+      // Resolve the real editing context id once
+      const ctxId = getEditingContextId();
+      let realCtxId = ctxId;
+      try {
+        const toRes = await fetch(API + '/target-object-id?ctxId=' + ctxId);
+        realCtxId = (await toRes.json()).editingContextId || ctxId;
+      } catch {}
       for (const r of ex) {
         await fetch(API + '/relations/' + r.id, { method: 'DELETE' });
         // Sync delete in Explorer tree
@@ -268,6 +265,7 @@ export default function DoDAFMatrixView() {
         const ctxId = getEditingContextId();
         const toRes = await fetch(API + '/target-object-id?ctxId=' + ctxId);
         const { targetObjectId, editingContextId: realCtxId } = await toRes.json();
+        let siriusId = '';
         if (targetObjectId && realCtxId) {
           const typeMap: Record<string, string> = {
             Satisfy: 'SysMLv2EditService-SatisfyRequirementUsage',
@@ -324,14 +322,17 @@ export default function DoDAFMatrixView() {
         } else {
           console.warn('[Matrix] No targetObjectId, skipping createChild');
         }
-      } catch (e) {
-        console.warn('[Matrix] createChild failed:', e);
-      }
+        // Store the relation with its backing siriusId so delete can sync the tree (survives refresh)
+        const relRes = await fetch(API + '/relations', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceId: ri, targetId: ci, relationType: rt, siriusId }) });
+        const newRel = await relRes.json().catch(() => null);
+        if (newRel?.id && siriusId) siriusIdMap.current[newRel.id] = siriusId;
+      } catch (e) { console.warn('[Matrix] create relation failed:', e); }
     }
     load();
   };
 
-  const handleDrop = (setScope: (v: string) => void, setName: (v: string) => void) => (e: React.DragEvent) => {
+  const handleDrop = (setScope: (v: string) => void, setName: (v: string) => void) => async (e: React.DragEvent) => {
     e.preventDefault();
     let pkgId = '';
     let pkgName = '';
@@ -357,8 +358,18 @@ export default function DoDAFMatrixView() {
       } catch {}
     }
     if (pkgId) {
+      // Convert Sirius tree object ID (UUID) to EMF element ID (URI fragment like "@.1.2")
+      // so the backend's fetch() can find the package in the resource set.
+      try {
+        const ctxId = getEditingContextId();
+        const res = await fetch(API + '/element-id?ctxId=' + encodeURIComponent(ctxId) + '&objectId=' + encodeURIComponent(pkgId));
+        const { elementId } = await res.json();
+        if (elementId) {
+          pkgId = elementId;
+        }
+      } catch (e) { console.warn('[Matrix] element-id conversion failed, using raw pkgId:', e); }
       setScope(pkgId);
-      setName(pkgName || pkgId.substring(0, 8) + '...');
+      if (pkgName) setName(pkgName); // only set from drag data name, not ID fallback — load() handles rest
     }
   };
 
@@ -502,19 +513,10 @@ export default function DoDAFMatrixView() {
                 placeholder="拖动Package至此处"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop(setRowScope, setRowScopeName)}
-                title="从模型树拖拽Package限定行范围"
-              />
-              {rowScope && (
-                <button
-                  onClick={() => {
-                    setRowScope('');
-                    setRowScopeName('');
-                  }}
-                  style={{ ...bs, padding: '4px 6px', fontSize: 11, color: '#fca5a5' }}>
-                  ✕
-                </button>
-              )}
+                title="从模型树拖拽Package限定行范围" />
+              {rowScope && <button onClick={() => { setRowScope(''); setRowScopeName(''); setRowParentChain([]); }} style={{ ...bs, padding: '4px 6px', fontSize: 11, color: '#fca5a5' }}>✕</button>}
             </div>
+            {rowParentChain.length > 0 && <div style={{ fontSize: 10, color: '#64748b', marginTop: 2, paddingLeft: 2 }}>{rowParentChain.join(' / ')}</div>}
             <h4 style={{ margin: '8px 0 4px', color: '#94a3b8', fontSize: 12 }}>行类型</h4>
             <div style={{ display: 'flex', gap: 4 }}>
               <input
@@ -543,19 +545,10 @@ export default function DoDAFMatrixView() {
                 placeholder="拖动Package至此处"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop(setColScope, setColScopeName)}
-                title="从模型树拖拽Package限定列范围"
-              />
-              {colScope && (
-                <button
-                  onClick={() => {
-                    setColScope('');
-                    setColScopeName('');
-                  }}
-                  style={{ ...bs, padding: '4px 6px', fontSize: 11, color: '#fca5a5' }}>
-                  ✕
-                </button>
-              )}
+                title="从模型树拖拽Package限定列范围" />
+              {colScope && <button onClick={() => { setColScope(''); setColScopeName(''); setColParentChain([]); }} style={{ ...bs, padding: '4px 6px', fontSize: 11, color: '#fca5a5' }}>✕</button>}
             </div>
+            {colParentChain.length > 0 && <div style={{ fontSize: 10, color: '#64748b', marginTop: 2, paddingLeft: 2 }}>{colParentChain.join(' / ')}</div>}
             <h4 style={{ margin: '8px 0 4px', color: '#94a3b8', fontSize: 12 }}>列类型</h4>
             <div style={{ display: 'flex', gap: 4 }}>
               <input
@@ -810,24 +803,8 @@ export default function DoDAFMatrixView() {
                     {S[r.relationType]} {r.relationType}
                   </span>
                   <span style={{ fontSize: 11, color: '#64748b' }}>{new Date(r.createdAt).toLocaleString()}</span>
-                  <button
-                    onClick={async () => {
-                      await fetch(API + '/relations/' + r.id, { method: 'DELETE' });
-                      setSel(null);
-                      load();
-                    }}
-                    style={{
-                      marginLeft: 'auto',
-                      background: '#ef4444',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: 3,
-                      padding: '2px 8px',
-                      cursor: 'pointer',
-                      fontSize: 11,
-                    }}>
-                    删除
-                  </button>
+                  <button onClick={async () => { let rc = getEditingContextId(); try { const tr = await fetch(API + '/target-object-id?ctxId=' + rc); rc = (await tr.json()).editingContextId || rc; } catch {} await fetch(API + '/relations/' + r.id + '?ctxId=' + encodeURIComponent(rc), { method: 'DELETE' }); delete siriusIdMap.current[r.id]; setSel(null); load(); }}
+                    style={{ marginLeft: 'auto', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 3, padding: '2px 8px', cursor: 'pointer', fontSize: 11 }}>删除</button>
                 </div>
               ))
             )}

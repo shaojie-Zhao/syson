@@ -21,13 +21,13 @@ public class ToolConstants {
 
     public static final String ANALYSIS = "Analysis";
 
-    public static final String BEHAVIOR = "Behavior";
+    public static final String BEHAVIOR = "Capability";
 
     public static final String EXTENSION = "Extension";
 
-    public static final String REQUIREMENTS = "Requirements";
+    public static final String REQUIREMENTS = "Requirement";
 
-    public static final String STRUCTURE = "Structure";
+    public static final String STRUCTURE = "Node";
 
     public static final String VIEW_AS = "View as";
 }
