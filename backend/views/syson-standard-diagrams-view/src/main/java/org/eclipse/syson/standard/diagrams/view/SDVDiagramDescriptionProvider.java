@@ -240,7 +240,7 @@ public class SDVDiagramDescriptionProvider implements IRepresentationDescription
             Map.entry(SysmlPackage.eINSTANCE.getUseCaseUsage(),            List.of(SysmlPackage.eINSTANCE.getElement_Documentation(), SysmlPackage.eINSTANCE.getUsage_NestedAttribute(), SysmlPackage.eINSTANCE.getUsage_NestedPort()))
             );
 
-    public static final ToolSectionDescription REQUIREMENTS_TOOL_SECTION = new ToolSectionDescription(ToolConstants.REQUIREMENTS, List.of(
+    public static final ToolSectionDescription REQUIREMENTS_TOOL_SECTION = new ToolSectionDescription("Requirement", List.of(
             SysmlPackage.eINSTANCE.getConcernUsage(),
             SysmlPackage.eINSTANCE.getConcernDefinition(),
             SysmlPackage.eINSTANCE.getSatisfyRequirementUsage(),
@@ -250,7 +250,7 @@ public class SDVDiagramDescriptionProvider implements IRepresentationDescription
             SysmlPackage.eINSTANCE.getConstraintDefinition()
             ));
 
-    public static final ToolSectionDescription STRUCTURE_TOOL_SECTION = new ToolSectionDescription(ToolConstants.STRUCTURE, List.of(
+    public static final ToolSectionDescription STRUCTURE_TOOL_SECTION = new ToolSectionDescription("Node", List.of(
             SysmlPackage.eINSTANCE.getAttributeUsage(),
             SysmlPackage.eINSTANCE.getAttributeDefinition(),
             SysmlPackage.eINSTANCE.getConnectionDefinition(),
@@ -267,7 +267,7 @@ public class SDVDiagramDescriptionProvider implements IRepresentationDescription
             SysmlPackage.eINSTANCE.getReferenceUsage()
             ));
 
-    public static final ToolSectionDescription BEHAVIOR_TOOL_SECTION = new ToolSectionDescription(ToolConstants.BEHAVIOR, List.of(
+    public static final ToolSectionDescription BEHAVIOR_TOOL_SECTION = new ToolSectionDescription("Capability", List.of(
             SysmlPackage.eINSTANCE.getAllocationUsage(),
             SysmlPackage.eINSTANCE.getAllocationDefinition(),
             SysmlPackage.eINSTANCE.getAcceptActionUsage(),
@@ -281,18 +281,18 @@ public class SDVDiagramDescriptionProvider implements IRepresentationDescription
             SysmlPackage.eINSTANCE.getViewUsage()
             ));
 
-    public static final ToolSectionDescription ANALYSIS_TOOL_SECTION = new ToolSectionDescription(ToolConstants.ANALYSIS, List.of(
+    public static final ToolSectionDescription ANALYSIS_TOOL_SECTION = new ToolSectionDescription("Analysis", List.of(
             SysmlPackage.eINSTANCE.getCaseUsage(),
             SysmlPackage.eINSTANCE.getCaseDefinition(),
             SysmlPackage.eINSTANCE.getUseCaseUsage(),
             SysmlPackage.eINSTANCE.getUseCaseDefinition()
             ));
 
-    public static final ToolSectionDescription EXTENSION_TOOL_SECTION = new ToolSectionDescription(ToolConstants.EXTENSION, List.of(
+    public static final ToolSectionDescription EXTENSION_TOOL_SECTION = new ToolSectionDescription("Extension", List.of(
             SysmlPackage.eINSTANCE.getMetadataDefinition()
             ));
 
-    public static final ToolSectionDescription VIEW_AS_TOOL_SECTION = new ToolSectionDescription(ToolConstants.VIEW_AS, List.of(
+    public static final ToolSectionDescription VIEW_AS_TOOL_SECTION = new ToolSectionDescription("View as", List.of(
             ));
 
     public static final List<ToolSectionDescription> TOOL_SECTIONS = List.of(
@@ -1520,6 +1520,24 @@ public class SDVDiagramDescriptionProvider implements IRepresentationDescription
             nodeTools.add(new SetAsViewToolProvider(AQLUtils.aqlString(StandardDiagramsConstants.AFV_QN), StandardDiagramsConstants.AFV).create(cache));
             nodeTools.add(new SetAsViewToolProvider(AQLUtils.aqlString(StandardDiagramsConstants.STV_QN), StandardDiagramsConstants.STV).create(cache));
         }
+        // DoDAF sections: add tools explicitly even without cache node description
+        if (BEHAVIOR_TOOL_SECTION.name().equals(sectionName) || STRUCTURE_TOOL_SECTION.name().equals(sectionName)) {
+            for (EClass eClass : getSectionElements(sectionName)) {
+                var nodeDescription = this.diagramBuilderHelper.newNodeDescription()
+                        .name(this.getDescriptionNameGenerator().getNodeName(eClass))
+                        .domainType(SysMLMetamodelHelper.buildQualifiedName(eClass))
+                        .semanticCandidatesExpression(AQLUtils.aqlString("aql:self"))
+                        .build();
+                nodeTools.add(this.toolDescriptionService.createNodeToolFromDiagramBackground(nodeDescription, eClass));
+            }
+        }
         return nodeTools;
+    }
+
+    private List<EClass> getSectionElements(String sectionName) {
+        for (ToolSectionDescription ts : TOOL_SECTIONS) {
+            if (ts.name().equals(sectionName)) return ts.elements();
+        }
+        return List.of();
     }
 }
