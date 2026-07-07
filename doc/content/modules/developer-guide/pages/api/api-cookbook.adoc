@@ -26,7 +26,7 @@ To install these libraries, run:
 include::example$init_api.py[]
 ----
 
-TIP: Replace `http://192.168.3.111:8080` with the actual URL of your API server if hosted elsewhere.
+TIP: Replace `http://localhost:8080` with the actual URL of your API server if hosted elsewhere.
 
 *What this code does*:
 

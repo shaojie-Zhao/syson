@@ -10,10 +10,10 @@ Test on simple SysMLv2 project (with `id` = `44ba0783-8476-442a-9ab3-b6c26e25173
 
 [source, bash]
 ----
-http://192.168.3.111:8080/api/rest/projects/44ba0783-8476-442a-9ab3-b6c26e251734/commits/44ba0783-8476-442a-9ab3-b6c26e251734/elements
+http://localhost:8080/api/rest/projects/44ba0783-8476-442a-9ab3-b6c26e251734/commits/44ba0783-8476-442a-9ab3-b6c26e251734/elements
 ----
 
-TIP: Replace `http://192.168.3.111:8080` with the actual URL of your API server if hosted elsewhere.
+TIP: Replace `http://localhost:8080` with the actual URL of your API server if hosted elsewhere.
 
 Use the swagger UI to execute the request (or your favorite REST client):
 
@@ -46,7 +46,7 @@ The containment relation between a _Membership_ and an _Element_ is named "owned
 
 [source, bash]
 ----
-http://192.168.3.111:8080/api/rest/projects/44ba0783-8476-442a-9ab3-b6c26e251734/commits
+http://localhost:8080/api/rest/projects/44ba0783-8476-442a-9ab3-b6c26e251734/commits
 ----
 
 with the following raw JSON body:
@@ -108,7 +108,7 @@ The JSON response:
 
 [source, bash]
 ----
-http://192.168.3.111:8080/api/rest/projects/44ba0783-8476-442a-9ab3-b6c26e251734/commits/44ba0783-8476-442a-9ab3-b6c26e251734/elements
+http://localhost:8080/api/rest/projects/44ba0783-8476-442a-9ab3-b6c26e251734/commits/44ba0783-8476-442a-9ab3-b6c26e251734/elements
 ----
 
 Use the swagger UI to execute the request (or your favorite REST client):
@@ -143,7 +143,7 @@ Execute the */commits* POST request, allowing to create the _PartDefinition_:
 
 [source, bash]
 ----
-http://192.168.3.111:8080/api/rest/projects/44ba0783-8476-442a-9ab3-b6c26e251734/commits
+http://localhost:8080/api/rest/projects/44ba0783-8476-442a-9ab3-b6c26e251734/commits
 ----
 
 with the following raw JSON body:
@@ -205,7 +205,7 @@ The JSON response:
 
 [source, bash]
 ----
-http://192.168.3.111:8080/api/rest/projects/44ba0783-8476-442a-9ab3-b6c26e251734/commits/44ba0783-8476-442a-9ab3-b6c26e251734/elements
+http://localhost:8080/api/rest/projects/44ba0783-8476-442a-9ab3-b6c26e251734/commits/44ba0783-8476-442a-9ab3-b6c26e251734/elements
 ----
 
 Use the swagger UI to execute the request (or your favorite REST client):

@@ -59,7 +59,7 @@ $ python new_objects_from_text.py url-of-syson-server file-path-of-sysmlv2-file 
 For example, to run the script, you would use the following command:
 [source,bash]
 ----
-$ python new_objects_from_text.py http://192.168.3.111:8080 /Users/myUserFolder/myFolder/mySysMLv2File.sysml 76bb3f29-17d1-465a-a2ca-a331978c36f3 2c0ddeb4-b9fe-478e-951e-0ca312013a5b
+$ python new_objects_from_text.py http://localhost:8080 /Users/myUserFolder/myFolder/mySysMLv2File.sysml 76bb3f29-17d1-465a-a2ca-a331978c36f3 2c0ddeb4-b9fe-478e-951e-0ca312013a5b
 ----
 
 Output example:
