@@ -170,7 +170,7 @@ jobs:
         run: |
           docker compose -f ../backend/application/syson-application/docker-compose.yml up -d
           docker compose -f ../backend/application/syson-application/docker-compose.yml ps
-          npx wait-on -t 180000 http://localhost:8080
+          npx wait-on -t 180000 http://192.168.3.111:8080
           npx playwright test
         working-directory: integration-tests-playwright
         env:
@@ -197,7 +197,7 @@ jobs:
         with:
           build: docker compose -f ../backend/application/syson-application/docker-compose.yml up -d
           start: docker compose -f ../backend/application/syson-application/docker-compose.yml ps
-          wait-on: "http://localhost:8080"
+          wait-on: "http://192.168.3.111:8080"
           wait-on-timeout: 180
           working-directory: integration-tests-cypress
           record: false

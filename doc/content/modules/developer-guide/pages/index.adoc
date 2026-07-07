@@ -571,6 +571,6 @@ ServiceMethod.of1(EObjectServices.class, EObjectServices::eGet, EObject.class, E
 [#generate_openapi]
 == Generate a new OpenAPI documentation of REST API
 
-. Build and run the syson server locally (using docker compose as example) on `http://localhost:8080`.
-. Download the documentation at the url: `http://localhost:8080/v3/api-docs/rest-apis`.
-. The swagger-ui user interface is `http://localhost:8080/swagger-ui/index.html`.
+. Build and run the syson server locally (using docker compose as example) on `http://192.168.3.111:8080`.
+. Download the documentation at the url: `http://192.168.3.111:8080/v3/api-docs/rest-apis`.
+. The swagger-ui user interface is `http://192.168.3.111:8080/swagger-ui/index.html`.

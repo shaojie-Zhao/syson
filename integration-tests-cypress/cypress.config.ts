@@ -26,9 +26,9 @@ export default defineConfig({
   requestTimeout: 60000,
   responseTimeout: 60000,
   env: {
-    baseAPIUrl: 'http://localhost:8080',
+    baseAPIUrl: 'http://192.168.3.111:8080',
   },
   e2e: {
-    baseUrl: 'http://localhost:8080',
+    baseUrl: 'http://192.168.3.111:8080',
   },
 });
