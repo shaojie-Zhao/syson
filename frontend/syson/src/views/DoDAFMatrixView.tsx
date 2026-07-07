@@ -611,14 +611,13 @@ export default function DoDAFMatrixView() {
             <thead>
               {/*列表的第一行表头*/}
               <tr>
-                <th
-                  style={{ ...th, width: RW, position: 'sticky', left: 0, top: 0, zIndex: 3, background: '#19284f' }}
-                  colSpan={2}
-                  rowSpan={2}>
+                <th style={{ ...th, width: RW, left: 0, top: 0, zIndex: 3, ...bgs }} colSpan={2} rowSpan={2}>
                   {tr ? '列 \\ 行' : '行 \\ 列'}
                 </th>
                 {/*<th style={{ ...th, width: CW, position: 'sticky', top: 0, zIndex: 2, background: '#19284f' }}></th>*/}
-                <th style={{ ...th, width: RW, position: 'sticky', left: 0, top: 0, zIndex: 3, background: '#19284f' }}>
+                <th
+                  style={{ ...th, width: RW, position: 'sticky', left: 0, top: 0, zIndex: 3, ...bgs }}
+                  colSpan={sC.length + 1}>
                   {sCN.map((c, ci) => (
                     <div style={{ paddingLeft: ci * 5 }}>
                       {ci != 0 && <span>└─</span>}
@@ -626,15 +625,15 @@ export default function DoDAFMatrixView() {
                     </div>
                   ))}
                 </th>
-                {sC.map((c, ci) => (
-                  <th
-                    key={'th1-' + ci}
-                    style={{ ...th, width: CW, position: 'sticky', top: 0, zIndex: 2, background: '#19284f' }}></th>
-                ))}
+                {/*{sC.map((c, ci) => (*/}
+                {/*  <th*/}
+                {/*    key={'th1-' + ci}*/}
+                {/*    style={{ ...th, width: CW, position: 'sticky', top: 0, zIndex: 2, background: '#19284f' }}></th>*/}
+                {/*))}*/}
               </tr>
               {/*列表的第二行表头*/}
               <tr>
-                <th style={{ ...th, width: RW, position: 'sticky', top: 0, zIndex: 2, background: '#19284f' }}></th>
+                <th style={{ ...th, width: RW, position: 'sticky', top: 0, zIndex: 2, ...bgs }}></th>
                 {sC.map((c) => (
                   <th
                     key={c.id}
@@ -663,8 +662,7 @@ export default function DoDAFMatrixView() {
                     {/*  }}>*/}
                     {/*  {c.dodafType || c.type}*/}
                     {/*</span>*/}
-                    {c.name.slice(0, 8)}
-                    {c.name.length > 8 && <span>...</span>}
+                    {c.name}
                   </th>
                 ))}
               </tr>
@@ -672,7 +670,9 @@ export default function DoDAFMatrixView() {
             <tbody>
               {/*列表body的第一行内容*/}
               <tr style={{ height: RH }}>
-                <td style={{ ...th, width: RW, position: 'sticky', left: 0, zIndex: 1, background: '#19284f' }}>
+                <td
+                  style={{ ...th, width: RW, position: 'sticky', left: 0, zIndex: 1, ...bgs }}
+                  rowSpan={sR.length + 1}>
                   {sRN.map((c, ci) => (
                     <div style={{ paddingLeft: ci * 5 }}>
                       {ci != 0 && <span>└─</span>}
@@ -680,7 +680,7 @@ export default function DoDAFMatrixView() {
                     </div>
                   ))}
                 </td>
-                <td style={{ ...th, width: RW, position: 'sticky', left: 0, zIndex: 1, background: '#19284f' }}></td>
+                <td style={{ ...th, width: RW, position: 'sticky', left: 0, zIndex: 1, ...bgs }}></td>
                 <td style={{ ...td, width: CW, background: '#273B6CFF' }}></td>
                 {sC.map((c, ci) => (
                   <td key={'--' + ci} style={{ ...td, width: CW, background: '#273B6CFF' }}></td>
@@ -689,7 +689,7 @@ export default function DoDAFMatrixView() {
               {/*列表body的其他内容*/}
               {sR.map((r, ri) => (
                 <tr key={r.id} style={{ height: RH }}>
-                  <td style={{ ...th, width: RW, position: 'sticky', left: 0, zIndex: 1, background: '#19284f' }}></td>
+                  {/*<td style={{ ...th, width: RW, position: 'sticky', left: 0, zIndex: 1, background: '#19284f' }}></td>*/}
                   <td
                     style={{ ...th, width: RW, position: 'sticky', left: 0, zIndex: 1, background: '#19284f' }}
                     onContextMenu={(e) => {
@@ -966,3 +966,6 @@ const td: React.CSSProperties = {
   fontSize: 14,
   verticalAlign: 'middle',
 };
+const bgs: React.CSSProperties = {
+  backgroundColor: '#524a73',
+}
