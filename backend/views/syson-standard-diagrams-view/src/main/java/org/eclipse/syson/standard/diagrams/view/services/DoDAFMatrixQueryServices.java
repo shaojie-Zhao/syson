@@ -34,6 +34,14 @@ public class DoDAFMatrixQueryServices {
     }
 
     /**
+     * Creates a new PartUsage element inside the ViewUsage with a default name.
+     * Used when the table context menu does not provide AQL variables.
+     */
+    public Element createDefaultMatrixElement(ViewUsage viewUsage) {
+        return this.createMatrixElement(viewUsage, "新元素");
+    }
+
+    /**
      * Creates a new PartUsage element inside the ViewUsage and returns it.
      */
     public Element createMatrixElement(ViewUsage viewUsage, String name) {

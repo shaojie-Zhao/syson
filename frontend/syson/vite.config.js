@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 import fs from 'fs';
+import path from 'path';
 
 const commitHash = require('child_process').execSync('git rev-parse --short HEAD').toString();
 
@@ -52,8 +53,48 @@ function siriusGanttPatchPlugin() {
   };
 }
 
+// Serve E:\syson-rg\examples as /examples on the dev server
+function examplesStaticPlugin() {
+  const examplesRoot = path.resolve(__dirname, '../../..', 'examples');
+  return {
+    name: 'examples-static',
+    configureServer(server) {
+      server.middlewares.use('/examples', (req, res, next) => {
+        // Remove /examples prefix to get relative path
+        const relPath = req.url.replace(/^\/examples\/?/, '') || 'plotting.html';
+        const filePath = path.join(examplesRoot, relPath);
+        // Prevent directory traversal
+        if (!filePath.startsWith(examplesRoot)) {
+          res.statusCode = 403;
+          res.end('Forbidden');
+          return;
+        }
+        // Try to serve the file
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+          const ext = path.extname(filePath).toLowerCase();
+          const mimeTypes = {
+            '.html': 'text/html',
+            '.js': 'application/javascript',
+            '.css': 'text/css',
+            '.png': 'image/png',
+            '.svg': 'image/svg+xml',
+            '.jpg': 'image/jpeg',
+            '.json': 'application/json',
+            '.woff': 'font/woff',
+            '.woff2': 'font/woff2',
+          };
+          res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+          res.end(fs.readFileSync(filePath));
+        } else {
+          next();
+        }
+      });
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => ({
-  plugins: [siriusGanttPatchPlugin(), react()],
+  plugins: [siriusGanttPatchPlugin(), examplesStaticPlugin(), react()],
   build: {
     minify: mode !== 'development',
   },
@@ -82,6 +123,9 @@ export default defineConfig(({ mode }) => ({
         ws: true,
         changeOrigin: true,
       },
+    },
+    fs: {
+      allow: ['..', '../..', '../../..'],
     },
   },
   //We define the process.env to avoid 'Uncaught ReferenceError: process is not defined'.

@@ -151,7 +151,8 @@ public class SDVDiagramDescriptionProvider implements IRepresentationDescription
 
     public static final String DESCRIPTION_NAME = "General View";
 
-    // @formatter:off
+    public String descriptionName = "General View";
+    public boolean showViewAsTools = true;
 
     public static  final List<EClass> DEFINITIONS = List.of(
             SysmlPackage.eINSTANCE.getActionDefinition(),
@@ -337,7 +338,7 @@ public class SDVDiagramDescriptionProvider implements IRepresentationDescription
                 .layoutOption(DiagramLayoutOption.NONE)
                 .minimapVisible(true)
                 .preconditionExpression(ServiceMethod.of0(ViewCreateService::canCreateDiagram).aqlSelf())
-                .name(DESCRIPTION_NAME)
+                .name(this.descriptionName)
                 .style(new DiagramBuilders().newDiagramStyleDescription().build())
                 .conditionalStyles(emptyDiagramStyle)
                 .titleExpression("aql:'view'+ Sequence{self.existingViewUsagesCountForRepresentationCreation(), 1}->sum()")

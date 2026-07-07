@@ -114,7 +114,11 @@ extend type Mutation {
   editDodafCapabilityAppearance(input: EditDodafCapabilityAppearanceInput!): EditDodafCapabilityAppearancePayload!
   editDodafOrganizationAppearance(input: EditDodafOrganizationAppearanceInput!): EditDodafOrganizationAppearancePayload!
   editDodafInformationExchangeAppearance(input: EditDodafInformationExchangeAppearanceInput!): EditDodafInformationExchangeAppearancePayload!
+  deleteOv1PartUsage(input: DeleteOv1PartUsageInput!): DeleteOv1PartUsagePayload!
 }
+
+input DeleteOv1PartUsageInput { id: ID! editingContextId: ID! elementId: ID! }
+union DeleteOv1PartUsagePayload = ErrorPayload | SuccessPayload
 
 extend union INodeStyle = DodafOperationalNodeStyle
 type DodafOperationalNodeStyle { borderColor: String! borderSize: Int! borderStyle: LineStyle! background: String! }
@@ -145,3 +149,8 @@ type DodafInformationExchangeStyle { borderColor: String! borderSize: Int! borde
 input DodafInformationExchangeAppearanceInput { background: String borderColor: String borderSize: Int borderStyle: LineStyle }
 input EditDodafInformationExchangeAppearanceInput { id: ID! editingContextId: ID! representationId: ID! nodeIds: [ID!]! appearance: DodafInformationExchangeAppearanceInput! }
 union EditDodafInformationExchangeAppearancePayload = ErrorPayload | SuccessPayload
+extend union INodeStyle = Ov1NodeStyle
+type Ov1NodeStyle { borderColor: String! borderSize: Int! borderStyle: LineStyle! background: String! iconId: String }
+input Ov1NodeAppearanceInput { background: String borderColor: String borderSize: Int borderStyle: LineStyle iconId: String }
+input EditOv1NodeAppearanceInput { id: ID! editingContextId: ID! representationId: ID! nodeIds: [ID!]! appearance: Ov1NodeAppearanceInput! }
+union EditOv1NodeAppearancePayload = ErrorPayload | SuccessPayload

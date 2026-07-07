@@ -12,6 +12,7 @@
  *******************************************************************************/
 
 import { loadDevMessages, loadErrorMessages } from '@apollo/client/dev';
+import { representationFactoryExtensionPoint } from '@eclipse-sirius/sirius-components-core';
 import {
   DiagramRepresentationConfiguration,
   footerExtensionPoint,
@@ -38,6 +39,7 @@ import './reset.css';
 import './transparency.css';
 import './variables.css';
 import './dodaf-views.css';
+<<<<<<< HEAD
 import ReactDOM from 'react-dom/client';
 import React from 'react';
 import DoDAFGanttTimeline from './views/DoDAFGanttTimeline';
@@ -51,6 +53,9 @@ import DoDAFMatrixView from './views/DoDAFMatrixView';
   const root = ReactDOM.createRoot(container);
   root.render(React.createElement(DoDAFMatrixView));
 };
+=======
+import { Ov1BlankView } from './views/Ov1BlankView';
+>>>>>>> 2382e533cb3c0fc85062c2c03f6e26fea5f95c9a
 
 if (process.env.NODE_ENV !== 'production') {
   loadDevMessages();
@@ -70,6 +75,20 @@ sysONExtensionRegistry.putData(navigationBarMenuHelpURLExtensionPoint, {
 sysONExtensionRegistry.addComponent(footerExtensionPoint, {
   identifier: `syson_${footerExtensionPoint.identifier}`,
   Component: SysONFooter,
+});
+
+sysONExtensionRegistry.putData(representationFactoryExtensionPoint, {
+  identifier: `syson_${representationFactoryExtensionPoint.identifier}`,
+  data: [
+    (representationMetadata: any): any => {
+      if (representationMetadata?.label?.includes('OV-1')) return Ov1BlankView;
+      // Match by description sourceId for manually created OV-1 views
+      // DoDAFOV1ViewDiagramDescriptionProvider has viewId="DoDAFOV1ViewDiagram" → UUID is deterministic
+      var descId = representationMetadata?.description?.id || '';
+      if (descId.indexOf('5058ff41-3a74-3fad-93f4-0854893bd3b6') >= 0) return Ov1BlankView;
+      return null;
+    },
+  ],
 });
 
 const container = document.getElementById('root');

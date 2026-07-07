@@ -21,7 +21,8 @@ import org.eclipse.syson.util.StandardDiagramsConstants;
  */
 public enum ViewDefinitionKind {
     GENERAL_VIEW, INTERCONNECTION_VIEW, ACTION_FLOW_VIEW, STATE_TRANSITION_VIEW,
-    DODAF_MATRIX_VIEW, DODAF_GANTT_VIEW, DODAF_SEQUENCE_VIEW, DODAF_TABLE_VIEW;
+    DODAF_MATRIX_VIEW, DODAF_GANTT_VIEW, DODAF_SEQUENCE_VIEW, DODAF_TABLE_VIEW,
+    DODAF_OV1_VIEW;
 
     public static ViewDefinitionKind getKind(String viewDefinitionName) {
         ViewDefinitionKind kind = null;
@@ -41,6 +42,8 @@ public enum ViewDefinitionKind {
             kind = DODAF_SEQUENCE_VIEW;
         } else if (StandardDiagramsConstants.DODAF_TABLE_QN.equals(viewDefinitionName)) {
             kind = DODAF_TABLE_VIEW;
+        } else if (StandardDiagramsConstants.DODAF_OV1_QN.equals(viewDefinitionName)) {
+            kind = DODAF_OV1_VIEW;
         }
         return kind;
     }

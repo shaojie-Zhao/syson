@@ -1114,4 +1114,8 @@ public class UtilService {
         return element.getAliasIds().contains("dodaf:node");
     }
 
+    public boolean isOv1Node(Element element) {
+        return element.getAliasIds().contains("dodaf:ov1");
+    }
+
 }

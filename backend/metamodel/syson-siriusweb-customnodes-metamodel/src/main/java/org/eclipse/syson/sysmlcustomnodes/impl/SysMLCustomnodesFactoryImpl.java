@@ -28,6 +28,7 @@ import org.eclipse.syson.sysmlcustomnodes.DodafSystemNodeStyleDescription;
 import org.eclipse.syson.sysmlcustomnodes.DodafCapabilityStyleDescription;
 import org.eclipse.syson.sysmlcustomnodes.DodafOrganizationStyleDescription;
 import org.eclipse.syson.sysmlcustomnodes.DodafInformationExchangeStyleDescription;
+import org.eclipse.syson.sysmlcustomnodes.Ov1NodeStyleDescription;
 
 /**
  * <!-- begin-user-doc --> An implementation of the model <b>Factory</b>. <!-- end-user-doc -->
@@ -82,6 +83,7 @@ public class SysMLCustomnodesFactoryImpl extends EFactoryImpl implements SysMLCu
             case 6: return this.createDodafCapabilityStyleDescription();
             case 7: return this.createDodafOrganizationStyleDescription();
             case 8: return this.createDodafInformationExchangeStyleDescription();
+            case 9: return this.createOv1NodeStyleDescription();
             default:
                 throw new IllegalArgumentException("The class '" + eClass.getName() + "' is not a valid classifier");
         }
@@ -135,6 +137,7 @@ public class SysMLCustomnodesFactoryImpl extends EFactoryImpl implements SysMLCu
     @Override public DodafCapabilityStyleDescription createDodafCapabilityStyleDescription() { return new DodafCapabilityStyleDescriptionImpl(); }
     @Override public DodafOrganizationStyleDescription createDodafOrganizationStyleDescription() { return new DodafOrganizationStyleDescriptionImpl(); }
     @Override public DodafInformationExchangeStyleDescription createDodafInformationExchangeStyleDescription() { return new DodafInformationExchangeStyleDescriptionImpl(); }
+    @Override public Ov1NodeStyleDescription createOv1NodeStyleDescription() { return new Ov1NodeStyleDescriptionImpl(); }
 
     /**
      * <!-- begin-user-doc --> <!-- end-user-doc -->

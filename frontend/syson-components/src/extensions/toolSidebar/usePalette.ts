@@ -101,7 +101,7 @@ export const usePalette = (
       variables: {
         editingContextId: editingContextId ?? '',
         representationId: representationId ?? '',
-        diagramElementIds,
+        diagramElementIds: diagramElementIds ?? [],
       },
       skip,
       fetchPolicy: 'cache-and-network',

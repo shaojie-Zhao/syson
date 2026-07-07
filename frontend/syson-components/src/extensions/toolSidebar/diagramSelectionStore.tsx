@@ -114,7 +114,7 @@ const DiagramSelectionSyncInner = () => {
       }
     } else {
       const nodeIds = nodes
-        .filter((n) => semanticIds.includes(n.data?.targetObjectId))
+        .filter((n) => semanticIds.includes((n.data as any)?.targetObjectId))
         .map((n) => n.id);
       if (
         nodeIds.length !== _selectedDiagramElementIds.length ||
@@ -150,7 +150,7 @@ class ErrorBoundary extends React.Component<
   static getDerivedStateFromError() {
     return { hasError: true };
   }
-  render() {
+  override render() {
     if (this.state.hasError) return null;
     return this.props.children;
   }

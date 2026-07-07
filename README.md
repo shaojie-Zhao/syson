@@ -1,41 +1,142 @@
-# SysON Project
+# SysON DoDAF v2.0 体系架构建模工具
 
-Welcome to the repository of the Eclipse SysON project.
+> 基于 Eclipse SysON (SysML v2 建模工具) 扩展，实现 DoDAF v2.0 体系架构框架完整功能。
 
-## Background
+## 项目背景
 
-Obeo, a prominent contributor to Eclipse's Modeling technologies, has a history of active involvement in the Model-Based Systems Engineering (MBSE) community notably through Capella. Our commitment to advancing modeling tools is evident through our work on Eclipse Sirius Web, which aims to revolutionize modeling tools. As we progress with Sirius Web, we see it becoming better suited for managing complex languages and domains.
+Eclipse SysON 是由 Obeo 和 CEA 联合发起的开源项目，基于 Sirius Web 平台构建 Web 端 SysML v2 建模工具。SysML v2 是 OMG 于 2018 年启动的重大修订版本，不再基于 UML 而是基于 KerML 核心建模语言，具有更严谨的形式化语义。
 
-CEA is another significant player in the Eclipse Modeling technologies world. It is the main contributor to the Papyrus modeling platform. This platform provides support for OMG standards such as UML 2.X and SysML 1.X and comes with a wide set of satellite tools providing capabilities such as simulation, code generation and document generation. CEA is widely involved in the definition of OMG standards that are provided by the Papyrus platform and its satellite tools. In particular, CEA chairs specifications such as MARTE (Model and Analysis of Real-Time and Embedded Systems), PSCS (Precise Semantics for UML Composite Structures) and PSSM (Precise Semantics for UML State Machines).
+本项目在 SysON 基础上扩展了 **DoDAF v2.0 (Department of Defense Architecture Framework)** 体系架构框架，支持 8 个视角、52 个模型的完整模板，并提供 OV-1 高层作战概念图的军标标绘与资源管理器同步功能。
 
-In 2018, the Object Management Group (OMG) initiated a major revision of SysML 1.X to increase its MBSE adoption. The intention was to develop language improvements over precision, expressiveness, consistency, interoperability, and usability. This work led to the production of SysML V2. SysML V2 introduces major changes that have an impact on both the user and tool vendor levels. For instance, SysML V2 is no longer based on UML but on KerML (a core modeling language with a well-grounded formal semantics). This redesign, SysMLv2, a crucial language for systems engineering, is highly important for system design and compatibility among MBSE tools. Notably Papyrus which already supports UML, SysMLv1 and Eclipse Capella, which is gaining strong traction, stands to benefit from this adoption.
+## 技术栈
 
-To facilitate this transformative vision, the System Engineering community acknowledged the need for a robust open-source tool dedicated to SysMLv2. This realization prompted both CEA and Obeo to initiate the development of a web-based SysMLv2 modeling tool using the Sirius Web platform. CEA will represent the project at the OMG and will lead the effort regarding SysMLv2 compliance and extensibility capabilities while Obeo will focus on the product and its user experience.
+| 层次 | 技术 |
+|------|------|
+| 后端 | Java 21 + Spring Boot 4.0.6 |
+| 建模框架 | EMF (Eclipse Modeling Framework) |
+| 图表引擎 | Sirius Web 2026.5.0 |
+| 前端 | React 18 + TypeScript + Vite |
+| UI 框架 | MUI (Material-UI) + React Flow |
+| 数据库 | PostgreSQL 15 |
+| 3D 地图 | Cesium + EasyGlobe (OV-1 军标标绘) |
 
-## Scope
+## 项目结构
 
-Eclipse SysON project provides an open-source and interoperable tool for editing SysMLv2 models conforming to the OMG Standard for the MBSE community.
+```
+syson/
+├── backend/
+│   ├── application/syson-application-configuration/  ← DoDAF 模板、初始化器、OV-1 控制器
+│   ├── metamodel/                                     ← SysML 元模型、自定义节点样式
+│   ├── services/                                      ← DoDAF 检测、图表服务、模型服务
+│   ├── views/                                         ← 图表/表格/甘特图 Provider
+│   └── tests/                                         ← 集成测试
+├── frontend/
+│   ├── syson/                                         ← 主应用 (主题、布局、OV-1 托管)
+│   └── syson-components/                              ← 组件库 (节点组件、注册表、Apollo Link)
+├── examples/                                          ← OV-1 军标标绘面板 (独立服务)
+│   ├── server.js                                      ← Express 静态 + REST API
+│   ├── plotting.html                                  ← Cesium 军标标绘页面
+│   └── layers/                                        ← 图层 JSON 持久化目录
+└── doc/                                               ← 设计文档
+    ├── detaileddesign.md                              ← 详细设计文档
+    └── nodeCreate.md                                  ← 模型对象创建机制文档
+```
 
-This software will prominently showcase structured editors: graphical, form-based and tables, effectively utilizing the capabilities of the Sirius Web modeling platform. Additionally, the project will ensure seamless integration with Open-Source solutions like Papyrus and Capella, further enhancing the usability and versatility of the tool.
+## DoDAF 扩展功能
 
-## Description
+### OV-1 高层作战概念图
 
-The Eclipse SysON project provides open-source web-based tooling to edit SysML v2 models. It includes a set of editors (graphical, textual, form-based, etc.) enabling users to build the various parts of system models. Capitalizing on the capabilities of the Sirius Web platform, SysON offers a user-friendly interface, facilitating seamless model creation, modification, and visualization.
+OV-1 View 是 DoDAF 8 个视角中**作战视角 (OV)** 的第一个视图。本实现采用与众不同的方案：嵌入独立的 Cesium/EasyGlobe 军标标绘面板，通过 Express 服务提供图层持久化，并通过 postMessage 桥接 + Apollo Link 拦截实现与资源管理器 (Explorer Tree) 的 **PartUsage 双向同步**。
 
-Furthermore, Eclipse SysON is the core of the SysMLv2 model editing feature of Papyrus and seamlessly enables co-design of SysMLv2 models alongside Eclipse Capella.
+#### 军标标绘
 
-Additionally, Eclipse SysON embraces the standard API for interconnection, enhancing the interoperability of these vital modeling resources and will support the SysML v2 textual specifications as an exchange format, to ensure seamless transitions.
+- 基于 Cesium 3D 地球 + EasyGlobe 军标标绘库
+- 支持点状/线状军标的绘制、编辑、删除
+- 红/蓝双方阵营军标
+- 通过 `examples/server.js` (Express) 独立服务运行在 `:3100` 端口
 
-Through this initiative, we seek to foster growth within the MBSE community by providing a robust and accessible tool that harmonizes seamlessly with modern modeling landscapes.
+#### 作战概念同步
 
-## Licenses
+绘制军标时自动在资源管理器中创建对应的 **PartUsage 作战概念**对象：
+
+| 功能 | 说明 |
+|------|------|
+| **创建** | 军标绘制 → postMessage 通知父窗口 → `createChild` GraphQL mutation (一步创建+命名) |
+| **命名规则** | `"军标类型-顺序号"` (如 "海军航空兵-001"，序号三位补零) |
+| **iframe→RM 删除** | 删除军标 → `deleteOv1PartUsage` 自定义 GraphQL mutation |
+| **RM→iframe 删除 (视图开)** | Apollo Link 拦截 `deleteTreeItem` 响应 → postMessage → 移除军标 |
+| **RM→iframe 删除 (视图关)** | Apollo Link → Express `/api/cleanupByPartUsage` → 更新 layer JSON |
+
+#### 浮动标签
+
+每个军标自动显示浮动标签，包含：
+- 作战概念名称 (与 RM 中 PartUsage 名称一致)
+- 经纬度坐标 (经度在前)
+- 标签边框和引线颜色跟随军标线型颜色
+- 标签不重叠 (碰撞避免)
+
+#### 图层持久化
+
+- **保存**: 每次绘制/编辑/删除后自动保存到 `layers/{representationId}.json`
+- **加载**: 重新打开 OV-1 View 时自动恢复上次状态
+- **ID 稳定**: 使用 `sym-{libID}-{code}-{pos.x}-{pos.y}` 算法（跨会话不变）
+
+### 其他 DoDAF 功能
+
+- 完整 52 个 DoDAF 模型模板 (8 视角)
+- 5 种 DoDAF 元素差异化节点样式
+- MatrixView / TableView / GanttView / SequenceView 四种自定义渲染引擎
+- 中文界面汉化
+- 深色主题
+
+## 快速开始
+
+### 环境要求
+
+- Java 21+
+- Node.js 22+
+- Maven 3.8+
+- Docker (PostgreSQL)
+- Git
+
+### 启动步骤
+
+```bash
+# 1. 启动 PostgreSQL
+docker start syson-postgres
+
+# 2. 启动后端 (Spring Boot :8080)
+cd backend/application/syson-application
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
+# 3. 启动 OV-1 标绘服务 (Express :3100)
+cd examples
+node server.js
+
+# 4. 启动前端 (Vite :5173)
+cd frontend/syson
+npm run start
+```
+
+### 访问地址
+
+| 服务 | 端口 | 说明 |
+|------|------|------|
+| 前端 | `:5173` | 主应用 |
+| 后端 | `:8080` | GraphQL API + REST |
+| 标绘 | `:3100` | OV-1 军标面板 + 图层 API |
+| 数据库 | `:5433` | PostgreSQL |
+
+## 开发指南
+
+详细设计文档见 `doc/detaileddesign.md`。
+OV-1 PartUsage 创建机制见 `doc/nodeCreate.md`。
+
+## 许可证
 
 Eclipse Public License 2.0
 
-## Legal Issues
+## 更多信息
 
-SysML® is a trademark owned by OMG with specific guidelines detailed here: <https://www.omg.org/legal/tm_guidelines.htm>
-
-## More about SysON
-
-You can visit the [SysON Website](https://mbse-syson.org/) or contact [Obeo](https://www.obeosoft.com/en/contact) for more information.
+- [SysON 官网](https://mbse-syson.org/)
+- [Obeo](https://www.obeosoft.com/en/contact)
