@@ -39,11 +39,11 @@ import './reset.css';
 import './transparency.css';
 import './variables.css';
 import './dodaf-views.css';
-<<<<<<< HEAD
 import ReactDOM from 'react-dom/client';
 import React from 'react';
 import DoDAFGanttTimeline from './views/DoDAFGanttTimeline';
 import DoDAFMatrixView from './views/DoDAFMatrixView';
+import { Ov1BlankView } from './views/Ov1BlankView';
 
 (window as any).renderDoDAFGantt = (container: HTMLElement) => {
   const root = ReactDOM.createRoot(container);
@@ -54,9 +54,6 @@ import DoDAFMatrixView from './views/DoDAFMatrixView';
   (container as any).__matrixRoot = root;
   root.render(React.createElement(DoDAFMatrixView));
 };
-=======
-import { Ov1BlankView } from './views/Ov1BlankView';
->>>>>>> 2382e533cb3c0fc85062c2c03f6e26fea5f95c9a
 
 // Notify overlay views (e.g. the DoDAF Matrix) whenever a GraphQL mutation changes the model — for
 // instance after deleting a node from the Explorer tree — so they can refresh immediately. The matrix
@@ -124,6 +121,25 @@ sysONExtensionRegistry.putData(representationFactoryExtensionPoint, {
   ],
 });
 
+// The default SysONExtensionRegistryMergeStrategy REPLACES data for representationFactoryExtensionPoint
+// ("workbench#representationFactory"), which would wipe out the built-in table/diagram/form factories when
+// we register the OV-1 factory above — breaking every non-OV-1 representation (incl. the DoDAF matrix table).
+// Override so factories are CONCATENATED (SysON/OV-1 first, then the defaults) instead of replaced.
+class SysONRepresentationSafeMergeStrategy extends SysONExtensionRegistryMergeStrategy {
+  mergeDataExtensions(identifier: string, existingValues: any, newValues: any): any {
+    if (identifier === representationFactoryExtensionPoint.identifier) {
+      const exData = Array.isArray(existingValues?.data) ? existingValues.data : [];
+      const nvData = Array.isArray(newValues?.data) ? newValues.data : [];
+      const existingIsSysON = String(existingValues?.identifier || '').startsWith('syson_');
+      // Ensure the SysON/OV-1 factory is tried first so it can override default diagram rendering.
+      const data = existingIsSysON ? [...exData, ...nvData] : [...nvData, ...exData];
+      return { identifier: newValues?.identifier ?? existingValues?.identifier, data };
+    }
+    return super.mergeDataExtensions(identifier, existingValues, newValues);
+  }
+}
+
+
 const container = document.getElementById('root');
 const root = createRoot(container!);
 root.render(
@@ -134,7 +150,7 @@ root.render(
         httpOrigin={httpOrigin}
         wsOrigin={wsOrigin}
         theme={sysonTheme}
-        extensionRegistryMergeStrategy={new SysONExtensionRegistryMergeStrategy()}
+        extensionRegistryMergeStrategy={new SysONRepresentationSafeMergeStrategy()}
         extensionRegistry={sysONExtensionRegistry}>
         <DiagramRepresentationConfiguration nodeTypeRegistry={sysONNodeTypeRegistry} />
       </SiriusWebApplication>

@@ -429,6 +429,8 @@
         var w = document.getElementById('matrix-wrapper');
         if (w) {
           try { if (w.__matrixRoot) w.__matrixRoot.unmount(); } catch (e) {}
+          // Restore the Sirius table we hid so the view can be re-injected / re-shown (avoids a blank pane).
+          try { if (w.__hiddenTable && w.__hiddenTable.isConnected) w.__hiddenTable.style.display = ''; } catch (e) {}
           w.remove();
         }
         matrixInjected = false;
@@ -441,6 +443,7 @@
         var wrapper = document.createElement('div');
         wrapper.id = 'matrix-wrapper';
         wrapper.setAttribute('data-repid', currentMatrixRepId());
+        wrapper.__hiddenTable = containerEl;
         wrapper.style.cssText = 'height:100%;overflow:hidden';
         containerEl.parentElement.insertBefore(wrapper, containerEl.nextSibling);
         if (window.renderDoDAFMatrix) window.renderDoDAFMatrix(wrapper);
@@ -454,7 +457,10 @@
         var w = document.getElementById('matrix-wrapper');
         // If the active representation changed (switched/reopened), tear down the stale matrix immediately
         // so its previous content cannot flash before the new one is injected (also properly unmounts the root).
-        if (w && w.getAttribute('data-repid') !== currentMatrixRepId()) { teardownMatrix(); w = null; }
+        // Guard: only when BOTH ids are known and differ, so a transient empty id can't tear down a fresh view.
+        var repNow = currentMatrixRepId();
+        var repWas = w ? w.getAttribute('data-repid') : '';
+        if (w && repWas && repNow && repWas !== repNow) { teardownMatrix(); w = null; }
         if (w && w.previousElementSibling && !w.previousElementSibling.closest('[data-testid="table-representation"]')) {
           teardownMatrix(); w = null;
         }
@@ -466,7 +472,7 @@
           var rep = reps[r];
           if (rep.offsetParent === null) continue;
           if (rep.closest('[class*="ganttContainer"], [class*="explorer"], [class*="sidebar"], [class*="tree"]')) continue;
-          var table = rep.querySelector('.MuiTableContainer-root table');
+          var table = rep.querySelector('.MuiTableContainer-root table') || rep.querySelector('table');
           var trCount = table ? table.querySelectorAll('tr').length : 0;
           if (trCount >= 2) { injectMatrix(rep); return; }
         }

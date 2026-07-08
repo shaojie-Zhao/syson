@@ -92,10 +92,34 @@ public class DoDAFMatrixDataService {
         try {
             String s = ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid));
             var metas = representationMetadataRepository.findAllRepresentationMetadataBySemanticDataId(java.util.UUID.fromString(s));
-            for (var m : metas) { if (m.getId().contains(repId) && m.getTargetObjectId() != null) return m.getTargetObjectId(); }
-            for (var m : metas) { if (m.getTargetObjectId() != null) return m.getTargetObjectId(); }
+            // 1) Exact match by the real matrix representation id — but only on a Table representation.
+            if (repId != null && !repId.isBlank() && !"default-matrix".equals(repId)) {
+                for (var m : metas) {
+                    if (m.getTargetObjectId() != null && isTableRepresentation(m) && m.getId() != null && m.getId().contains(repId)) {
+                        return m.getTargetObjectId();
+                    }
+                }
+            }
+            // 2) Otherwise pick a Table representation (the DoDAF matrix is always a Table). NEVER fall back to
+            //    non-Table representations (e.g. OV-1 Gantt / Diagram), which previously mis-targeted created elements.
+            for (var m : metas) {
+                if (m.getTargetObjectId() != null && isTableRepresentation(m)) {
+                    return m.getTargetObjectId();
+                }
+            }
+            log.warn("getTargetObjectId: no Table representation found for ec={} (repId={})", s, repId);
         } catch (Exception e) { log.warn("TOI: {}", e.getMessage()); }
         return null;
+    }
+
+    /** A DoDAF matrix is rendered as a Sirius Table representation (kind contains "type=Table"). */
+    private boolean isTableRepresentation(org.eclipse.sirius.web.domain.boundedcontexts.representationdata.RepresentationMetadata m) {
+        try {
+            String kind = m.getKind();
+            return kind != null && kind.contains("type=Table");
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /** Map Sirius Object ID (from createChild) to EMF elementId */

@@ -9,8 +9,15 @@ function getEditingContextId(): string {
 }
 
 function getRepresentationId(): string {
-    const m = window.location.search.match(/[?&]representation=([^&]+)/);
-    return m ? m[1] : 'default-matrix';
+    // Sirius Web may carry the representation id either as a query param (?representation=)
+    // or as the last path segment (/projects/{id}/edit/{representationId}). Try both so we can
+    // send the REAL matrix representation id to the backend (avoids the fragile fallback that
+    // could target another representation such as OV-1).
+    const q = window.location.search.match(/[?&]representation=([^&]+)/);
+    if (q) return decodeURIComponent(q[1]);
+    const p = window.location.pathname.match(/\/edit\/([^/?#]+)/);
+    if (p) return decodeURIComponent(p[1]);
+    return 'default-matrix';
 }
 
 function storageKey(repId: string): string {
@@ -238,7 +245,7 @@ export default function DoDAFMatrixView() {
             // Create model element in Explorer tree via GraphQL createChild, then store the relation WITH its siriusId
             try {
                 const ctxId = getEditingContextId();
-                const toRes = await fetch(API + '/target-object-id?ctxId=' + ctxId);
+                const toRes = await fetch(API + '/target-object-id?ctxId=' + ctxId + '&matrixRepId=' + encodeURIComponent(getRepresentationId()));
                 const {targetObjectId, editingContextId: realCtxId} = await toRes.json();
                 let siriusId = '';
                 if (targetObjectId && realCtxId) {

@@ -213,14 +213,12 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 membership.getOwnedRelatedElement().add(newElement);
             }
             new ElementInitializerSwitch().doSwitch(eObject);
-<<<<<<< HEAD
             // Tag DoDAF elements with appropriate aliasId
             if (eObject instanceof Element created && this.isDoDAFProject(container)) {
-                this.tagDoDAFAlias(created, childCreationDescriptionId);
-=======
+                this.tagDoDAFAlias(created, resolvedId);
+            }
             if (initName != null && !initName.isEmpty() && eObject instanceof Element newElement) {
                 newElement.setDeclaredName(initName);
->>>>>>> 2382e533cb3c0fc85062c2c03f6e26fea5f95c9a
             }
             if (eObject instanceof ViewUsage viewUsage) {
                 this.createDiagram(editingContext, viewUsage);
