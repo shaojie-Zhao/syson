@@ -1,0 +1,21 @@
+{
+  "goal": "Rewrite DoDAF Matrix View as full Cameo-style dependency matrix",
+  "scope": "All requirements from spec document — four-zone layout, virtual scrolling, relation CRUD, gap analysis, CSV export, undo/redo",
+  "non_goals": "Phase 2 config templates, OCL query engine",
+  "allowed_operations": ["read_file", "write_file", "edit_file", "bash", "glob", "grep"],
+  "success_criteria": [
+    "Matrix view replaces Sirius Web table representation",
+    "Frozen headers with virtual scrolling for 1000+ rows",
+    "Cell click/dblclick CRUD works",
+    "CSV export works",
+    "Gap analysis filter works",
+    "Transpose works",
+    "Undo/redo works"
+  ],
+  "verification_gates": [
+    "Open Matrix view — custom component appears",
+    "Create/delete relations via cell dblclick",
+    "Export CSV — file downloads",
+    "Filter to 'only related' — unrelated rows/cols hidden"
+  ]
+}

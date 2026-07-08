@@ -52,7 +52,7 @@ export class PlaywrightProject {
         libraryIds: [],
       },
     };
-    const response = await this.request.post('http://localhost:8080/api/graphql', {
+    const response = await this.request.post('http://192.168.3.111:8080/api/graphql', {
       data: {
         query: createProjectQuery,
         variables,
@@ -74,7 +74,7 @@ export class PlaywrightProject {
         projectId,
       },
     };
-    const response = await this.request.post('http://localhost:8080/api/graphql', {
+    const response = await this.request.post('http://192.168.3.111:8080/api/graphql', {
       data: {
         query: deleteProjectQuery,
         variables,

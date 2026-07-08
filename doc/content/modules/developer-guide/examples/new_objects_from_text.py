@@ -133,8 +133,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "url",
         nargs="?",  # Makes the argument optional
-        default="http://localhost:8080",  # Default value
-        help="The API base URL (e.g., http://yourSysonServerURL). Defaults to http://localhost:8080"
+        default="http://192.168.3.111:8080",  # Default value
+        help="The API base URL (e.g., http://yourSysonServerURL). Defaults to http://192.168.3.111:8080"
     )
 
     parser.add_argument(

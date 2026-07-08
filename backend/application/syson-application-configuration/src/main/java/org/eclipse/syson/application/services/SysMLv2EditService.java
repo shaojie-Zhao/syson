@@ -16,8 +16,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.eclipse.emf.ecore.EClass;
@@ -162,6 +164,10 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             if (SysmlPackage.eNS_PREFIX.equals(ePackage.getNsPrefix())) {
                 List<ChildCreationDescription> childCreationDescriptions = new ArrayList<>();
                 List<EClass> childrenCandidates = new GetChildCreationSwitch().doSwitch(eClass);
+                // For DoDAF projects, filter to show only DoDAF-relevant types
+                if (this.isDoDAFProject(container)) {
+                    childrenCandidates = filterDoDAFChildren(childrenCandidates);
+                }
                 childrenCandidates.forEach(candidate -> {
                     List<String> iconURL = java.util.List.of("/icons/full/obj16/" + candidate.getName() + ".svg");
                     StyledString styledLabel = this.labelService.getStyledLabel(candidate);
@@ -207,8 +213,14 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 membership.getOwnedRelatedElement().add(newElement);
             }
             new ElementInitializerSwitch().doSwitch(eObject);
+<<<<<<< HEAD
+            // Tag DoDAF elements with appropriate aliasId
+            if (eObject instanceof Element created && this.isDoDAFProject(container)) {
+                this.tagDoDAFAlias(created, childCreationDescriptionId);
+=======
             if (initName != null && !initName.isEmpty() && eObject instanceof Element newElement) {
                 newElement.setDeclaredName(initName);
+>>>>>>> 2382e533cb3c0fc85062c2c03f6e26fea5f95c9a
             }
             if (eObject instanceof ViewUsage viewUsage) {
                 this.createDiagram(editingContext, viewUsage);
@@ -326,5 +338,82 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                     this.representationMetadataPersistenceService.save(null, editingContext, representationMetadata, diagram.getTargetObjectId());
                     this.representationPersistenceService.save(null, editingContext, diagram);
                 });
+    }
+
+    /** DoDAF-relevant SysML types for the "New" menu filter. */
+    private static final Set<String> DODAF_CHILD_TYPES = Set.of(
+        "PartDefinition", "PartUsage", "ActionUsage", "Dependency", "Package",
+        "ViewUsage", "Documentation", "Comment", "TextualRepresentation",
+        "PortUsage", "PortDefinition", "InterfaceUsage", "InterfaceDefinition",
+        "RequirementUsage", "RequirementDefinition", "SatisfyRequirementUsage",
+        "AllocationUsage", "AllocationDefinition"
+    );
+
+    private boolean isDoDAFProject(EObject container) {
+        try {
+            Resource resource = container.eResource();
+            if (resource != null) {
+                var it = resource.getAllContents();
+                while (it.hasNext()) {
+                    EObject obj = it.next();
+                    if (obj instanceof Element e && e.getAliasIds().stream().anyMatch(a -> a.startsWith("dodaf:"))) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private List<EClass> filterDoDAFChildren(List<EClass> candidates) {
+        return candidates.stream()
+            .filter(eClass -> DODAF_CHILD_TYPES.contains(eClass.getName()))
+            .toList();
+    }
+
+    private static final Map<String, String> DODAF_TYPE_TO_ALIAS = Map.ofEntries(
+        Map.entry("SysMLv2EditService-PartUsage", "dodaf:node"),
+        Map.entry("SysMLv2EditService-PartDefinition", "dodaf:node"),
+        Map.entry("SysMLv2EditService-ActionUsage", "dodaf:capability"),
+        Map.entry("SysMLv2EditService-ActionDefinition", "dodaf:capability"),
+        Map.entry("SysMLv2EditService-SatisfyRequirementUsage", "dodaf:satisfy"),
+        Map.entry("SysMLv2EditService-AllocationUsage", "dodaf:allocate"),
+        Map.entry("SysMLv2EditService-AllocationDefinition", "dodaf:allocate"),
+        Map.entry("SysMLv2EditService-InterfaceUsage", "dodaf:exchange"),
+        Map.entry("SysMLv2EditService-InterfaceDefinition", "dodaf:exchange"),
+        Map.entry("SysMLv2EditService-RequirementUsage", "dodaf:requirement"),
+        Map.entry("SysMLv2EditService-RequirementDefinition", "dodaf:requirement"),
+        Map.entry("SysMLv2EditService-ConcernUsage", "dodaf:requirement"),
+        Map.entry("SysMLv2EditService-ConcernDefinition", "dodaf:requirement"),
+        Map.entry("SysMLv2EditService-ConstraintUsage", "dodaf:requirement"),
+        Map.entry("SysMLv2EditService-ConstraintDefinition", "dodaf:requirement"),
+        Map.entry("SysMLv2EditService-AttributeUsage", "dodaf:node"),
+        Map.entry("SysMLv2EditService-AttributeDefinition", "dodaf:node"),
+        Map.entry("SysMLv2EditService-ItemUsage", "dodaf:node"),
+        Map.entry("SysMLv2EditService-ItemDefinition", "dodaf:node"),
+        Map.entry("SysMLv2EditService-PortUsage", "dodaf:node"),
+        Map.entry("SysMLv2EditService-PortDefinition", "dodaf:node"),
+        Map.entry("SysMLv2EditService-ConnectionDefinition", "dodaf:node"),
+        Map.entry("SysMLv2EditService-EnumerationDefinition", "dodaf:node"),
+        Map.entry("SysMLv2EditService-AcceptActionUsage", "dodaf:capability"),
+        Map.entry("SysMLv2EditService-OccurrenceUsage", "dodaf:capability"),
+        Map.entry("SysMLv2EditService-OccurrenceDefinition", "dodaf:capability"),
+        Map.entry("SysMLv2EditService-StateUsage", "dodaf:capability"),
+        Map.entry("SysMLv2EditService-StateDefinition", "dodaf:capability"),
+        Map.entry("SysMLv2EditService-ViewUsage", "dodaf:capability"),
+        Map.entry("SysMLv2EditService-ReferenceUsage", "dodaf:node"),
+        Map.entry("SysMLv2EditService-CaseUsage", "dodaf:capability"),
+        Map.entry("SysMLv2EditService-CaseDefinition", "dodaf:capability"),
+        Map.entry("SysMLv2EditService-UseCaseUsage", "dodaf:capability"),
+        Map.entry("SysMLv2EditService-UseCaseDefinition", "dodaf:capability"),
+        Map.entry("SysMLv2EditService-MetadataDefinition", "dodaf:metadata"),
+        Map.entry("SysMLv2EditService-AssignmentActionUsage", "dodaf:capability")
+    );
+
+    private void tagDoDAFAlias(Element element, String childCreationDescriptionId) {
+        String alias = DODAF_TYPE_TO_ALIAS.get(childCreationDescriptionId);
+        if (alias != null && !element.getAliasIds().contains(alias)) {
+            element.getAliasIds().add(alias);
+        }
     }
 }

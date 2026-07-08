@@ -39,7 +39,23 @@ import './reset.css';
 import './transparency.css';
 import './variables.css';
 import './dodaf-views.css';
+<<<<<<< HEAD
+import ReactDOM from 'react-dom/client';
+import React from 'react';
+import DoDAFGanttTimeline from './views/DoDAFGanttTimeline';
+import DoDAFMatrixView from './views/DoDAFMatrixView';
+
+(window as any).renderDoDAFGantt = (container: HTMLElement) => {
+  const root = ReactDOM.createRoot(container);
+  root.render(React.createElement(DoDAFGanttTimeline));
+};
+(window as any).renderDoDAFMatrix = (container: HTMLElement) => {
+  const root = ReactDOM.createRoot(container);
+  root.render(React.createElement(DoDAFMatrixView));
+};
+=======
 import { Ov1BlankView } from './views/Ov1BlankView';
+>>>>>>> 2382e533cb3c0fc85062c2c03f6e26fea5f95c9a
 
 if (process.env.NODE_ENV !== 'production') {
   loadDevMessages();

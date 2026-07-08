@@ -1,5 +1,9 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+<<<<<<< HEAD
+import { Gantt, ViewMode, Task } from '@ObeoNetwork/gantt-task-react';
+=======
 import { Gantt as GanttOriginal, ViewMode, DateStartColumn, DateEndColumn } from '@ObeoNetwork/gantt-task-react';
+>>>>>>> 2382e533cb3c0fc85062c2c03f6e26fea5f95c9a
 import '@ObeoNetwork/gantt-task-react/dist/style.css';
 import { zhCN } from 'date-fns/locale';
 
@@ -18,6 +22,7 @@ const DoDAFGanttTimeline: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Month);
   const [editing, setEditing] = useState<GT | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [adding, setAdding] = useState(false);
 
   const load = useCallback(async () => {
     try { const r = await fetch(API); setTasks(await r.json()); } catch {}
@@ -50,12 +55,13 @@ const DoDAFGanttTimeline: React.FC = () => {
   }, [tasks, expanded]);
 
   const handleAdd = async (parentId: string | null) => {
+    if (adding) return;
+    setAdding(true);
     const url = API + (parentId ? `?parentId=${parentId}` : '');
-    const r = await fetch(url, { method: 'POST' }).catch(()=>null);
-    if (r) {
-      const newTask = await r.json().catch(()=>null);
+    try {
+      const r = await fetch(url, { method: 'POST' });
+      const newTask = await r.json();
       if (newTask && parentId) {
-        // Constrain child dates to parent's range
         const parent = tasks.find(t => t.id === parentId);
         let start = newTask.startDate, end = newTask.endDate;
         if (parent) {
@@ -67,12 +73,14 @@ const DoDAFGanttTimeline: React.FC = () => {
           await fetch(API + '/' + newTask.id, {
             method: 'PUT', headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ ...newTask, startDate: start, endDate: end }),
-          }).catch(()=>{});
+          });
         }
         setExpanded(p => { const s = new Set(p); s.add(parentId); return s; });
       }
+    } catch {} finally {
+      await load();
+      setAdding(false);
     }
-    load();
   };
 
   const save = async (t: GT) => {
@@ -132,8 +140,9 @@ const DoDAFGanttTimeline: React.FC = () => {
           style={{ flex: 1, cursor: 'pointer', fontSize: 13, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
           {name}
         </span>
-        <button onClick={(e) => { e.stopPropagation(); handleAdd(task.id); }}
-          style={{ border: 'none', borderRadius: 3, padding: '2px 8px', cursor: 'pointer', fontSize: 11, color: '#a5b4fc', background: 'rgba(99,102,241,0.15)', flexShrink: 0 }}
+        <button onClick={() => handleAdd(task.id)}
+          disabled={adding}
+          style={{ border: 'none', borderRadius: 3, padding: '2px 8px', cursor: adding ? 'wait' : 'pointer', fontSize: 11, color: adding ? '#64748b' : '#a5b4fc', background: adding ? 'rgba(255,255,255,0.05)' : 'rgba(99,102,241,0.15)', flexShrink: 0, opacity: adding ? 0.5 : 1 }}
           title="添加子任务">+</button>
         <button onClick={(e) => { e.stopPropagation(); handleDeleteTasks([task]); }}
           style={{ border: 'none', borderRadius: 3, padding: '2px 8px', cursor: 'pointer', fontSize: 11, color: '#fca5a5', background: 'rgba(239,68,68,0.15)', flexShrink: 0 }}
@@ -142,8 +151,17 @@ const DoDAFGanttTimeline: React.FC = () => {
     );
   };
 
-  const ProgressCell: React.FC<any> = ({ data: { task } }) => {
+  const StartCell: React.FC<any> = ({ data: { task } }) => {
     if (!task || task.type === 'empty') return <div />;
+    const d = task.start ? (typeof task.start === 'string' ? task.start : task.start.toISOString().slice(0, 10)) : '';
+    return <div style={{ padding: '6px 8px', fontSize: 12, color: '#e2e8f0' }}>{d}</div>;
+  };
+  const EndCell: React.FC<any> = ({ data: { task } }) => {
+    if (!task || task.type === 'empty') return <div />;
+    const d = task.end ? (typeof task.end === 'string' ? task.end : task.end.toISOString().slice(0, 10)) : '';
+    return <div style={{ padding: '6px 8px', fontSize: 12, color: '#e2e8f0' }}>{d}</div>;
+  };
+  const ProgressCell: React.FC<any> = ({ data: { task } }) => {
     const t = tasks.find(x => x.id === task.id);
     const p = t ? t.progress : (task.progress || 0);
     const c = colorFor(p);
@@ -156,8 +174,6 @@ const DoDAFGanttTimeline: React.FC = () => {
       </div>
     );
   };
-
-  const editParent = editing?.parentId ? tasks.find(t => t.id === editing.parentId) : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: DARK, fontFamily: 'system-ui, sans-serif' }}>
@@ -227,15 +243,20 @@ const DoDAFGanttTimeline: React.FC = () => {
             columns={[
               { id: 'seq', Cell: SeqCell as any, width: 80, title: '序号' },
               { id: 'name', Cell: NameCell as any, width: 300, title: '名称' },
-              { id: 'start', Cell: DateStartColumn as any, width: 100, title: '开始' },
-              { id: 'end', Cell: DateEndColumn as any, width: 100, title: '结束' },
+              { id: 'start', Cell: StartCell as any, width: 100, title: '开始' },
+              { id: 'end', Cell: EndCell as any, width: 100, title: '结束' },
               { id: 'progress', Cell: ProgressCell as any, width: 100, title: '进度' },
             ]}
+<<<<<<< HEAD
+            onDateChange={async (task: Task) => {
+=======
             onDateChange={async (task: any) => {
+>>>>>>> 2382e533cb3c0fc85062c2c03f6e26fea5f95c9a
               const t = tasks.find(x => x.id === task.id);
               if (!t) return;
-              const newStart = task.start.toISOString().slice(0, 10);
-              const newEnd = task.end.toISOString().slice(0, 10);
+              const newStart = (task as any).start?.toISOString?.()?.slice(0, 10) || '';
+              const newEnd = (task as any).end?.toISOString?.()?.slice(0, 10) || '';
+              if (!newStart || !newEnd) return;
               if (t.parentId) {
                 const parent = tasks.find(x => x.id === t.parentId);
                 if (parent) {
@@ -250,21 +271,9 @@ const DoDAFGanttTimeline: React.FC = () => {
               if (t) save({ ...t, progress: task.progress });
             }}
             onDelete={async (ts) => { for (const t of ts) await fetch(API + '/' + t.id, { method: 'DELETE' }).catch(() => {}); load(); }}
-            onExpandChange={(task) => { toggle(task.id); setExpanded(p => { const s = new Set(p); s.has(task.id) ? s.delete(task.id) : s.add(task.id); return s; }); }}
-            barFill={65}
+            onExpandChange={(task) => { toggle(task.id); }}
             headerHeight={48}
             rowHeight={42}
-            distances={{ minimumRowDisplayed: 20 }}
-            colors={{
-              evenTaskBackgroundColor: '#19284F',
-              selectedTaskBackgroundColor: '#1e3366',
-              todayColor: 'rgba(251,191,36,0.15)',
-              barBackgroundColor: '#3b82f6',
-              barProgressColor: '#2563eb',
-              projectBackgroundColor: '#1e40af',
-              projectProgressColor: '#1d4ed8',
-              projectBackgroundSelectedColor: '#1e3a8a',
-            }}
             dateFormats={{
               dateColumnFormat: 'yyyy-MM-dd',
               monthBottomHeaderFormat: 'M月',
@@ -274,7 +283,11 @@ const DoDAFGanttTimeline: React.FC = () => {
             }}
             dateLocale={zhCN}
             fontFamily="system-ui, sans-serif"
+<<<<<<< HEAD
+            TooltipContent={({ task }: { task: Task }) => {
+=======
             TooltipContent={({ task }: any) => {
+>>>>>>> 2382e533cb3c0fc85062c2c03f6e26fea5f95c9a
               if (!task) return null;
               return (
                 <div style={{ background: DARK2, padding: '8px 12px', borderRadius: 8, color: '#e0e0e0', fontSize: 12, border: '1px solid ' + BORDER, boxShadow: '0 4px 16px rgba(0,0,0,0.4)' }}>
@@ -315,13 +328,15 @@ const DoDAFGanttTimeline: React.FC = () => {
                     开始
                   </div>
                   <input type="date" value={editing.startDate}
-                    min={editParent?.startDate} max={editParent?.endDate || editing.endDate}
+                    min={editing.parentId ? (tasks.find(t => t.id === editing.parentId)?.startDate) : undefined}
+                    max={editing.parentId ? (tasks.find(t => t.id === editing.parentId)?.endDate) || editing.endDate : editing.endDate}
                     onChange={e => setEditing({ ...editing, startDate: e.target.value })} style={inputStyle({})} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 4, fontWeight: 500 }}>结束</div>
                   <input type="date" value={editing.endDate}
-                    min={editParent?.startDate || editing.startDate} max={editParent?.endDate}
+                    min={editing.parentId ? (tasks.find(t => t.id === editing.parentId)?.startDate) || editing.startDate : editing.startDate}
+                    max={editing.parentId ? (tasks.find(t => t.id === editing.parentId)?.endDate) : undefined}
                     onChange={e => setEditing({ ...editing, endDate: e.target.value })} style={inputStyle({})} />
                 </div>
               </div>
