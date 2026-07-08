@@ -11,7 +11,7 @@
  *     Obeo - initial API and implementation
  *******************************************************************************/
 
-import { ApolloLink } from '@apollo/client';
+import { ApolloLink, Observable } from '@apollo/client';
 import { ExtensionRegistry, WorkbenchViewContribution, workbenchViewContributionExtensionPoint } from '@eclipse-sirius/sirius-components-core';
 import {
   diagramToolbarActionExtensionPoint,
@@ -127,7 +127,7 @@ const zhLocaleConfigurer: ApolloClientOptionsConfigurer = (currentOptions) => {
 
   return {
     ...currentOptions,
-    link: zhLocaleLink.concat(currentOptions.link),
+    link: currentOptions.link ? zhLocaleLink.concat(currentOptions.link) : zhLocaleLink,
   };
 };
 
@@ -160,7 +160,7 @@ const toolInLeftSidebarConfigurer: ApolloClientOptionsConfigurer = (currentOptio
 
   return {
     ...currentOptions,
-    link: toolSidebarLink.concat(currentOptions.link),
+    link: currentOptions.link ? toolSidebarLink.concat(currentOptions.link) : toolSidebarLink,
   };
 };
 
@@ -190,6 +190,44 @@ sysONExtensionRegistry.addComponent(diagramToolbarActionExtensionPoint, {
 sysONExtensionRegistry.addComponent(diagramToolbarActionExtensionPoint, {
   identifier: `syson_${diagramToolbarActionExtensionPoint.identifier}_DiagramSelectionSync`,
   Component: DiagramSelectionSync,
+});
+
+// Apollo Link: intercept deleteTreeItem to sync RM deletions → OV-1 iframe
+const deleteTreeItemInterceptor: ApolloClientOptionsConfigurer = (currentOptions) => {
+  const deleteLink = new ApolloLink((operation, forward) => {
+    return new Observable((observer: any) => {
+      const subscription = forward(operation).subscribe({
+        next: (response: any) => {
+          if (operation.operationName === 'deleteTreeItem') {
+            try {
+              const treeItemId = operation.variables?.input?.treeItemId;
+              const ecId = operation.variables?.input?.editingContextId;
+              console.info('[OV-1 Link] deleteTreeItem treeItemId=' + treeItemId + ' ecId=' + ecId + ' cbSet=' + !!((window as any).__ov1OnDeleteItem));
+              if (treeItemId) {
+                if ((window as any).__ov1OnDeleteItem) {
+                  (window as any).__ov1OnDeleteItem(treeItemId);
+                } else if (ecId) {
+                  fetch('http://localhost:3100/api/cleanupByPartUsage/' + encodeURIComponent(ecId) + '/' + encodeURIComponent(treeItemId), { method: 'POST' })
+                    .then(function(r: any) { return r.json(); })
+                    .then(function(d: any) { console.info('[OV-1 Link] cleanup result:', d); })
+                    .catch(function(e: any) { console.warn('[OV-1 Link] cleanup failed:', e); });
+                }
+              }
+            } catch(e) { console.warn('[OV-1 Link] error', e); }
+          }
+          observer.next(response);
+        },
+        error: (err: any) => observer.error(err),
+        complete: () => observer.complete(),
+      });
+      return () => subscription.unsubscribe();
+    });
+  });
+  return { ...currentOptions, link: currentOptions.link ? deleteLink.concat(currentOptions.link) : deleteLink };
+};
+sysONExtensionRegistry.putData(apolloClientOptionsConfigurersExtensionPoint, {
+  identifier: `syson_${apolloClientOptionsConfigurersExtensionPoint.identifier}_deleteTreeItemInterceptor`,
+  data: [deleteTreeItemInterceptor],
 });
 
 sysONExtensionRegistry.addComponent(navigationBarMenuIconExtensionPoint, {

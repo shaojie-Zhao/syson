@@ -44,6 +44,8 @@ public class StandardDiagramsConstants {
     public static final String DODAF_SEQUENCE_QN = "DoDAFv2_Library::SequenceView";
     public static final String DODAF_TABLE_QN = "DoDAFv2_Library::TableView";
 
+    public static final String DODAF_OV1_QN = "DoDAFv2_Library::OV1View";
+
     public static final Map<String, String> SHORT_NAME_TO_VALUE = new HashMap<>();
 
     static {

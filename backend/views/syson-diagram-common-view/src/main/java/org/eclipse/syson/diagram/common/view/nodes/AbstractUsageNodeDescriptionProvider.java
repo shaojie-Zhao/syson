@@ -183,6 +183,10 @@ public abstract class AbstractUsageNodeDescriptionProvider extends AbstractNodeD
                 .style(this.createUsageNodeStyle())
                 .conditionalStyles(
                         this.diagramBuilderHelper.newConditionalNodeStyle()
+                                .condition(ServiceMethod.of0(UtilService::isOv1Node).aqlSelf())
+                                .style(this.createOv1NodeStyle())
+                                .build(),
+                        this.diagramBuilderHelper.newConditionalNodeStyle()
                                 .condition(ServiceMethod.of0(UtilService::isDodafCapability).aqlSelf())
                                 .style(this.createDodafCapabilityStyle())
                                 .build(),
@@ -278,6 +282,15 @@ public abstract class AbstractUsageNodeDescriptionProvider extends AbstractNodeD
                 .background(this.colorProvider.getColor(ViewConstants.DEFAULT_BACKGROUND_COLOR))
                 .childrenLayoutStrategy(layoutStrategy)
                 .build();
+    }
+
+    private NodeStyleDescription createOv1NodeStyle() {
+        var bg = org.eclipse.sirius.components.view.ViewFactory.eINSTANCE.createFixedColor();
+        bg.setValue("#F1F5F9");
+        var border = org.eclipse.sirius.components.view.ViewFactory.eINSTANCE.createFixedColor();
+        border.setValue("#3B82F6");
+        return this.diagramBuilderHelper.newRectangularNodeStyleDescription()
+                .background(bg).borderColor(border).borderSize(2).borderRadius(8).build();
     }
 
     private NodeStyleDescription createDodafCapabilityStyle() {

@@ -136,6 +136,9 @@ public class SysMLv2TemplatesRepresentationInitializer {
         if (viewName.contains("PV-2")) return StandardDiagramsConstants.DODAF_GANTT_QN;      // Project timeline
         if (viewName.contains("SV-8")) return StandardDiagramsConstants.DODAF_GANTT_QN;      // System evolution
 
+        // === OV-1 High Level Concept View ===
+        if (viewName.contains("OV-1")) return StandardDiagramsConstants.DODAF_OV1_QN;
+
         // === Sequence/Event Trace views ===
         if (viewName.contains("OV-6c")) return StandardDiagramsConstants.DODAF_SEQUENCE_QN;   // Event trace
 
@@ -187,11 +190,19 @@ public class SysMLv2TemplatesRepresentationInitializer {
                 var name = vu.getDeclaredName();
                 if (name != null) {
                     try {
-                        // Set the appropriate ViewDefinition type for ALL views
+                        // Set ViewDefinition type
                         String viewDefQN = this.getViewDefinitionForDoDAFView(name);
                         this.modelMutationElementService.featureTypeViewUsage(vu, viewDefQN);
-                        // Representations are created by user via "New Representation" menu
-                        // This avoids duplicate explorer nodes under each ViewUsage
+                        // Pre-create diagram for all DoDAF views using full SDV engine
+                        if (name != null && (viewDefQN.equals(StandardDiagramsConstants.GV_QN)
+                                || viewDefQN.equals(StandardDiagramsConstants.IV_QN)
+                                || viewDefQN.equals(StandardDiagramsConstants.AFV_QN)
+                                || viewDefQN.equals(StandardDiagramsConstants.STV_QN)
+                                || viewDefQN.equals(StandardDiagramsConstants.DODAF_OV1_QN)
+                                || viewDefQN.equals(StandardDiagramsConstants.DODAF_SEQUENCE_QN))) {
+                            this.diagramMutationDiagramService.createDiagram(vu, editingContext,
+                                    SysONRepresentationDescriptionIdentifiers.GENERAL_VIEW_DIAGRAM_DESCRIPTION_ID);
+                        }
                     } catch (Exception e) {
                         this.logger.warn("Failed to process DoDAF view {}: {}", name, e.getMessage());
                     }

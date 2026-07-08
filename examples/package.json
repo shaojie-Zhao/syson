@@ -1,0 +1,14 @@
+{
+  "name": "syson-ov1-plotting",
+  "version": "1.0.0",
+  "description": "DoDAF OV-1 军标标绘面板 - 独立前端服务",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "pg": "^8.22.0"
+  }
+}

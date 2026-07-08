@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>军标标绘面板</title>
+    <link href="./easyGlobe/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <script src="./easyGlobe/Cesium/Cesium.js"></script>
+    <script src="./easyGlobe/easyGlobe.js"></script>
+    <script src="./json/plottingjson.js"></script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #000;
+        }
+
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 军标标绘面板 (Left) */
+        .panel-left {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            width: 520px;
+            height: calc(100vh - 40px);
+            background: rgba(10, 30, 50, 0.85);
+            border: 2px solid #00aaff;
+            border-radius: 8px;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(0, 170, 255, 0.5);
+            display: flex;
+            flex-direction: column;
+            pointer-events: auto;
+        }
+
+        .plotting-toggle {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            width: 44px;
+            height: 44px;
+            background: rgba(10, 30, 50, 0.85);
+            border: 2px solid #00aaff;
+            border-radius: 8px;
+            color: #d6f0ff;
+            box-shadow: 0 0 12px rgba(0, 170, 255, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+            user-select: none;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .panel-header {
+            padding: 10px 15px;
+            background: linear-gradient(90deg, rgba(0, 170, 255, 0.4), transparent);
+            border-bottom: 1px solid #00aaff;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-btn {
+            width: 28px;
+            height: 22px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(0, 170, 255, 0.45);
+            border-radius: 4px;
+            color: #d6f0ff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            user-select: none;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(0, 170, 255, 0.45);
+            border-radius: 6px;
+            padding: 4px 6px;
+        }
+
+        .search-box input {
+            width: 180px;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .search-clear {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 170, 255, 0.35);
+            background: rgba(0, 0, 0, 0.25);
+            color: #d6f0ff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .panel-body {
+            flex: 1;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        .panel-left-body {
+            display: flex;
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        .tree-container {
+            width: 230px;
+            overflow: auto;
+            border-right: 1px solid rgba(0, 170, 255, 0.25);
+            padding-right: 10px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .icon-container {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .icon-header {
+            font-size: 12px;
+            color: #00aaff;
+            padding: 2px 0 10px 0;
+            border-bottom: 1px solid rgba(0, 170, 255, 0.25);
+            margin-bottom: 10px;
+        }
+
+        .icon-grid {
+            flex: 1;
+            overflow: auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding-right: 4px;
+            contain: layout paint;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .tree-container::-webkit-scrollbar,
+        .icon-grid::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+
+        .icon-item {
+            border: 1px solid rgba(0, 170, 255, 0.25);
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            height: 132px;
+            box-sizing: border-box;
+            transition: border-color 0.12s ease, background-color 0.12s ease, transform 0.12s ease;
+            will-change: transform;
+            contain: layout paint;
+        }
+
+        .icon-item:hover,
+        .icon-item.active {
+            border-color: rgba(0, 170, 255, 0.8);
+            background: rgba(0, 170, 255, 0.08);
+            transform: translateZ(0) scale(1.01);
+        }
+
+        .icon-thumb {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .icon-thumb img {
+            width: 52px;
+            height: 52px;
+            object-fit: contain;
+            background: transparent;
+        }
+
+        .icon-item-title {
+            font-size: 12px;
+            color: #d6f0ff;
+            text-align: center;
+            line-height: 1.2;
+            overflow: hidden;
+            height: 34px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        /* Tree View */
+        ul.tree {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+
+        ul.tree ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .tree li {
+            margin: 5px 0;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .tree li:hover>.tree-node {
+            color: #00aaff;
+        }
+
+        .tree-node {
+            display: flex;
+            align-items: center;
+        }
+
+        .tree-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            display: inline-block;
+            text-align: center;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            position: absolute;
+            left: 560px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(10, 30, 50, 0.8);
+            border: 1px solid #00aaff;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover,
+        .tool-btn.active {
+            background: rgba(0, 170, 255, 0.5);
+            box-shadow: 0 0 10px #00aaff;
+        }
+
+        /* 属性面板 (Right) */
+        .panel-right {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            width: 300px;
+            background: rgba(10, 30, 50, 0.85);
+            border: 2px solid #00aaff;
+            border-radius: 8px;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(0, 170, 255, 0.5);
+            pointer-events: auto;
+            overflow: hidden;
+        }
+
+        .panel-right.open {
+            animation: propPanelIn 0.18s ease-out;
+        }
+
+        @keyframes propPanelIn {
+            from {
+                transform: translateX(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .prop-table-head {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.35);
+            border-bottom: 1px solid rgba(0, 170, 255, 0.35);
+            font-size: 12px;
+        }
+
+        .prop-th {
+            font-weight: bold;
+            color: #d6f0ff;
+        }
+
+        .prop-scroll {
+            max-height: calc(80vh - 70px);
+            overflow: auto;
+        }
+
+        .prop-group {
+            border-bottom: 1px solid rgba(0, 170, 255, 0.3);
+            padding: 10px;
+        }
+
+        .prop-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #00aaff;
+            margin-bottom: 8px;
+        }
+
+        .prop-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .prop-label {
+            color: #ccc;
+            width: 40%;
+        }
+
+        .prop-value {
+            width: 55%;
+        }
+
+        .prop-value input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00aaff;
+            color: #fff;
+            padding: 2px 5px;
+            box-sizing: border-box;
+        }
+
+        .prop-value-two {
+            display: flex;
+            gap: 6px;
+        }
+
+        .prop-value-two input {
+            width: 50%;
+        }
+
+        input[type="color"] {
+            padding: 0;
+            height: 22px;
+        }
+
+        /* Info Bottom Right */
+        .info-bar {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            color: #fff;
+            font-size: 12px;
+            text-align: right;
+            text-shadow: 1px 1px 2px #000;
+            pointer-events: none;
+        }
+
+        .info-bar div {
+            margin-top: 5px;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00aaff;
+            border-radius: 3px;
+        }
+
+        /* Floating labels */
+        .ov1-label-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        .ov1-label-line { stroke-width: 1.5; fill: none; }
+        .ov1-label-box { position: absolute; padding: 4px 8px; border-radius: 6px; border: 2px solid; font-size: 11px; font-family: Microsoft YaHei, sans-serif; white-space: nowrap; pointer-events: auto; cursor: pointer; }
+        .ov1-label-box { color: #fff !important; border: 2px solid #3b82f6; background: rgba(0,0,0,0.5); }
+    </style>
+</head>
+
+<body>
+    <div id="cesiumContainer"></div>
+
+    <!-- Floating labels overlay -->
+    <div id="labelOverlay" class="ov1-label-overlay">
+      <svg id="leaderSvg" style="position:absolute;width:100%;height:100%;pointer-events:none"></svg>
+    </div>
+
+    <div class="plotting-toggle" id="plottingToggle" onclick="togglePlottingPanel(true)" style="display:none;">军标</div>
+
+    <!-- 左侧：军标标绘面板 -->
+    <div class="panel-left">
+        <div class="panel-header">
+            <span>军标标绘面板</span>
+            <div class="panel-header-actions">
+                <div class="search-box" id="searchBox" style="display:none;">
+                    <input id="symbolSearchInput" type="text" placeholder="搜索军标名称/编号"
+                        oninput="onSearchInput(this.value)" onkeydown="onSearchKeyDown(event)">
+                    <button class="search-clear" title="清空" onclick="clearSearch()">×</button>
+                </div>
+                <span class="header-btn" title="搜索" onclick="toggleSearch()">🔍</span>
+                <span class="header-btn" title="收起" onclick="togglePlottingPanel(false)">◀</span>
+            </div>
+        </div>
+        <div class="panel-body panel-left-body">
+            <div class="tree-container">
+                <ul class="tree" id="symbolTree"></ul>
+            </div>
+            <div class="icon-container">
+                <div class="icon-header" id="iconHeader">-</div>
+                <div class="icon-grid" id="iconGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 中间：工具栏 -->
+    <div class="toolbar" id="toolbar">
+        <button class="tool-btn" id="btnStop" title="取消交互" onclick="stopInteract()">&#128683;</button>
+        <button class="tool-btn" id="btnEdit" title="编辑" onclick="activateEdit()">✏️</button>
+        <button class="tool-btn" id="btnDelete" title="删除" onclick="deleteSelectedSymbol()">🗑️</button>
+        <button class="tool-btn" id="btnDownload" title="下载图层" onclick="downloadLayer()">⬇️</button>
+        <button class="tool-btn" id="btnUpload" title="上传" onclick="uploadLayer()">⬆️</button>
+        <button class="tool-btn" id="btnDeleteLayer" title="删除图层" onclick="deleteLayer()">🧹</button>
+    </div>
+
+    <input type="file" id="layerFileInput" accept=".json,application/json" style="display:none">
+
+    <div class="panel-right" id="propPanel" style="display: none;">
+        <div class="panel-header">
+            <span>属性面板</span>
+        </div>
+        <div class="prop-table-head">
+            <div class="prop-th">Name</div>
+            <div class="prop-th">Value</div>
+        </div>
+        <div class="prop-scroll">
+            <div class="prop-group">
+                <div class="prop-title">- 标号详情</div>
+                <div class="prop-row">
+                    <span class="prop-label">标号库ID</span>
+                    <span class="prop-value" id="propLibId">-</span>
+                </div>
+                <div class="prop-row">
+                    <span class="prop-label">标号Code</span>
+                    <span class="prop-value" id="propCode">-</span>
+                </div>
+                <div class="prop-row">
+                    <span class="prop-label">标号名字</span>
+                    <span class="prop-value" id="propName">-</span>
+                </div>
+                <div class="prop-row">
+                    <span class="prop-label">标号经度</span>
+                    <span class="prop-value" id="propLon">-</span>
+                </div>
+                <div class="prop-row">
+                    <span class="prop-label">标号纬度</span>
+                    <span class="prop-value" id="propLat">-</span>
+                </div>
+                <div class="prop-row">
+                    <span class="prop-label">标号高度</span>
+                    <span class="prop-value" id="propHeight">-</span>
+                </div>
+            </div>
+
+            <div class="prop-group">
+                <div class="prop-title">基本</div>
+                <div class="prop-row" id="rowRotation">
+                    <span class="prop-label">旋转角度</span>
+                    <span class="prop-value">
+                        <input type="number" id="propRotation" step="1" value="0"
+                            onchange="updateSymbolRotation(this.value)">
+                    </span>
+                </div>
+                <div class="prop-row" id="rowSize">
+                    <span class="prop-label">设置大小</span>
+                    <span class="prop-value prop-value-two">
+                        <input type="number" id="propSizeW" step="1" value="128" onchange="propSetSize()">
+                        <input type="number" id="propSizeH" step="1" value="128" onchange="propSetSize()">
+                    </span>
+                </div>
+                <div class="prop-row" id="rowScale">
+                    <span class="prop-label">缩放大小</span>
+                    <span class="prop-value">
+                        <input type="number" id="propScale" step="0.1" value="1.0"
+                            onchange="updateSymbolScale(this.value)">
+                    </span>
+                </div>
+            </div>
+
+            <div class="prop-group" id="groupLine">
+                <div class="prop-title">- 线型</div>
+                <div class="prop-row" id="rowStrokeWidth">
+                    <span class="prop-label">线宽</span>
+                    <span class="prop-value">
+                        <input type="number" id="propStrokeWidth" step="1" value="1"
+                            onchange="propSetStrokeWidth(this.value)">
+                    </span>
+                </div>
+                <div class="prop-row" id="rowStrokeColor">
+                    <span class="prop-label">线宽颜色</span>
+                    <span class="prop-value">
+                        <input type="color" id="propStrokeColor" value="#ff0000"
+                            onchange="propSetStrokeColor(this.value)">
+                    </span>
+                </div>
+                <div class="prop-row" id="rowStrokeOpacity">
+                    <span class="prop-label">线透明度</span>
+                    <span class="prop-value">
+                        <input type="number" id="propStrokeOpacity" step="0.1" value="1"
+                            onchange="propSetStrokeOpacity(this.value)">
+                    </span>
+                </div>
+            </div>
+
+            <div class="prop-group" id="groupFill">
+                <div class="prop-title">- 填充</div>
+                <div class="prop-row" id="rowFillColor">
+                    <span class="prop-label">填充色</span>
+                    <span class="prop-value">
+                        <input type="color" id="propFillColor" value="#ffffff" onchange="propSetFillColor(this.value)">
+                    </span>
+                </div>
+                <div class="prop-row" id="rowFillOpacity">
+                    <span class="prop-label">填充色透明度</span>
+                    <span class="prop-value">
+                        <input type="number" id="propFillOpacity" step="0.1" value="0.3"
+                            onchange="propSetFillOpacity(this.value)">
+                    </span>
+                </div>
+            </div>
+
+            <div class="prop-group" id="groupNote">
+                <div class="prop-title">- 注记</div>
+                <div class="prop-row">
+                    <span class="prop-label">注记字体</span>
+                    <span class="prop-value">
+                        <input type="text" id="propNoteFont" value="" onchange="propSetNoteFont(this.value)">
+                    </span>
+                </div>
+                <div class="prop-row">
+                    <span class="prop-label">注记x轴的位置</span>
+                    <span class="prop-value">
+                        <input type="number" id="propNoteOffsetX" step="1" value="0" onchange="propSetNoteOffset()">
+                    </span>
+                </div>
+                <div class="prop-row">
+                    <span class="prop-label">注记y轴的位置</span>
+                    <span class="prop-value">
+                        <input type="number" id="propNoteOffsetY" step="1" value="0" onchange="propSetNoteOffset()">
+                    </span>
+                </div>
+
+                <div class="prop-row">
+                    <span class="prop-label">注记内容</span>
+                    <span class="prop-value">
+                        <input type="text" id="propNoteText" value="" onchange="propSetNoteText(this.value)">
+                    </span>
+                </div>
+
+                <div class="prop-row">
+                    <span class="prop-label">注记填充颜色</span>
+                    <span class="prop-value">
+                        <input type="color" id="propNoteFillColor" value="#ffffff"
+                            onchange="propSetNoteFillColor(this.value)">
+                    </span>
+                </div>
+                <div class="prop-row">
+                    <span class="prop-label">注记边线颜色</span>
+                    <span class="prop-value">
+                        <input type="color" id="propNoteOutlineColor" value="#000000"
+                            onchange="propSetNoteOutlineColor(this.value)">
+                    </span>
+                </div>
+                <div class="prop-row">
+                    <span class="prop-label">注记边线宽度</span>
+                    <span class="prop-value">
+                        <input type="number" id="propNoteOutlineWidth" step="1" value="1"
+                            onchange="propSetNoteOutlineWidth(this.value)">
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-bar" id="infoBar">
+        <div>地理经度: <span id="infoLon">-</span></div>
+        <div>地理纬度: <span id="infoLat">-</span></div>
+        <div>当前高程: <span id="infoAlt">-</span> m</div>
+        <div>相机高度: <span id="infoCamAlt">-</span> m</div>
+        <div>当前时间: <span id="infoTime">-</span></div>
+    </div>
+
+    <script>
+        var viewer, plottingController, plottingLayer;
+        var currentSelectedSymbol = null;
+        var currentDrawLibID = 100;
+        var currentDrawCode = 2100;
+        var currentDrawSymbolType = 'SYMBOL_DOT';
+        var EG = window.eg && window.eg.default ? window.eg.default : window.eg;
+        var plottingCatalog = window.plottingCatalog || null;
+        var baseTileLayer = null;
+        var baseTileUrl = window.PLOTTING_BASE_TILE_URL ||
+            'http://localhost:7089/smartgis.service/image?source=easyGlobeYX&z={z}&x={x}&y={y}';
+        var symbolMeta = {};
+        var allSymbolsFlat = [];
+        var lastCategoryNode = null;
+        var searchQuery = '';
+        var isPlottingPanelOpen = true;
+        var infoUpdateTimer = null;
+
+        console.log('[OV-1] SCRIPT START representationId=' + (new URLSearchParams(window.location.search)).get('representationId'));
+
+        // --- Persistence ---
+        var representationId = null;
+        (function() {
+            var p = new URLSearchParams(window.location.search);
+            representationId = p.get('representationId') || null;
+        })();
+        var lastSavedSymbolsJson = '';
+        var autoSaveTimer = null;
+        var typeSeqCounters = {};
+        var knownSymbolIds = {};
+        var labelDataMap = {};
+
+        function notifyParent(msg) {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage(msg, '*');
+            }
+        }
+
+        var isPlottingReady = false;
+        var autoLoadComplete = false;
+        var autoLoadAttempts = 0;
+        var MAX_AUTOLOAD_ATTEMPTS = 10;
+
+        function autoSave() {
+            if (!plottingLayer || typeof plottingLayer.toJson !== 'function') return;
+            if (!representationId) return;
+            var rawJson = plottingLayer.toJson();
+            // Compare raw JSON for change detection (before injection)
+            if (rawJson === lastSavedSymbolsJson) return;
+            lastSavedSymbolsJson = rawJson;
+            // Inject _symbolId and _displayName for persistence
+            var json = rawJson;
+            try {
+                var obj = JSON.parse(rawJson);
+                var syms = obj.symbols || [];
+                // Assign sequence numbers per type (sorted by position for consistency)
+                var typeCounts = {};
+                for (var i = 0; i < syms.length; i++) {
+                    var s = syms[i];
+                    var pos = s.position || {};
+                    s._symbolId = 'sym-' + (s.libID||0) + '-' + (s.code||0) + '-' +
+                        ((pos.x||0)).toFixed(6) + '-' + ((pos.y||0)).toFixed(6);
+                    var mk = (s.libID||0) + ':' + (s.code||0);
+                    if (!typeCounts[mk]) typeCounts[mk] = 0;
+                    typeCounts[mk]++;
+                    var seq = String(typeCounts[mk]);
+                    while (seq.length < 3) seq = '0' + seq;
+                    var mt = symbolMeta[mk];
+                    var tn = (mt && mt.name) || ('军标_' + mk);
+                    s._displayName = tn + '-' + seq;
+                }
+                json = JSON.stringify(obj);
+            } catch(e) {}
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(function() {
+                labelDirty = true;
+                fetch('/api/layer/' + encodeURIComponent(representationId), {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: json
+                }).catch(function(e) { console.warn('[OV-1] autoSave failed', e); });
+            }, 500);
+        }
+
+        function autoLoad() {
+            if (!representationId) { console.log('[OV-1] autoLoad skipped: no repId'); return; }
+            if (!isPlottingReady) {
+                if (autoLoadAttempts < MAX_AUTOLOAD_ATTEMPTS) {
+                    autoLoadAttempts++;
+                    console.log('[OV-1] autoLoad waiting for plotting ready, attempt', autoLoadAttempts);
+                    setTimeout(autoLoad, 1500);
+                }
+                return;
+            }
+            console.log('[OV-1] autoLoad fetching', representationId);
+            fetch('/api/layer/' + encodeURIComponent(representationId))
+                .then(function(r) {
+                    console.log('[OV-1] autoLoad response', r.status);
+                    if (!r.ok) return null;
+                    return r.json();
+                })
+                .then(function(data) {
+                    console.log('[OV-1] autoLoad data:', typeof data, data && data.symbols && data.symbols.length);
+                    if (data && data.symbols && data.symbols.length > 0 && plottingController) {
+                        console.log('[OV-1] autoLoad restoring', data.symbols.length, 'symbols');
+                        try {
+                            for (var i = 0; i < data.symbols.length; i++) {
+                                var ds = data.symbols[i];
+                                if (ds._symbolId) {
+                                    knownSymbolIds[ds._symbolId] = true;
+                                    console.log('[OV-1] autoLoad populate sid=' + ds._symbolId + ' displayName=' + ds._displayName);
+                                    if (ds._displayName) {
+                                        if (!labelDataMap[ds._symbolId]) labelDataMap[ds._symbolId] = {};
+                                        labelDataMap[ds._symbolId].displayName = ds._displayName;
+                                    }
+                                }
+                            }
+                        } catch(e) { console.error('[OV-1] autoLoad populate error:', e); }
+                        plottingController.ensureSuperPlot(function() {
+                            try {
+                                importLayerJsonObject(data);
+                                lastSavedSymbolsJson = plottingLayer ? plottingLayer.toJson() : '';
+                                autoLoadComplete = true;
+                                console.log('[OV-1] autoLoad done');
+                            } catch(e2) { console.error('[OV-1] importLayerJsonObject error:', e2); }
+                        });
+                    } else {
+                        console.log('[OV-1] autoLoad: no saved data or empty');
+                        autoLoadComplete = true;
+                    }
+                })
+                .catch(function(e) { console.log('[OV-1] autoLoad: no saved layer yet', e.message); });
+        }
+
+        function togglePlottingPanel(open) {
+            isPlottingPanelOpen = open !== false;
+            var panel = document.querySelector('.panel-left');
+            var toggle = document.getElementById('plottingToggle');
+            var toolbar = document.getElementById('toolbar');
+            if (panel) {
+                panel.style.display = isPlottingPanelOpen ? 'flex' : 'none';
+            }
+            if (toggle) {
+                toggle.style.display = isPlottingPanelOpen ? 'none' : 'flex';
+            }
+            if (toolbar) {
+                toolbar.style.display = isPlottingPanelOpen ? 'flex' : 'none';
+                toolbar.style.left = isPlottingPanelOpen ? '560px' : '80px';
+            }
+        }
+
+        function toggleSearch() {
+            var box = document.getElementById('searchBox');
+            var input = document.getElementById('symbolSearchInput');
+            if (!box || !input) {
+                return;
+            }
+            var show = box.style.display === 'none';
+            box.style.display = show ? 'flex' : 'none';
+            if (show) {
+                input.focus();
+                input.select();
+            } else if (!searchQuery) {
+                applySearch();
+            }
+        }
+
+        function onSearchKeyDown(evt) {
+            if (!evt) {
+                return;
+            }
+            if (evt.key === 'Enter') {
+                applySearch();
+                return;
+            }
+            if (evt.key === 'Escape') {
+                clearSearch();
+            }
+        }
+
+        function onSearchInput(value) {
+            searchQuery = String(value || '');
+            applySearch();
+        }
+
+        function clearSearch() {
+            searchQuery = '';
+            var input = document.getElementById('symbolSearchInput');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            applySearch();
+        }
+
+        function applySearch() {
+            var q = String(searchQuery || '').trim().toLowerCase();
+            if (!q) {
+                if (lastCategoryNode) {
+                    renderIconGrid(lastCategoryNode, true);
+                } else {
+                    renderIconGrid(null, true);
+                }
+                return;
+            }
+            var results = [];
+            for (var i = 0; i < allSymbolsFlat.length; i++) {
+                var s = allSymbolsFlat[i];
+                var name = String(s.title || '').toLowerCase();
+                var code = String(s.code || '').toLowerCase();
+                var cat = String(s.categoryPath || '').toLowerCase();
+                if (name.indexOf(q) >= 0 || code.indexOf(q) >= 0 || cat.indexOf(q) >= 0) {
+                    results.push(s);
+                }
+            }
+            renderIconGridFromSymbols(results, '搜索：' + searchQuery + '（' + results.length + '）');
+        }
+
+
+
+        function initCesium() {
+            viewer = new Cesium.Viewer('cesiumContainer', {
+                baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+                    Cesium.TileMapServiceImageryProvider.fromUrl(
+                        Cesium.buildModuleUrl('http://127.0.0.1:8092/map'),
+                        {
+                            fileExtension: "png",
+                        }
+                    )
+                ),
+                animation: false,
+                timeline: false,
+                baseLayerPicker: false,
+                geocoder: false,
+                homeButton: false,
+                sceneModePicker: false,
+                navigationHelpButton: false,
+                fullscreenButton: false,
+                infoBox: false,
+                selectionIndicator: false,
+                requestRenderMode: true,
+                maximumRenderTimeChange: Number.POSITIVE_INFINITY,
+                imageryProvider: false
+            });
+
+            viewer.scene.frameState.creditDisplay.container.style.visibility = 'hidden';
+
+            viewer.camera.setView({
+                destination: Cesium.Cartesian3.fromDegrees(110, 30, 8000000)
+            });
+
+            if (infoUpdateTimer) {
+                clearInterval(infoUpdateTimer);
+            }
+            updateInfoBar();
+            infoUpdateTimer = setInterval(updateInfoBar, 250);
+
+            const addWorldTerrainAsync = async (viewer) => {
+                try {
+                    const terrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
+                        'http://127.0.0.1:8092/dem',
+                        {
+                            requestWaterMask: false,
+                            requestVertexNormals: true,
+                        }
+                    );
+                    viewer.terrainProvider = terrainProvider;
+                } catch (error) {
+                    console.log("failed to add world terrain: ", error);
+                }
+            };
+            addWorldTerrainAsync(viewer);
+
+            // Register label update on postRender
+            viewer.scene.postRender.addEventListener(function() {
+                updateFloatingLabels();
+            });
+
+            /*if (baseTileUrl) {
+                setBaseTileLayer(baseTileUrl);
+            }*/
+
+        }
+
+        function setBaseTileLayer(tileUrl) {
+            if (!tileUrl || !viewer) {
+                return;
+            }
+
+            if (baseTileLayer) {
+                viewer.imageryLayers.remove(baseTileLayer, true);
+                baseTileLayer = null;
+            }
+
+            var provider = new Cesium.UrlTemplateImageryProvider({
+                url: tileUrl,
+                tilingScheme: new Cesium.GeographicTilingScheme({
+                    numberOfLevelZeroTilesX: 2,
+                    numberOfLevelZeroTilesY: 1,
+                    ellipsoid: Cesium.Ellipsoid.WGS84
+                }),
+                minimumLevel: 0,
+                maximumLevel: 18
+            });
+
+            baseTileLayer = viewer.imageryLayers.addImageryProvider(provider, 0);
+        }
+
+        function initPlotting() {
+            EG = window.eg && window.eg.default ? window.eg.default : window.eg;
+            if (!EG || typeof EG.plottingController !== 'function') {
+                throw new Error('easyGlobe.js 未正确加载或版本不匹配：EG.plottingController 不存在。');
+            }
+            plottingController = new EG.plottingController(viewer);
+            plottingLayer = EG.layer.PlottingLayer("军标图层");
+            plottingController.addLayer(plottingLayer);
+            isPlottingReady = true;
+        }
+
+        // --- Floating labels system ---
+        var labelOverlay = null;
+        var leaderSvg = null;
+        var labelDataMap = {};  // _symbolId → {labelDiv, lineEl, displayName}
+        var labelDirty = true;
+
+        function initLabels() {
+            labelOverlay = document.getElementById('labelOverlay');
+            leaderSvg = document.getElementById('leaderSvg');
+        }
+
+        function updateFloatingLabels() {
+            if (!labelOverlay || !plottingLayer || !viewer) return;
+
+            var json = plottingLayer.toJson();
+            var obj, syms;
+            try { obj = JSON.parse(json); syms = obj.symbols || []; }
+            catch(e) { return; }
+
+            var activeIds = {};
+            var screenPositions = [];
+            for (var i = 0; i < syms.length; i++) {
+                var s = syms[i];
+                var pos = s.position || {};
+                var sid = s._symbolId || ('sym-' + (s.libID||0) + '-' + (s.code||0) + '-' +
+                    ((pos.x||0)).toFixed(6) + '-' + ((pos.y||0)).toFixed(6));
+                activeIds[sid] = true;
+                // position is Cartesian3 in ECEF - use directly with wgs84ToWindowCoordinates
+                var cart = new Cesium.Cartesian3(pos.x || 0, pos.y || 0, pos.z || 0);
+                var screenPos = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, cart);
+                if (!screenPos) { screenPositions.push(null); continue; }
+                // Compute lng/lat for display
+                var cg = Cesium.Cartographic.fromCartesian(cart);
+                var lng = Cesium.Math.toDegrees(cg.longitude).toFixed(4);
+                var lat = Cesium.Math.toDegrees(cg.latitude).toFixed(4);
+                screenPositions.push({ sid: sid, x: screenPos.x, y: screenPos.y, s: s, lng: lng, lat: lat });
+            }
+
+            // Collision avoidance
+            screenPositions.sort(function(a, b) { return (a ? a.y : 0) - (b ? b.y : 0); });
+            var lastY = -100;
+            for (var j = 0; j < screenPositions.length; j++) {
+                var sp = screenPositions[j];
+                if (!sp) continue;
+                if (sp.y < lastY + 44) sp.y = lastY + 44;
+                lastY = sp.y;
+            }
+
+            for (var k = 0; k < screenPositions.length; k++) {
+                var sp2 = screenPositions[k];
+                if (!sp2) continue;
+                var s2 = sp2.s;
+                var entry = labelDataMap[sp2.sid];
+                var mk3 = (s2.libID||0) + ':' + (s2.code||0);
+                var metaName3 = (symbolMeta[mk3] && symbolMeta[mk3].name) || '';
+                var fallbackName = metaName3 || ('军标_' + mk3);
+                var displayName = (entry && entry.displayName) || s2._displayName || s2.name || fallbackName;
+                var coordText = sp2.lng + ', ' + sp2.lat;
+                // Faction color from strokeColor
+                // Use strokeColor directly for label border and line
+                var sc = s2.strokeColor || '#3b82f6';
+                if (sc.indexOf('rgba') === 0) { var parts = sc.match(/[\\d.]+/g); if (parts && parts.length >= 3) sc = 'rgb(' + parts[0] + ',' + parts[1] + ',' + parts[2] + ')'; }
+
+                if (!entry || !entry.labelDiv) {
+                    // Recreate label if it was cleared or only has displayName from autoLoad
+                    if (entry && entry.labelDiv) entry.labelDiv.remove();
+                    var div = document.createElement('div');
+                    div.className = 'ov1-label-box';
+                    div.style.borderColor = sc;
+                    labelOverlay.appendChild(div);
+                    var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('class', 'ov1-label-line');
+                    leaderSvg.appendChild(line);
+                    // Preserve displayName from autoLoad if already set
+                    var existing = labelDataMap[sp2.sid];
+                    var finalName = (existing && existing.displayName) || displayName;
+                    if (existing && existing.displayName) {
+                        console.info('[OV-1 label] using existing displayName:', existing.displayName, 'for sid:', sp2.sid);
+                    }
+                    entry = { labelDiv: div, lineEl: line, displayName: finalName };
+                    labelDataMap[sp2.sid] = entry;
+                } else {
+                    entry.labelDiv.style.borderColor = sc;
+                }
+                // Always update content with latest displayName
+                var currentName = entry.displayName || displayName;
+                entry.labelDiv.innerHTML = '<b>' + currentName + '</b><br>' + coordText;
+                entry.lineEl.setAttribute('stroke', sc);
+                // Position label upper-right, 30° angle, double distance
+                var offsetX = 40;
+                var offsetY = -23;
+                var lx = sp2.x + offsetX;
+                var ly = sp2.y + offsetY;
+                if (lx + 200 > viewer.canvas.clientWidth) lx = sp2.x - 220;
+                if (ly < 10) ly = 10;
+                entry.labelDiv.style.left = lx + 'px';
+                entry.labelDiv.style.top = ly + 'px';
+                entry.labelDiv.style.display = 'block';
+                // Diagonal leader line: from label left-center to symbol center
+                var labelMidX = lx;
+                var labelMidY = ly + 16;
+                entry.lineEl.setAttribute('x1', labelMidX);
+                entry.lineEl.setAttribute('y1', labelMidY);
+                entry.lineEl.setAttribute('x2', sp2.x);
+                entry.lineEl.setAttribute('y2', sp2.y);
+                entry.lineEl.setAttribute('display', 'block');
+            }
+
+            for (var sid2 in labelDataMap) {
+                if (!activeIds[sid2]) {
+                    labelDataMap[sid2].labelDiv.style.display = 'none';
+                    labelDataMap[sid2].lineEl.setAttribute('display', 'none');
+                }
+            }
+        }
+
+        var selectedHighlightSymbol = null;
+        var selectedHighlightBackupMap = typeof WeakMap === 'function' ? new WeakMap() : null;
+        var currentToolMode = null;
+
+        function clearSelectedHighlight() {
+            if (!selectedHighlightSymbol) {
+                return;
+            }
+            var sym = selectedHighlightSymbol;
+            selectedHighlightSymbol = null;
+
+            var backup = selectedHighlightBackupMap ? selectedHighlightBackupMap.get(sym) : sym.__egHighlightBackup;
+            if (!backup) {
+                return;
+            }
+
+            if (backup.strokeColor !== undefined && typeof sym.setStrokeColor === 'function') {
+                sym.setStrokeColor(backup.strokeColor);
+            }
+            if (backup.strokeWidth !== undefined && typeof sym.setStrokeWidth === 'function') {
+                sym.setStrokeWidth(backup.strokeWidth);
+            }
+            if (backup.strokeOpacity !== undefined && typeof sym.setStrokeOpacity === 'function') {
+                sym.setStrokeOpacity(backup.strokeOpacity);
+            }
+            if (backup.fillColor !== undefined && typeof sym.setFillColor === 'function') {
+                sym.setFillColor(backup.fillColor);
+            }
+            if (backup.fillOpacity !== undefined && typeof sym.setFillOpacity === 'function') {
+                sym.setFillOpacity(backup.fillOpacity);
+            }
+            if (backup.scale !== undefined && typeof sym.setScale === 'function') {
+                sym.setScale(backup.scale);
+            }
+        }
+
+        function applySelectedHighlight(symbol) {
+            if (!symbol) {
+                return;
+            }
+            clearSelectedHighlight();
+            selectedHighlightSymbol = symbol;
+
+            var backup = {};
+            if (typeof symbol.getStrokeColor === 'function' && typeof symbol.setStrokeColor === 'function') {
+                backup.strokeColor = symbol.getStrokeColor();
+                symbol.setStrokeColor('#00ffff');
+            }
+            if (typeof symbol.getStrokeWidth === 'function' && typeof symbol.setStrokeWidth === 'function') {
+                backup.strokeWidth = symbol.getStrokeWidth();
+                var w = Number(backup.strokeWidth);
+                if (!Number.isFinite(w)) {
+                    w = 1;
+                }
+                symbol.setStrokeWidth(Math.max(2, w + 2));
+            }
+            if (typeof symbol.getStrokeOpacity === 'function' && typeof symbol.setStrokeOpacity === 'function') {
+                backup.strokeOpacity = symbol.getStrokeOpacity();
+                symbol.setStrokeOpacity(1);
+            }
+            if (typeof symbol.getFillOpacity === 'function' && typeof symbol.setFillOpacity === 'function') {
+                backup.fillOpacity = symbol.getFillOpacity();
+                var o = Number(backup.fillOpacity);
+                if (Number.isFinite(o)) {
+                    symbol.setFillOpacity(Math.min(1, Math.max(0, o)));
+                }
+            }
+            if (typeof symbol.getFillColor === 'function' && typeof symbol.setFillColor === 'function') {
+                backup.fillColor = symbol.getFillColor();
+            }
+            if (typeof symbol.getScale === 'function' && typeof symbol.setScale === 'function') {
+                backup.scale = symbol.getScale();
+                var s = Number(backup.scale);
+                if (!Number.isFinite(s) || s <= 0) {
+                    s = 1;
+                }
+                symbol.setScale(s * 1.15);
+            }
+
+            if (selectedHighlightBackupMap) {
+                selectedHighlightBackupMap.set(symbol, backup);
+            } else {
+                symbol.__egHighlightBackup = backup;
+            }
+        }
+
+        function setSelectedSymbol(symbol) {
+            currentSelectedSymbol = symbol || null;
+            var panel = document.getElementById('propPanel');
+            if (!currentSelectedSymbol) {
+                clearSelectedHighlight();
+                if (panel) {
+                    panel.style.display = 'none';
+                    panel.classList.remove('open');
+                }
+                return;
+            }
+            if (panel) {
+                panel.style.display = 'block';
+                panel.classList.add('open');
+            }
+            if (currentToolMode === 'edit') {
+                clearSelectedHighlight();
+            } else {
+                applySelectedHighlight(currentSelectedSymbol);
+            }
+            refreshPropPanel();
+            if (viewer && viewer.scene && typeof viewer.scene.requestRender === 'function') {
+                viewer.scene.requestRender();
+            }
+        }
+
+        function toLonLatFromCartesian(cartesian) {
+            if (!cartesian) {
+                return null;
+            }
+            var carto = Cesium.Cartographic.fromCartesian(cartesian);
+            if (!carto) {
+                return null;
+            }
+            return {
+                lon: Cesium.Math.toDegrees(carto.longitude),
+                lat: Cesium.Math.toDegrees(carto.latitude)
+            };
+        }
+
+        function refreshPropPanel() {
+            if (!currentSelectedSymbol) {
+                return;
+            }
+            var hasSet = function (setterName) {
+                return typeof currentSelectedSymbol[setterName] === 'function';
+            };
+
+            var showRow = function (id, show) {
+                var el = document.getElementById(id);
+                if (el) {
+                    el.style.display = show ? '' : 'none';
+                }
+            };
+
+            var libID = typeof currentSelectedSymbol.getLibID === 'function' ? currentSelectedSymbol.getLibID() :
+                currentDrawLibID;
+            var code = typeof currentSelectedSymbol.getCode === 'function' ? currentSelectedSymbol.getCode() :
+                currentDrawCode;
+            var meta = symbolMeta[String(libID) + ':' + String(code)] || {};
+
+            document.getElementById('propLibId').innerText = String(libID);
+            document.getElementById('propCode').innerText = String(code);
+            document.getElementById('propName').innerText = meta.name || '-';
+
+            var lon = null;
+            var lat = null;
+            var height = null;
+
+            if (EG && EG.point && typeof EG.point.fromCartesian === 'function' &&
+                typeof currentSelectedSymbol.getPosition === 'function') {
+                var pt = EG.point.fromCartesian(currentSelectedSymbol.getPosition());
+                if (pt) {
+                    lon = pt.lon;
+                    lat = pt.lat;
+                    height = pt.height;
+                }
+            } else if (typeof currentSelectedSymbol.getPosition === 'function') {
+                var lonlat = toLonLatFromCartesian(currentSelectedSymbol.getPosition());
+                if (lonlat) {
+                    lon = lonlat.lon;
+                    lat = lonlat.lat;
+                    height = 0;
+                }
+            } else if (typeof currentSelectedSymbol.getControlPoints === 'function') {
+                var cps = currentSelectedSymbol.getControlPoints();
+                if (Array.isArray(cps) && cps.length) {
+                    lon = cps[0][0];
+                    lat = cps[0][1];
+                    height = cps[0][2] || 0;
+                }
+            }
+
+            document.getElementById('propLon').innerText = Number.isFinite(lon) ? Number(lon).toFixed(6) : '-';
+            document.getElementById('propLat').innerText = Number.isFinite(lat) ? Number(lat).toFixed(6) : '-';
+            document.getElementById('propHeight').innerText = Number.isFinite(height) ? Number(height).toFixed(2) : '-';
+
+            showRow('rowRotation', typeof currentSelectedSymbol.getRotation === 'function' && hasSet('setRotation'));
+            showRow('rowSize', typeof currentSelectedSymbol.getSize === 'function' && hasSet('setSize'));
+            showRow('rowScale', typeof currentSelectedSymbol.getScale === 'function' && hasSet('setScale'));
+
+            var rotationEl = document.getElementById('propRotation');
+            if (rotationEl && typeof currentSelectedSymbol.getRotation === 'function') {
+                rotationEl.value = String(currentSelectedSymbol.getRotation());
+            }
+
+            var sizeWEl = document.getElementById('propSizeW');
+            var sizeHEl = document.getElementById('propSizeH');
+            if (sizeWEl && sizeHEl && typeof currentSelectedSymbol.getSize === 'function') {
+                var size = currentSelectedSymbol.getSize();
+                if (Array.isArray(size) && size.length >= 2) {
+                    sizeWEl.value = String(size[0]);
+                    sizeHEl.value = String(size[1]);
+                }
+            }
+
+            var scaleEl = document.getElementById('propScale');
+            if (scaleEl && typeof currentSelectedSymbol.getScale === 'function') {
+                scaleEl.value = String(currentSelectedSymbol.getScale());
+            }
+
+            var hasStrokeWidth = typeof currentSelectedSymbol.getStrokeWidth === 'function' && hasSet('setStrokeWidth');
+            var hasStrokeColor = typeof currentSelectedSymbol.getStrokeColor === 'function' && hasSet('setStrokeColor');
+            var hasStrokeOpacity = typeof currentSelectedSymbol.getStrokeOpacity === 'function' && hasSet('setStrokeOpacity');
+            showRow('groupLine', hasStrokeWidth || hasStrokeColor || hasStrokeOpacity);
+            showRow('rowStrokeWidth', hasStrokeWidth);
+            showRow('rowStrokeColor', hasStrokeColor);
+            showRow('rowStrokeOpacity', hasStrokeOpacity);
+
+            if (typeof currentSelectedSymbol.getStrokeWidth === 'function') {
+                document.getElementById('propStrokeWidth').value = String(currentSelectedSymbol.getStrokeWidth());
+            }
+            if (typeof currentSelectedSymbol.getStrokeColor === 'function') {
+                document.getElementById('propStrokeColor').value = currentSelectedSymbol.getStrokeColor();
+            }
+            if (typeof currentSelectedSymbol.getStrokeOpacity === 'function') {
+                document.getElementById('propStrokeOpacity').value = String(currentSelectedSymbol.getStrokeOpacity());
+            }
+
+            var hasFillColor = typeof currentSelectedSymbol.getFillColor === 'function' && hasSet('setFillColor');
+            var hasFillOpacity = typeof currentSelectedSymbol.getFillOpacity === 'function' && hasSet('setFillOpacity');
+            showRow('groupFill', hasFillColor || hasFillOpacity);
+            showRow('rowFillColor', hasFillColor);
+            showRow('rowFillOpacity', hasFillOpacity);
+
+            if (typeof currentSelectedSymbol.getFillColor === 'function') {
+                document.getElementById('propFillColor').value = currentSelectedSymbol.getFillColor();
+            }
+            if (typeof currentSelectedSymbol.getFillOpacity === 'function') {
+                document.getElementById('propFillOpacity').value = String(currentSelectedSymbol.getFillOpacity());
+            }
+
+            var hasNoteFont = typeof currentSelectedSymbol.getNoteText === 'function' && hasSet('setNoteFont');
+            var hasNoteOffset = typeof currentSelectedSymbol.getNoteOffset === 'function' && hasSet('setNoteOffset');
+            var hasNoteText = typeof currentSelectedSymbol.getNoteText === 'function' && hasSet('setNoteText');
+            var hasNoteFillColor = (typeof currentSelectedSymbol.getNoteOutlineColor === 'function' &&
+                    hasSet('setNoteFillColor')) ||
+                (typeof currentSelectedSymbol.getNoteFillColor === 'function' && hasSet('setNoteFillColor'));
+            var hasNoteOutlineColor = typeof currentSelectedSymbol.getNoteOutlineColor === 'function' && hasSet(
+                'setNoteOutlineColor');
+            var hasNoteOutlineWidth = typeof currentSelectedSymbol.getNoteOutlineWidth === 'function' && hasSet(
+                'setNoteOutlineWidth');
+            showRow('groupNote', hasNoteFont || hasNoteOffset || hasNoteText || hasNoteFillColor || hasNoteOutlineColor ||
+                hasNoteOutlineWidth);
+
+            if (typeof currentSelectedSymbol.getNoteText === 'function') {
+                var noteTextValue = currentSelectedSymbol.getNoteText();
+                var noteFontEl = document.getElementById('propNoteFont');
+                if (noteFontEl) {
+                    noteFontEl.value = (typeof currentSelectedSymbol.getNoteFont === 'function' ? currentSelectedSymbol
+                        .getNoteFont() : noteTextValue) || '';
+                }
+                var noteTextEl = document.getElementById('propNoteText');
+                if (noteTextEl) {
+                    noteTextEl.value = noteTextValue || '';
+                }
+            }
+
+            if (typeof currentSelectedSymbol.getNoteOffset === 'function') {
+                var offset = currentSelectedSymbol.getNoteOffset() || [0, 0];
+                document.getElementById('propNoteOffsetX').value = String(offset[0] || 0);
+                document.getElementById('propNoteOffsetY').value = String(offset[1] || 0);
+            }
+
+            if (typeof currentSelectedSymbol.getNoteOutlineColor === 'function') {
+                var outlineColor = currentSelectedSymbol.getNoteOutlineColor() || '#000000';
+                document.getElementById('propNoteOutlineColor').value = outlineColor;
+                document.getElementById('propNoteFillColor').value = outlineColor;
+            } else if (typeof currentSelectedSymbol.getNoteFillColor === 'function') {
+                document.getElementById('propNoteFillColor').value = currentSelectedSymbol.getNoteFillColor() || '#ffffff';
+            }
+
+            if (typeof currentSelectedSymbol.getNoteOutlineWidth === 'function') {
+                document.getElementById('propNoteOutlineWidth').value = String(currentSelectedSymbol.getNoteOutlineWidth());
+            }
+        }
+
+        function updateInfoBar() {
+            var camera = viewer.camera;
+            var position = camera.positionCartographic;
+            var lon = Cesium.Math.toDegrees(position.longitude).toFixed(6);
+            var lat = Cesium.Math.toDegrees(position.latitude).toFixed(6);
+            var alt = position.height.toFixed(2);
+
+            document.getElementById('infoLon').innerText = lon;
+            document.getElementById('infoLat').innerText = lat;
+            document.getElementById('infoCamAlt').innerText = alt;
+            document.getElementById('infoAlt').innerText = alt;
+
+            var now = new Date();
+            document.getElementById('infoTime').innerText = now.toLocaleTimeString();
+        }
+
+        function buildTreeFromPlottingJson(data) {
+            if (!Array.isArray(data)) {
+                return [];
+            }
+            allSymbolsFlat.length = 0;
+
+            function mapCategoryNode(node, path) {
+                path = Array.isArray(path) ? path : [];
+                var item = {
+                    title: node.text || node.title || '',
+                    children: [],
+                    symbols: null,
+                    imgurl: node.imgurl || null
+                };
+
+                var currentPath = path.slice();
+                if (item.title) {
+                    currentPath.push(item.title);
+                }
+
+                if (Array.isArray(node.children) && node.children.length) {
+                    item.children = node.children.map(function (c) {
+                        return mapCategoryNode(c, currentPath);
+                    }).filter(Boolean);
+                }
+
+                if (Array.isArray(node.node) && node.node.length) {
+                    item.symbols = node.node.map(function (sym) {
+                        var key = String(sym.libID) + ':' + String(sym.symbolCode);
+                        symbolMeta[key] = {
+                            name: sym.symbolName || '',
+                            symbolType: sym.symbolType || ''
+                        };
+                        var obj = {
+                            title: sym.symbolName || '',
+                            libID: sym.libID,
+                            code: sym.symbolCode,
+                            symbolType: sym.symbolType,
+                            iconPath: (node.imgurl ? ('./image/' + node.imgurl + '/' + sym.symbolCode +
+                                '.png') : null),
+                            categoryPath: currentPath.join('/')
+                        };
+                        allSymbolsFlat.push(obj);
+                        return obj;
+                    });
+                }
+
+                if (!item.title && (!item.children || item.children.length === 0)) {
+                    return null;
+                }
+                return item;
+            }
+
+            return data.map(function (n) {
+                return mapCategoryNode(n, []);
+            }).filter(Boolean);
+        }
+
+        var treeData = buildTreeFromPlottingJson(plottingCatalog);
+
+        function createIconItem(sym, grid) {
+            var div = document.createElement('div');
+            div.className = 'icon-item';
+
+            var thumb = document.createElement('div');
+            thumb.className = 'icon-thumb';
+            if (sym.iconPath) {
+                var img = document.createElement('img');
+                img.src = sym.iconPath;
+                thumb.appendChild(img);
+            }
+            div.appendChild(thumb);
+
+            var title = document.createElement('div');
+            title.className = 'icon-item-title';
+            title.textContent = (sym.title || '-') + ' (' + sym.code + ')';
+            div.appendChild(title);
+
+            div.onclick = function () {
+                var active = grid.querySelector('.icon-item.active');
+                if (active) {
+                    active.classList.remove('active');
+                }
+                div.classList.add('active');
+
+                currentDrawLibID = sym.libID;
+                currentDrawCode = sym.code;
+                currentDrawSymbolType = sym.symbolType || 'SYMBOL_DOT';
+                if (currentDrawSymbolType === 'SYMBOL_ALGO') {
+                    activateDrawAlgo();
+                } else {
+                    activateDrawDot();
+                }
+            };
+
+            return div;
+        }
+
+        function renderIconGridFromSymbols(symbols, headerText) {
+            var header = document.getElementById('iconHeader');
+            var grid = document.getElementById('iconGrid');
+            if (!header || !grid) {
+                return;
+            }
+            header.innerText = headerText || '-';
+            grid.innerHTML = '';
+
+            for (var i = 0; i < symbols.length; i++) {
+                grid.appendChild(createIconItem(symbols[i], grid));
+            }
+        }
+
+        function renderIconGrid(categoryNode, keepHeader) {
+            var header = document.getElementById('iconHeader');
+            var grid = document.getElementById('iconGrid');
+            if (!header || !grid) {
+                return;
+            }
+
+            if (!categoryNode) {
+                if (!keepHeader) {
+                    header.innerText = '-';
+                }
+                grid.innerHTML = '';
+                return;
+            }
+
+            if (!keepHeader) {
+                header.innerText = categoryNode.title || '-';
+            }
+            var symbols = Array.isArray(categoryNode.symbols) ? categoryNode.symbols : [];
+            grid.innerHTML = '';
+
+            for (var i = 0; i < symbols.length; i++) {
+                grid.appendChild(createIconItem(symbols[i], grid));
+            }
+        }
+
+        function renderTree(data, container) {
+            data.forEach(function (node) {
+                var li = document.createElement('li');
+                var div = document.createElement('div');
+                div.className = 'tree-node';
+                var iconHtml =
+                    `<span class="tree-icon">${node.children && node.children.length ? '📂' : '📁'}</span>`;
+                div.innerHTML = `${iconHtml} <span>${node.title}</span>`;
+                li.appendChild(div);
+
+                if (node.children && node.children.length) {
+                    var ul = document.createElement('ul');
+                    renderTree(node.children, ul);
+                    li.appendChild(ul);
+                }
+
+                div.onclick = function (nodeCopy) {
+                    return function () {
+                        if (nodeCopy.symbols && nodeCopy.symbols.length) {
+                            lastCategoryNode = nodeCopy;
+                            var input = document.getElementById('symbolSearchInput');
+                            if (input && input.value) {
+                                input.value = '';
+                                searchQuery = '';
+                                var box = document.getElementById('searchBox');
+                                if (box) {
+                                    box.style.display = 'none';
+                                }
+                            }
+                            renderIconGrid(nodeCopy);
+                        }
+                    };
+                }(node);
+
+                container.appendChild(li);
+            });
+        }
+
+        function activateDrawDot() {
+            currentToolMode = 'draw';
+            if (currentDrawSymbolType === 'SYMBOL_ALGO') {
+                activateDrawAlgo();
+                return;
+            }
+            if (!plottingController || !plottingLayer) {
+                return;
+            }
+            var plottingHandler = new EG.plotting.handler.DrawDotSymbol({
+                libID: currentDrawLibID,
+                code: currentDrawCode
+            });
+            plottingHandler.setPlottingLayer(plottingLayer);
+            plottingController.setHandlers(plottingHandler);
+        }
+
+        function activateDrawAlgo() {
+            currentToolMode = 'draw';
+            if (currentDrawSymbolType !== 'SYMBOL_ALGO') {
+                activateDrawDot();
+                return;
+            }
+            if (!plottingController || !plottingLayer) {
+                return;
+            }
+            plottingController.ensureSuperPlot(function (ok) {
+                if (!ok) {
+                    return;
+                }
+                var plottingHandler = new EG.plotting.handler.DrawAlgoSymbol({
+                    libID: currentDrawLibID,
+                    code: currentDrawCode
+                });
+                plottingHandler.setPlottingLayer(plottingLayer);
+                plottingController.setHandlers(plottingHandler);
+            });
+        }
+
+        function activateEdit() {
+            if (!plottingController || !plottingLayer) {
+                return;
+            }
+            currentToolMode = 'edit';
+            clearSelectedHighlight();
+
+            var modifyPlottingHandler = new EG.plotting.handler.ModifyPlottingSymbol();
+            if (modifyPlottingHandler && typeof modifyPlottingHandler.setPlottingLayer === 'function') {
+                modifyPlottingHandler.setPlottingLayer(plottingLayer);
+            }
+            plottingController.setHandlers(modifyPlottingHandler);
+            modifyPlottingHandler.on('ModifyPlottingSymbolStart', function (evt) {
+                if (!evt || !evt.plottingSymbol) {
+                    return;
+                }
+                setSelectedSymbol(evt.plottingSymbol);
+            });
+            modifyPlottingHandler.on('ModifyPlottingSymbolChange', function (evt) {
+                if (!evt || !evt.plottingSymbol) {
+                    return;
+                }
+                refreshPropPanel();
+            });
+            modifyPlottingHandler.on('ModifyPlottingSymbolEnd', function (evt) {
+                if (!evt || !evt.plottingSymbol) {
+                    return;
+                }
+                refreshPropPanel();
+                autoSave();
+            });
+        }
+
+        function updateSymbolScale(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setScale !== 'function') {
+                return;
+            }
+            var v = Number(value);
+            if (!Number.isFinite(v) || v <= 0) {
+                return;
+            }
+            currentSelectedSymbol.setScale(v);
+        }
+
+        function updateSymbolRotation(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setRotation !== 'function') {
+                return;
+            }
+            var v = Number(value);
+            if (!Number.isFinite(v)) {
+                return;
+            }
+            currentSelectedSymbol.setRotation(v);
+        }
+
+        function propSetVisible(visible) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setVisible !== 'function') {
+                return;
+            }
+            currentSelectedSymbol.setVisible(!!visible);
+        }
+
+        function propSetSize() {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setSize !== 'function') {
+                return;
+            }
+            var w = Number(document.getElementById('propSizeW').value);
+            var h = Number(document.getElementById('propSizeH').value);
+            if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+                return;
+            }
+            currentSelectedSymbol.setSize([w, h]);
+        }
+
+        function propSetStrokeWidth(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setStrokeWidth !== 'function') {
+                return;
+            }
+            var v = Number(value);
+            if (!Number.isFinite(v) || v < 0) {
+                return;
+            }
+            currentSelectedSymbol.setStrokeWidth(v);
+        }
+
+        function propSetStrokeColor(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setStrokeColor !== 'function') {
+                return;
+            }
+            currentSelectedSymbol.setStrokeColor(value);
+        }
+
+        function propSetStrokeOpacity(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setStrokeOpacity !== 'function') {
+                return;
+            }
+            var v = Number(value);
+            if (!Number.isFinite(v)) {
+                return;
+            }
+            if (v < 0) v = 0;
+            if (v > 1) v = 1;
+            currentSelectedSymbol.setStrokeOpacity(v);
+        }
+
+        function propSetFillEnable(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setFill !== 'function') {
+                return;
+            }
+            currentSelectedSymbol.setFill(!!value);
+        }
+
+        function propSetFillColor(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setFillColor !== 'function') {
+                return;
+            }
+            currentSelectedSymbol.setFillColor(value);
+        }
+
+        function propSetFillOpacity(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setFillOpacity !== 'function') {
+                return;
+            }
+            var v = Number(value);
+            if (!Number.isFinite(v)) {
+                return;
+            }
+            if (v < 0) v = 0;
+            if (v > 1) v = 1;
+            currentSelectedSymbol.setFillOpacity(v);
+        }
+
+        function propSetNoteText(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setNoteText !== 'function') {
+                return;
+            }
+            currentSelectedSymbol.setNoteText(value);
+        }
+
+        function propSetNoteFont(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setNoteFont !== 'function') {
+                return;
+            }
+            currentSelectedSymbol.setNoteFont(value);
+        }
+
+        function propSetNoteScale(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setNoteScale !== 'function') {
+                return;
+            }
+            var v = Number(value);
+            if (!Number.isFinite(v) || v <= 0) {
+                return;
+            }
+            currentSelectedSymbol.setNoteScale(v);
+        }
+
+        function propSetNoteFillColor(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setNoteFillColor !== 'function') {
+                return;
+            }
+            currentSelectedSymbol.setNoteFillColor(value);
+        }
+
+        function propSetNoteOutlineColor(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setNoteOutlineColor !== 'function') {
+                return;
+            }
+            currentSelectedSymbol.setNoteOutlineColor(value);
+        }
+
+        function propSetNoteOutlineWidth(value) {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setNoteOutlineWidth !== 'function') {
+                return;
+            }
+            var v = Number(value);
+            if (!Number.isFinite(v) || v < 0) {
+                return;
+            }
+            currentSelectedSymbol.setNoteOutlineWidth(v);
+        }
+
+        function propSetNoteOffset() {
+            if (!currentSelectedSymbol || typeof currentSelectedSymbol.setNoteOffset !== 'function') {
+                return;
+            }
+            var x = Number(document.getElementById('propNoteOffsetX').value);
+            var y = Number(document.getElementById('propNoteOffsetY').value);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) {
+                return;
+            }
+            currentSelectedSymbol.setNoteOffset([x, y]);
+        }
+
+        function stopInteract() {
+            currentToolMode = null;
+            plottingController.clearHandlers();
+            setSelectedSymbol(null);
+        }
+
+        function deleteSelectedSymbol() {
+            if (!plottingLayer || !currentSelectedSymbol) { return; }
+            console.info('[OV-1] deleteSelectedSymbol called');
+
+            // Compute _symbolId (same algorithm as polling watcher: libID:code:pos.x:pos.y)
+            var sid = null;
+            try {
+                var libID = currentSelectedSymbol.getLibID ? currentSelectedSymbol.getLibID() : 0;
+                var code = currentSelectedSymbol.getCode ? currentSelectedSymbol.getCode() : 0;
+                var cpos = currentSelectedSymbol.getPosition ? currentSelectedSymbol.getPosition() : null;
+                var px = cpos ? (cpos.x || 0) : 0;
+                var py = cpos ? (cpos.y || 0) : 0;
+                sid = 'sym-' + libID + '-' + code + '-' + (px).toFixed(6) + '-' + (py).toFixed(6);
+            } catch(e) {
+                sid = null;
+            }
+            console.info('[OV-1] deleteSelectedSymbol sid=' + sid);
+
+            plottingLayer.removeSymbol(currentSelectedSymbol);
+            setSelectedSymbol(null);
+            labelDirty = true;
+            autoSave();
+            console.info('[OV-1] checking: sid=' + !!sid + ' repId=' + !!representationId + ' val=' + representationId);
+            if (sid && representationId) {
+                console.info('[OV-1] notifyParent deleteSymbol', sid);
+                notifyParent({ type: 'deleteSymbol', symbolId: sid, representationId: representationId });
+            } else {
+                console.warn('[OV-1] notifyParent SKIPPED: sid=' + !!sid + ' repId=' + !!representationId);
+            }
+        }
+
+        function downloadLayer() {
+            if (!plottingLayer || typeof plottingLayer.toJson !== 'function') {
+                return;
+            }
+            var json = plottingLayer.toJson();
+            var blob = new Blob([json], {
+                type: 'application/json;charset=utf-8'
+            });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = (plottingLayer.getName ? plottingLayer.getName() : 'plotting-layer') + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function uploadLayer() {
+            var input = document.getElementById('layerFileInput');
+            if (!input) {
+                return;
+            }
+            input.value = '';
+            input.click();
+        }
+
+        function importLayerJsonObject(jsonObject) {
+            if (!jsonObject || !Array.isArray(jsonObject.symbols)) {
+                return false;
+            }
+
+            if (plottingLayer && typeof plottingLayer.removeSymbols === 'function') {
+                plottingLayer.removeSymbols();
+            }
+            setSelectedSymbol(null);
+
+            if (typeof jsonObject.name === 'string' && plottingLayer && typeof plottingLayer.setName === 'function') {
+                plottingLayer.setName(jsonObject.name);
+            }
+            if (typeof jsonObject.visible === 'boolean' && plottingLayer && typeof plottingLayer.setVisible ===
+                'function') {
+                plottingLayer.setVisible(jsonObject.visible);
+            }
+            if (typeof jsonObject.active === 'boolean' && plottingLayer && typeof plottingLayer.setActive ===
+                'function') {
+                plottingLayer.setActive(jsonObject.active);
+            }
+            if (typeof jsonObject.locked === 'boolean' && plottingLayer && typeof plottingLayer.setLocked ===
+                'function') {
+                plottingLayer.setLocked(jsonObject.locked);
+            }
+
+            for (var i = 0; i < jsonObject.symbols.length; i++) {
+                var symbolJsonObject = jsonObject.symbols[i];
+                if (!symbolJsonObject || !symbolJsonObject._ClassName) {
+                    continue;
+                }
+                if (symbolJsonObject._ClassName === 'csplotting.DotSymbol') {
+                    EG.plotting.DotSymbol.fromJson(symbolJsonObject, {
+                        parentLayer: plottingLayer
+                    });
+                } else if (symbolJsonObject._ClassName === 'csplotting.AlgoSymbol') {
+                    EG.plotting.AlgoSymbol.fromJson(symbolJsonObject, {
+                        parentLayer: plottingLayer
+                    });
+                }
+            }
+            return true;
+        }
+
+        function deleteLayer() {
+            if (!plottingController) {
+                return;
+            }
+            if (!confirm('确定删除图层吗？（会清空并重建一个新图层）')) {
+                return;
+            }
+            stopInteract();
+            setSelectedSymbol(null);
+            if (plottingLayer) {
+                plottingController.removeLayer(plottingLayer);
+            }
+            plottingLayer = EG.layer.PlottingLayer("军标图层");
+            plottingController.addLayer(plottingLayer);
+            plottingController.setActivePlottingLayer(plottingLayer);
+            lastSavedSymbolsJson = '';
+            autoSave();
+        }
+
+        window.onload = function () {
+            initCesium();
+            initPlotting();
+            initLabels();
+            // Auto-load saved layer (with retry logic)
+            if (representationId) {
+                autoLoad();
+            }
+            // Polling watcher: detect symbol changes from draw/edit/delete operations
+            var lastSymbolCount = 0;
+            setInterval(function() {
+                if (!autoLoadComplete) return;
+                if (!plottingLayer || typeof plottingLayer.toJson !== 'function') return;
+                var json = plottingLayer.toJson();
+                if (json === lastSavedSymbolsJson) return;
+                var obj = JSON.parse(json);
+                var symbols = obj.symbols || [];
+                var count = symbols.length;
+                if (count !== lastSymbolCount) {
+                    // Detect new symbols for PartUsage creation
+                    if (count > lastSymbolCount && representationId) {
+                        for (var i = 0; i < symbols.length; i++) {
+                            var s = symbols[i];
+                            // Stable composite key: libID:code:position (survives page reload if symbol not moved)
+                            var pos = s.position || {};
+                            var sid = s._symbolId || ('sym-' + (s.libID||0) + '-' + (s.code||0) + '-' +
+                                ((pos.x||0)).toFixed(6) + '-' + ((pos.y||0)).toFixed(6));
+                            if (!knownSymbolIds[sid]) {
+                                knownSymbolIds[sid] = true;
+                                s._symbolId = sid;
+                                var metaKey = (s.libID || 0) + ':' + (s.code || 0);
+                                var meta = symbolMeta[metaKey];
+                                var typeName = (meta && meta.name) || ('军标_' + metaKey);
+                                // Sequence based on PartUsage names in model (source of truth)
+                                var targetObjectId = (new URLSearchParams(window.location.search)).get('targetObjectId');
+                                if (targetObjectId) {
+                                    fetch('/api/partUsageNames/' + encodeURIComponent(representationId) + '/' + encodeURIComponent(targetObjectId))
+                                        .then(function(r) { if (!r.ok) return []; return r.json(); })
+                                        .then(function(names) {
+                                            var maxSeq = 0;
+                                            for (var ni = 0; ni < names.length; ni++) {
+                                                if (names[ni] && names[ni].indexOf(typeName) === 0) {
+                                                    var parts = names[ni].split('-');
+                                                    var sn = parseInt(parts[parts.length - 1], 10);
+                                                    if (!isNaN(sn) && sn > maxSeq) maxSeq = sn;
+                                                }
+                                            }
+                                            // Also check pending names in labelDataMap
+                                            for (var lsid in labelDataMap) {
+                                                var lde = labelDataMap[lsid];
+                                                if (lde && lde.displayName && lde.displayName.indexOf(typeName) === 0) {
+                                                    var p2 = lde.displayName.split('-');
+                                                    var sn2 = parseInt(p2[p2.length - 1], 10);
+                                                    if (!isNaN(sn2) && sn2 > maxSeq) maxSeq = sn2;
+                                                }
+                                            }
+                                            var seq = String(maxSeq + 1);
+                                            while (seq.length < 3) seq = '0' + seq;
+                                            var symbolName = typeName + '-' + seq;
+                                            finalizeSymbol(sid, s, symbolName);
+                                        }).catch(function() {
+                                            finalizeSymbol(sid, s, typeName + '-???');
+                                        });
+                                } else {
+                                    finalizeSymbol(sid, s, typeName + '-???');
+                                }
+                                function finalizeSymbol(sid, s, symbolName) {
+                                s._displayName = symbolName;
+                                // Store display name for label rendering
+                                if (!labelDataMap[sid]) labelDataMap[sid] = {};
+                                labelDataMap[sid].displayName = symbolName;
+                                console.info('[OV-1] new symbol detected:', sid, symbolName);
+                                notifyParent({
+                                    type: 'createSymbol',
+                                    representationId: representationId,
+                                    symbol: { _symbolId: sid, name: symbolName, libID: s.libID, code: s.code, position: pos }
+                                });
+                            }
+                        }
+                    }
+                    // Detect removed symbols
+                    if (count < lastSymbolCount) {
+                        var newIds = {};
+                        for (var j = 0; j < symbols.length; j++) {
+                            var ss = symbols[j];
+                            var nid = ss.id || ss._id || ss.guid || '';
+                            if (nid) newIds[nid] = true;
+                        }
+                        for (var oldId in knownSymbolIds) {
+                            if (!newIds[oldId]) {
+                                delete knownSymbolIds[oldId];
+                            }
+                        }
+                    }
+                    lastSymbolCount = count;
+                    autoSave();
+                }
+            }, 1500);
+            if (!treeData || !treeData.length) {
+                console.warn('plottingjson.js not loaded or has invalid format.');
+            }
+            renderTree(treeData, document.getElementById('symbolTree'));
+            if (treeData && treeData.length) {
+                var queue = treeData.slice();
+                var found = null;
+                while (queue.length) {
+                    var n = queue.shift();
+                    if (n.symbols && n.symbols.length) {
+                        found = n;
+                        break;
+                    }
+                    if (n.children && n.children.length) {
+                        queue = queue.concat(n.children);
+                    }
+                }
+                lastCategoryNode = found;
+                renderIconGrid(found);
+            }
+            togglePlottingPanel(false);
+
+            var fileInput = document.getElementById('layerFileInput');
+            if (fileInput) {
+                fileInput.addEventListener('change', function () {
+                    var f = fileInput.files && fileInput.files[0];
+                    if (!f) {
+                        return;
+                    }
+                    var reader = new FileReader();
+                    reader.onload = function () {
+                        var text = String(reader.result || '');
+                        var jsonObject = null;
+                        try {
+                            jsonObject = JSON.parse(text);
+                        } catch (e) {
+                            return;
+                        }
+                        plottingController.ensureSuperPlot(function () {
+                            importLayerJsonObject(jsonObject);
+                        });
+                    };
+                    reader.readAsText(f, 'utf-8');
+                });
+            }
+
+            // Listen for postMessage from parent (e.g., delete symbol from resource manager)
+            window.addEventListener('message', function(event) {
+                var msg = event.data;
+                if (!msg || !msg.type) return;
+                if (msg.type === 'deleteSymbol' && msg.symbolId && plottingLayer) {
+                    try {
+                        var json = plottingLayer.toJson();
+                        var obj = JSON.parse(json);
+                        var syms = obj.symbols || [];
+                        for (var i = 0; i < syms.length; i++) {
+                            var s = syms[i];
+                            var pos = s.position || {};
+                            // Compute _symbolId same way as creation
+                            var computedId = 'sym-' + (s.libID||0) + '-' + (s.code||0) + '-' +
+                                ((pos.x||0)).toFixed(6) + '-' + ((pos.y||0)).toFixed(6);
+                            if (computedId === msg.symbolId || s._symbolId === msg.symbolId) {
+                                var liveSymbols = plottingLayer.getSymbols ? plottingLayer.getSymbols() : [];
+                                if (liveSymbols[i]) {
+                                    plottingLayer.removeSymbol(liveSymbols[i]);
+                                }
+                                setSelectedSymbol(null);
+                                delete knownSymbolIds[msg.symbolId];
+                                lastSavedSymbolsJson = '';
+                                autoSave();
+                                console.info('[OV-1] symbol removed:', msg.symbolId);
+                                break;
+                            }
+                        }
+                    } catch(e) {}
+                }
+                if (msg.type === 'layerRefresh' && plottingController) {
+                    autoLoad();
+                }
+            });
+        };
+    </script>
+</body>
+
+</html>

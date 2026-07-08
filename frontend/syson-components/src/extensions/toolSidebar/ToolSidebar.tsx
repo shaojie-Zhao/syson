@@ -67,7 +67,7 @@ const useToolSidebarStyles = makeStyles()((theme) => ({
     color: theme.palette.primary.main,
     backgroundColor: theme.palette.action.selected,
     padding: theme.spacing(0.25, 0.75),
-    borderRadius: theme.shape.borderRadius / 2,
+    borderRadius: Number(theme.shape.borderRadius) / 2,
     lineHeight: 1.5,
   },
   content: {
@@ -113,7 +113,7 @@ const useToolSidebarStyles = makeStyles()((theme) => ({
 }));
 
 export const ToolSidebar = forwardRef<{ id: string } | null, WorkbenchViewComponentProps>(
-  ({ editingContextId }, ref) => {
+  ({ editingContextId }, _ref) => {
     const { classes } = useToolSidebarStyles();
     const [invokeTool, { error: invokeError }] = useInvokeTool();
     const { addErrorMessage } = useMultiToast();
@@ -139,7 +139,7 @@ export const ToolSidebar = forwardRef<{ id: string } | null, WorkbenchViewCompon
     }, []);
 
     const hasSelection = diagramElementIds.length > 0;
-    const primaryElementIds = hasSelection ? [diagramElementIds[0]] : [];
+    const primaryElementIds: string[] = hasSelection ? [diagramElementIds[0]!] : [];
 
     // Canvas palette: use the diagram's own representationId (matches canvas right-click)
     const {
@@ -173,7 +173,7 @@ export const ToolSidebar = forwardRef<{ id: string } | null, WorkbenchViewCompon
           : [representationId];
         const doInvoke = () => invokeTool(editingContextId, representationId, toolId, invokeIds, toolLabel);
         if (/delete/i.test(toolLabel)) {
-          showDeletionConfirmation(doInvoke, `This action will delete "${toolLabel}".`, '');
+          showDeletionConfirmation(doInvoke);
         } else if (dialogDescriptionId) {
           // Selection dialog tools: delegate to Sirius dialog pipeline via requestDialog
           const semanticIds = getSelectedSemanticIds();

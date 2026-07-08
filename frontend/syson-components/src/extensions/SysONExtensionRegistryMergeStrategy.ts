@@ -11,7 +11,7 @@
  *     Obeo - initial API and implementation
  *******************************************************************************/
 
-import { DataExtension, workbenchViewContributionExtensionPoint } from '@eclipse-sirius/sirius-components-core';
+import { DataExtension, representationFactoryExtensionPoint, workbenchViewContributionExtensionPoint } from '@eclipse-sirius/sirius-components-core';
 import { widgetContributionExtensionPoint } from '@eclipse-sirius/sirius-components-forms';
 import { omniboxCommandOverrideContributionExtensionPoint } from '@eclipse-sirius/sirius-components-omnibox';
 import { treeItemContextMenuEntryOverrideExtensionPoint } from '@eclipse-sirius/sirius-components-trees';
@@ -42,6 +42,9 @@ export class SysONExtensionRegistryMergeStrategy
     }
     if (identifier === workbenchViewContributionExtensionPoint.identifier) {
       return this.mergeWorkbenchViewContributions(existingValues, newValues);
+    }
+    if (identifier === representationFactoryExtensionPoint.identifier) {
+      return this.mergeRepresentationFactories(existingValues, newValues);
     }
     return newValues;
   }
@@ -84,6 +87,22 @@ export class SysONExtensionRegistryMergeStrategy
       identifier: `syson_${widgetContributionExtensionPoint.identifier}`,
       data: [...existingContributions.data, ...newContributions.data],
     };
+  }
+
+  private mergeRepresentationFactories(
+    existingFactories: DataExtension<any>,
+    newFactories: DataExtension<any>
+  ): DataExtension<any> {
+    const existingIsSysON = existingFactories.identifier?.startsWith('syson_');
+    const newIsSysON = newFactories.identifier?.startsWith('syson_');
+    // syson factories must always be first so they take priority in .find()
+    if (newIsSysON) {
+      return { identifier: newFactories.identifier, data: [...newFactories.data, ...existingFactories.data] };
+    }
+    if (existingIsSysON) {
+      return { identifier: existingFactories.identifier, data: [...existingFactories.data, ...newFactories.data] };
+    }
+    return { identifier: newFactories.identifier, data: [...newFactories.data, ...existingFactories.data] };
   }
 
   private mergeWorkbenchViewContributions(

@@ -54,6 +54,7 @@ public class DoDAFMatrixTableDescriptionProvider implements IRepresentationDescr
                 .headerLabelExpression("")
                 .initialHeightExpression("-1")
                 .isResizableExpression(AQLConstants.AQL_FALSE)
+                .contextMenuEntries(this.createContextMenuEntries().toArray(RowContextMenuEntry[]::new))
                 .build();
 
         return this.tableBuilders.newTableDescription()
@@ -144,10 +145,10 @@ public class DoDAFMatrixTableDescriptionProvider implements IRepresentationDescr
 
         entries.add(this.tableBuilders.newRowContextMenuEntry()
                 .name("DoDAFMatrix-CreateRow")
-                .labelExpression("新建矩阵元素")
+                .labelExpression("新建")
                 .iconURLExpression("/images/graphicalAdd.svg")
                 .body(this.viewBuilders.newChangeContext()
-                        .expression(ServiceMethod.of1(DoDAFMatrixQueryServices::createMatrixElement).aqlSelf("newName"))
+                        .expression(ServiceMethod.of0(DoDAFMatrixQueryServices::createDefaultMatrixElement).aqlSelf())
                         .build())
                 .build());
 

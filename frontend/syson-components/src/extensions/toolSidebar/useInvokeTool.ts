@@ -76,7 +76,7 @@ export const useInvokeTool = (): [
     representationId: string,
     toolId: string,
     diagramElementIds: string[],
-    toolLabel?: string,
+    _toolLabel?: string,
     toolVariables?: Array<{ name: string; value: string; type?: string }>
   ) => {
     const isDeleteTool = SEMANTIC_DELETE_TOOL_IDS.includes(toolId);

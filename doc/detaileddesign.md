@@ -1,6 +1,6 @@
 # SysON DoDAF v2.0 详细设计文档
 
-> 版本: 2026.5.0 | 日期: 2026-06-15 | 分支: feature/chinese-localization
+> 版本: 2026.5.0 | 日期: 2026-06-22 | 分支: feature/combine (基于 feature/chinese-localization + ToolSidebar 合并)
 
 ---
 
@@ -477,6 +477,8 @@ newSetValue()
 | 4 | 所有自定义 ViewDefinition 复用 SDV 图表描述 | Matrix/Gantt/Table/Sequence | 架构上已注册独立描述，后续可替换专属实现 |
 | 5 | Java 字符串常量上限 65535 字节 | AddYourFirstElement | 已改为运行时从 classpath 加载 SVG 文件 |
 | 6 | 表格操作列（Row Actions） | MatrixView | 移除 contextMenuEntries 导致操作列消失，需恢复 |
+| 7 | EMF EClass 图标 URL 解析异常 | ToolSidebar / 右键菜单 | Sirius 框架将 EClass 传入图标解析器时调用 `toString()` 而非 ItemProvider，导致 URL 包含 `EClassImpl@xxx`。文件本身存在于 `/api/images/icons/full/obj16/xxx.svg`，需向 Sirius 上游提 PR 修复 |
+| 8 | ToolSidebar 工具侧边栏 | 全部图表 | 已合并到 feature/combine 分支，通过 Apollo Link 动态注入左侧面板（默认隐藏），需在面板菜单手动激活 |
 
 ### 11.5 后续迭代建议
 
@@ -527,7 +529,32 @@ newSetValue()
 
 ---
 
-## 13. 文件清单
+## 13. ToolSidebar 工具侧边栏
+
+### 13.1 概述
+
+feature/combine 分支新增了工具侧边栏功能，位于左侧面板，默认隐藏。用户需在左侧面板菜单中手动激活"工具"面板。
+
+### 13.2 架构
+
+- `ToolSidebar.tsx` — 工具侧边栏 React 组件，显示 SysML 元素类型分类树
+- `usePalette.ts` — 调色板工具加载 Hook
+- `useInvokeTool.ts` — 工具调用 Hook（通过 GraphQL mutation 创建元素）
+- `diagramSelectionStore.tsx` — 图表选中同步 Store
+- `ToolSidebar.types.ts` — 类型定义
+
+### 13.3 注册方式
+
+通过 Apollo Link（`toolInLeftSidebarConfigurer`）拦截 `getWorkbenchConfiguration` 响应，将 `syson-tool-sidebar` 注入左侧面板 views 列表。同时注册为 `WorkbenchViewContribution`（id: `syson-tool-sidebar`, title: `工具`）。
+
+### 13.4 已知问题
+
+- EMF 图标渲染异常（见 11.4-7）
+- `currentOptions.link` 可能为 undefined 导致 Link 拼接失败（已修复）
+
+---
+
+## 14. 文件清单
 
 ### 13.1 修改文件（部分）
 

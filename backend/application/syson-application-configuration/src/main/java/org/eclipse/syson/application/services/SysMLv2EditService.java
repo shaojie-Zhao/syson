@@ -132,7 +132,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             } else {
                 List<EClass> childrenCandidates = new GetChildCreationSwitch().doSwitch(SysmlPackage.eINSTANCE.getNamespace());
                 childrenCandidates.forEach(candidate -> {
-                    List<String> iconURL = this.labelService.getImagePaths(EcoreUtil.create(candidate));
+                    List<String> iconURL = java.util.List.of("/icons/full/obj16/" + candidate.getName() + ".svg");
                     StyledString styledLabel = this.labelService.getStyledLabel(candidate);
                     String label = "";
                     if (styledLabel != null) {
@@ -169,7 +169,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                     childrenCandidates = filterDoDAFChildren(childrenCandidates);
                 }
                 childrenCandidates.forEach(candidate -> {
-                    List<String> iconURL = this.labelService.getImagePaths(EcoreUtil.create(candidate));
+                    List<String> iconURL = java.util.List.of("/icons/full/obj16/" + candidate.getName() + ".svg");
                     StyledString styledLabel = this.labelService.getStyledLabel(candidate);
                     String label = "";
                     if (styledLabel != null) {
@@ -189,8 +189,16 @@ public class SysMLv2EditService implements IEditServiceDelegate {
 
     @Override
     public Optional<Object> createChild(IEditingContext editingContext, Object object, String childCreationDescriptionId) {
-        if (childCreationDescriptionId.startsWith(ID_PREFIX) && object instanceof Element container) {
-            EClass eClass = SysMLMetamodelHelper.toEClass(childCreationDescriptionId.substring(ID_PREFIX.length()));
+        // Support name parameter: SysMLv2EditService-PartUsage:MyName
+        String initName = null;
+        String resolvedId = childCreationDescriptionId;
+        int colonIdx = childCreationDescriptionId.lastIndexOf(':');
+        if (colonIdx > 0 && childCreationDescriptionId.startsWith(ID_PREFIX)) {
+            initName = childCreationDescriptionId.substring(colonIdx + 1);
+            resolvedId = childCreationDescriptionId.substring(0, colonIdx);
+        }
+        if (resolvedId.startsWith(ID_PREFIX) && object instanceof Element container) {
+            EClass eClass = SysMLMetamodelHelper.toEClass(resolvedId.substring(ID_PREFIX.length()));
             EObject eObject = SysmlFactory.eINSTANCE.create(eClass);
             Optional<EClass> intermediateContainerClass = new GetIntermediateContainerCreationSwitch(container).doSwitch(eClass);
             if (intermediateContainerClass.isPresent() && eObject instanceof Element newElement) {
@@ -205,9 +213,14 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 membership.getOwnedRelatedElement().add(newElement);
             }
             new ElementInitializerSwitch().doSwitch(eObject);
+<<<<<<< HEAD
             // Tag DoDAF elements with appropriate aliasId
             if (eObject instanceof Element created && this.isDoDAFProject(container)) {
                 this.tagDoDAFAlias(created, childCreationDescriptionId);
+=======
+            if (initName != null && !initName.isEmpty() && eObject instanceof Element newElement) {
+                newElement.setDeclaredName(initName);
+>>>>>>> 2382e533cb3c0fc85062c2c03f6e26fea5f95c9a
             }
             if (eObject instanceof ViewUsage viewUsage) {
                 this.createDiagram(editingContext, viewUsage);

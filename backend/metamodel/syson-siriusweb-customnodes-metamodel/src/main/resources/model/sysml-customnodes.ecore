@@ -36,4 +36,9 @@
       eSuperTypes="../../../../../sirius-components-view-diagram/src/main/resources/model/diagram.ecore#//NodeStyleDescription">
     <eStructuralFeatures xsi:type="ecore:EReference" name="background" eType="ecore:EClass ../../../../../sirius-components-view/src/main/resources/model/view.ecore#//UserColor"/>
   </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Ov1NodeStyleDescription"
+      eSuperTypes="../../../../../sirius-components-view-diagram/src/main/resources/model/diagram.ecore#//NodeStyleDescription">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="background" eType="ecore:EClass ../../../../../sirius-components-view/src/main/resources/model/view.ecore#//UserColor"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="iconId" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
 </ecore:EPackage>

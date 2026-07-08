@@ -17,6 +17,7 @@ public class Dodafv2TemplateBuilder {
         vd(lp,"GanttView");
         vd(lp,"SequenceView");
         vd(lp,"TableView");
+        vd(lp,"OV1View");
         return r;
     }
 
@@ -47,7 +48,7 @@ public class Dodafv2TemplateBuilder {
 
         // OV (8): flw() for resource flows, suc() for action/event flows, sub() for org, dep() for others
         var ov=pkg(root,"OV_作战视角");
-        {var v=vu(ov,"OV-1_高层作战概念图");var ship=pu("水面指挥舰","dodaf:operational");add(v,ship);var uuv=pu("无人潜航器编队","dodaf:operational");add(v,uuv);var air=pu("反潜巡逻机","dodaf:operational");add(v,air);var cmd=pu("岸基指挥中心","dodaf:operational");add(v,cmd);var sen=pu("水下传感器阵列","dodaf:operational");add(v,sen);var enemy=pu("敌方潜艇目标","dodaf:operational");add(v,enemy);dep(v,sen,ship);dep(v,ship,uuv);dep(v,ship,air);dep(v,cmd,ship);dep(v,sen,enemy);}
+        {var v=vu(ov,"OV-1_高层作战概念图");/* PartUsages created dynamically from plotting tool via auto-save */}
         {var v=vu(ov,"OV-2_作战资源流描述");var a=pu("指挥节点","dodaf:operational");add(v,a);var b=pu("探测节点","dodaf:operational");add(v,b);var c=pu("攻击节点","dodaf:operational");add(v,c);dep(v,b,a);dep(v,a,c);}
         {var v=vu(ov,"OV-3_作战资源流矩阵");var a=pu("探测→指挥数据流","dodaf:exchange");add(v,a);var b=pu("指挥→攻击指令流","dodaf:exchange");add(v,b);dep(v,a,b);}
         {var v=vu(ov,"OV-4_组织结构图");var a=pu("联合反潜指挥部","dodaf:organization");add(v,a);var b=pu("水面作战群","dodaf:organization");add(v,b);var c=pu("航空反潜大队","dodaf:organization");add(v,c);var d=pu("水下无人系统分队","dodaf:organization");add(v,d);dep(v,b,a);dep(v,c,a);dep(v,d,a);}
