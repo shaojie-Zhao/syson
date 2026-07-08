@@ -1,9 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-<<<<<<< HEAD
-import { Gantt, ViewMode, Task } from '@ObeoNetwork/gantt-task-react';
-=======
-import { Gantt as GanttOriginal, ViewMode, DateStartColumn, DateEndColumn } from '@ObeoNetwork/gantt-task-react';
->>>>>>> 2382e533cb3c0fc85062c2c03f6e26fea5f95c9a
+import { Gantt as GanttOriginal, ViewMode, Task, DateStartColumn, DateEndColumn } from '@ObeoNetwork/gantt-task-react';
 import '@ObeoNetwork/gantt-task-react/dist/style.css';
 import { zhCN } from 'date-fns/locale';
 
@@ -247,11 +243,7 @@ const DoDAFGanttTimeline: React.FC = () => {
               { id: 'end', Cell: EndCell as any, width: 100, title: '结束' },
               { id: 'progress', Cell: ProgressCell as any, width: 100, title: '进度' },
             ]}
-<<<<<<< HEAD
-            onDateChange={async (task: Task) => {
-=======
             onDateChange={async (task: any) => {
->>>>>>> 2382e533cb3c0fc85062c2c03f6e26fea5f95c9a
               const t = tasks.find(x => x.id === task.id);
               if (!t) return;
               const newStart = (task as any).start?.toISOString?.()?.slice(0, 10) || '';
@@ -283,11 +275,7 @@ const DoDAFGanttTimeline: React.FC = () => {
             }}
             dateLocale={zhCN}
             fontFamily="system-ui, sans-serif"
-<<<<<<< HEAD
-            TooltipContent={({ task }: { task: Task }) => {
-=======
             TooltipContent={({ task }: any) => {
->>>>>>> 2382e533cb3c0fc85062c2c03f6e26fea5f95c9a
               if (!task) return null;
               return (
                 <div style={{ background: DARK2, padding: '8px 12px', borderRadius: 8, color: '#e0e0e0', fontSize: 12, border: '1px solid ' + BORDER, boxShadow: '0 4px 16px rgba(0,0,0,0.4)' }}>
