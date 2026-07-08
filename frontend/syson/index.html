@@ -421,6 +421,18 @@
       setInterval(function() { scanForGantt(); }, 100);
       // ===== Custom DoDAF Matrix View injection =====
       var matrixInjected = false;
+      function currentMatrixRepId() {
+        var m = window.location.search.match(/[?&]representation=([^&]+)/);
+        return m ? m[1] : '';
+      }
+      function teardownMatrix() {
+        var w = document.getElementById('matrix-wrapper');
+        if (w) {
+          try { if (w.__matrixRoot) w.__matrixRoot.unmount(); } catch (e) {}
+          w.remove();
+        }
+        matrixInjected = false;
+      }
       function injectMatrix(containerEl) {
         if (matrixInjected) return;
         matrixInjected = true;
@@ -428,6 +440,7 @@
         containerEl.style.display = 'none';
         var wrapper = document.createElement('div');
         wrapper.id = 'matrix-wrapper';
+        wrapper.setAttribute('data-repid', currentMatrixRepId());
         wrapper.style.cssText = 'height:100%;overflow:hidden';
         containerEl.parentElement.insertBefore(wrapper, containerEl.nextSibling);
         if (window.renderDoDAFMatrix) window.renderDoDAFMatrix(wrapper);
@@ -439,8 +452,11 @@
       }
       function scanForMatrix() {
         var w = document.getElementById('matrix-wrapper');
+        // If the active representation changed (switched/reopened), tear down the stale matrix immediately
+        // so its previous content cannot flash before the new one is injected (also properly unmounts the root).
+        if (w && w.getAttribute('data-repid') !== currentMatrixRepId()) { teardownMatrix(); w = null; }
         if (w && w.previousElementSibling && !w.previousElementSibling.closest('[data-testid="table-representation"]')) {
-          w.remove(); matrixInjected = false;
+          teardownMatrix(); w = null;
         }
         if (matrixInjected && !document.getElementById('matrix-wrapper')) matrixInjected = false;
         if (matrixInjected) return;
@@ -455,10 +471,9 @@
           if (trCount >= 2) { injectMatrix(rep); return; }
         }
       }
-      setInterval(function() { scanForMatrix(); }, 500);
+      setInterval(function() { scanForMatrix(); }, 200);
       window._injectMatrix = function() {
-        var wrapper = document.getElementById('matrix-wrapper'); if (wrapper) wrapper.remove();
-        matrixInjected = false; scanForMatrix();
+        teardownMatrix(); scanForMatrix();
       };
     </script>
     <script type="module" src="/src/index.tsx"></script>

@@ -49,8 +49,41 @@ import DoDAFMatrixView from './views/DoDAFMatrixView';
 };
 (window as any).renderDoDAFMatrix = (container: HTMLElement) => {
   const root = ReactDOM.createRoot(container);
+  (container as any).__matrixRoot = root;
   root.render(React.createElement(DoDAFMatrixView));
 };
+
+// Notify overlay views (e.g. the DoDAF Matrix) whenever a GraphQL mutation changes the model — for
+// instance after deleting a node from the Explorer tree — so they can refresh immediately. The matrix
+// lives in its own isolated React root without access to Sirius' Apollo/subscriptions, so we bridge the
+// signal through a window event by wrapping fetch (which Apollo's HttpLink uses for /api/graphql).
+(() => {
+  const w = window as any;
+  if (w.__sysonFetchPatched) {
+    return;
+  }
+  w.__sysonFetchPatched = true;
+  const origFetch: typeof fetch = w.fetch?.bind(w);
+  if (!origFetch) {
+    return;
+  }
+  w.fetch = async (...args: any[]) => {
+    const res = await origFetch(...(args as [RequestInfo, RequestInit?]));
+    try {
+      const req = args[0];
+      const url = typeof req === 'string' ? req : req?.url;
+      const init = args[1];
+      const method = (init?.method || (typeof req === 'object' ? req?.method : '') || '').toUpperCase();
+      const body = init?.body;
+      if (url && url.includes('/api/graphql') && method === 'POST' && typeof body === 'string' && body.includes('mutation') && res.ok) {
+        window.dispatchEvent(new CustomEvent('syson-model-mutation'));
+      }
+    } catch {
+      /* ignore */
+    }
+    return res;
+  };
+})();
 
 if (process.env.NODE_ENV !== 'production') {
   loadDevMessages();
