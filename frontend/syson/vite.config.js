@@ -107,19 +107,19 @@ export default defineConfig(({ mode }) => ({
   server: {
     proxy: {
       '/api': {
-        target: 'http://192.168.3.111:8080',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/images': {
-        target: 'http://192.168.3.111:8080',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/icons': {
-        target: 'http://192.168.3.111:8080',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/subscriptions': {
-        target: 'ws://192.168.3.111:8080',
+        target: 'ws://localhost:8080',
         ws: true,
         changeOrigin: true,
       },

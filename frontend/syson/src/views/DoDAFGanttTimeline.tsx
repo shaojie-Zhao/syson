@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Gantt as GanttOriginal, ViewMode, Task } from '@ObeoNetwork/gantt-task-react';
+import { Gantt as GanttOriginal, ViewMode, Task, DateStartColumn, DateEndColumn } from '@ObeoNetwork/gantt-task-react';
 import '@ObeoNetwork/gantt-task-react/dist/style.css';
 import { zhCN } from 'date-fns/locale';
 
@@ -243,7 +243,7 @@ const DoDAFGanttTimeline: React.FC = () => {
               { id: 'end', Cell: EndCell as any, width: 100, title: '结束' },
               { id: 'progress', Cell: ProgressCell as any, width: 100, title: '进度' },
             ]}
-            onDateChange={async (task: Task) => {
+            onDateChange={async (task: any) => {
               const t = tasks.find(x => x.id === task.id);
               if (!t) return;
               const newStart = (task as any).start?.toISOString?.()?.slice(0, 10) || '';
@@ -275,7 +275,7 @@ const DoDAFGanttTimeline: React.FC = () => {
             }}
             dateLocale={zhCN}
             fontFamily="system-ui, sans-serif"
-            TooltipContent={({ task }: { task: Task }) => {
+            TooltipContent={({ task }: any) => {
               if (!task) return null;
               return (
                 <div style={{ background: DARK2, padding: '8px 12px', borderRadius: 8, color: '#e0e0e0', fontSize: 12, border: '1px solid ' + BORDER, boxShadow: '0 4px 16px rgba(0,0,0,0.4)' }}>
