@@ -26,12 +26,11 @@ public class DoDAFMatrixDataService {
     private final IRepresentationMetadataRepository representationMetadataRepository;
     private final JdbcTemplate jdbcTemplate;
     private final IEditingContextEventProcessorRegistry eventProcessorRegistry;
-    private static final Map<String, Map<String, Object>> relations = new ConcurrentHashMap<>();
     private static final Map<String, List<Map<String, Object>>> elementCache = new ConcurrentHashMap<>();
     private static final Map<String, String> packageNameCache = new ConcurrentHashMap<>();
     static final Map<String, String> ctxIdCache = new ConcurrentHashMap<>();
     private static final Map<String, org.eclipse.emf.ecore.resource.ResourceSet> resourceSetCache = new ConcurrentHashMap<>();
-    private static final Map<String, Object[]> docTextCache = new ConcurrentHashMap<>();
+    private volatile boolean tableReady = false;
     private static final Map<String, String> DODAF_MAP = Map.of("dodaf:capability","Capability","dodaf:operational","OperationalNode","dodaf:system","SystemNode","dodaf:organization","Organization","dodaf:exchange","InformationExchange");
 
     public DoDAFMatrixDataService(IEditingContextSearchService a, IEditingContextPersistenceService p, IObjectSearchService o,
@@ -83,7 +82,7 @@ public class DoDAFMatrixDataService {
         String ck = pid + ":" + pkid; String c = packageNameCache.get(ck); if (c != null) return c;
         try { var rs = getRS(pid); if (rs == null) return fb(pkid);
             for (var r : rs.getResources()) {
-                try { EObject o = r.getEObject(pkid); if (o instanceof org.eclipse.syson.sysml.Package sp && sp.getDeclaredName() != null && !sp.getDeclaredName().isBlank()) { packageNameCache.put(ck, sp.getDeclaredName()); return sp.getDeclaredName(); } } catch (Exception ig) {}
+                try { EObject o = r.getEObject(pkid); if ((o instanceof org.eclipse.syson.sysml.Package || o instanceof org.eclipse.syson.sysml.ViewUsage)) { String nm = en(o); if (nm != null && !nm.isBlank()) { packageNameCache.put(ck, nm); return nm; } } } catch (Exception ig) {}
             }
         } catch (Exception ig) {}
         return fb(pkid);
@@ -93,10 +92,34 @@ public class DoDAFMatrixDataService {
         try {
             String s = ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid));
             var metas = representationMetadataRepository.findAllRepresentationMetadataBySemanticDataId(java.util.UUID.fromString(s));
-            for (var m : metas) { if (m.getId().contains(repId) && m.getTargetObjectId() != null) return m.getTargetObjectId(); }
-            for (var m : metas) { if (m.getTargetObjectId() != null) return m.getTargetObjectId(); }
+            // 1) Exact match by the real matrix representation id — but only on a Table representation.
+            if (repId != null && !repId.isBlank() && !"default-matrix".equals(repId)) {
+                for (var m : metas) {
+                    if (m.getTargetObjectId() != null && isTableRepresentation(m) && m.getId() != null && m.getId().contains(repId)) {
+                        return m.getTargetObjectId();
+                    }
+                }
+            }
+            // 2) Otherwise pick a Table representation (the DoDAF matrix is always a Table). NEVER fall back to
+            //    non-Table representations (e.g. OV-1 Gantt / Diagram), which previously mis-targeted created elements.
+            for (var m : metas) {
+                if (m.getTargetObjectId() != null && isTableRepresentation(m)) {
+                    return m.getTargetObjectId();
+                }
+            }
+            log.warn("getTargetObjectId: no Table representation found for ec={} (repId={})", s, repId);
         } catch (Exception e) { log.warn("TOI: {}", e.getMessage()); }
         return null;
+    }
+
+    /** A DoDAF matrix is rendered as a Sirius Table representation (kind contains "type=Table"). */
+    private boolean isTableRepresentation(org.eclipse.sirius.web.domain.boundedcontexts.representationdata.RepresentationMetadata m) {
+        try {
+            String kind = m.getKind();
+            return kind != null && kind.contains("type=Table");
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /** Map Sirius Object ID (from createChild) to EMF elementId */
@@ -182,45 +205,75 @@ public class DoDAFMatrixDataService {
     private String en(EObject o) { try { if (o instanceof PartUsage x) return x.getDeclaredName(); if (o instanceof RequirementUsage x) return x.getDeclaredName(); if (o instanceof ActionUsage x) return x.getDeclaredName(); if (o instanceof InterfaceUsage x) return x.getDeclaredName(); if (o instanceof org.eclipse.syson.sysml.Package x) return x.getDeclaredName(); } catch (Exception ig) {} try { var f = o.eClass().getEStructuralFeature("declaredName"); if (f != null && o.eGet(f) instanceof String s && !s.isBlank()) return s; } catch (Exception ig) {} return null; }
     private boolean mt(EObject o, java.util.Set<String> ts) { String cn = o.eClass().getName(); for (String t : ts) if (cn.contains(t) || cn.equalsIgnoreCase(t)) return true; return false; }
 
-    public List<Map<String, Object>> getRelations() { return new ArrayList<>(relations.values()); }
+    private String resolveEc(String pid) { return ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid)); }
+
+    /** Lazily create the persistence table for matrix relations (idempotent). */
+    private void ensureTable() {
+        if (tableReady) { return; }
+        synchronized (this) {
+            if (tableReady) { return; }
+            try {
+                jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS dodaf_matrix_relation (id text PRIMARY KEY, editing_context_id text, source_id text NOT NULL, target_id text NOT NULL, relation_type text NOT NULL, sirius_id text, created_at bigint NOT NULL)");
+                tableReady = true;
+            } catch (Exception e) { log.error("ensureTable: {}", e.getMessage(), e); }
+        }
+    }
+
+    private Map<String, Object> rowToRelation(Map<String, Object> row) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", row.get("id"));
+        m.put("sourceId", row.get("source_id"));
+        m.put("targetId", row.get("target_id"));
+        m.put("relationType", row.get("relation_type"));
+        Object sid = row.get("sirius_id");
+        if (sid instanceof String s && !s.isBlank()) { m.put("siriusId", s); }
+        m.put("createdAt", row.get("created_at"));
+        return m;
+    }
+
+    public List<Map<String, Object>> getRelations() {
+        ensureTable();
+        List<Map<String, Object>> out = new ArrayList<>();
+        try {
+            for (var row : jdbcTemplate.queryForList("SELECT * FROM dodaf_matrix_relation ORDER BY created_at")) { out.add(rowToRelation(row)); }
+        } catch (Exception e) { log.error("getRelations: {}", e.getMessage(), e); }
+        return out;
+    }
 
     /**
-     * Return the relations, first pruning any relation whose backing SysML element no longer exists in the model
-     * (e.g. it was deleted from the Explorer tree). A grace period protects freshly-created relations whose element
-     * may not be persisted yet.
+     * Return the relations for an editing context, first pruning any relation whose backing SysML element no longer
+     * exists in the model (e.g. it was deleted from the Explorer tree). A grace period protects freshly-created
+     * relations whose element may not be persisted yet.
      */
     public List<Map<String, Object>> getRelations(String pid) {
-        if (pid == null || pid.isBlank()) { return new ArrayList<>(relations.values()); }
-        var withSirius = relations.values().stream()
-                .filter(r -> r.get("siriusId") instanceof String sid && !sid.isBlank())
-                .toList();
+        ensureTable();
+        if (pid == null || pid.isBlank()) { return getRelations(); }
+        String ecId = resolveEc(pid);
+        List<Map<String, Object>> rows;
+        try {
+            rows = jdbcTemplate.queryForList("SELECT * FROM dodaf_matrix_relation WHERE editing_context_id = ? OR editing_context_id IS NULL ORDER BY created_at", ecId);
+        } catch (Exception e) { log.error("getRelations(pid): {}", e.getMessage(), e); return new ArrayList<>(); }
+        java.util.Set<Object> pruned = new java.util.HashSet<>();
+        var withSirius = rows.stream().filter(r -> r.get("sirius_id") instanceof String sid && !sid.isBlank()).toList();
         if (!withSirius.isEmpty()) {
-            String docText = loadDocumentTextCached(pid);
+            String docText = loadDocumentText(pid);
             if (docText != null) {
                 long now = System.currentTimeMillis();
                 for (var r : withSirius) {
-                    Object ca = r.get("createdAt");
-                    long createdAt = (ca instanceof Number n) ? n.longValue() : 0L;
-                    if (now - createdAt < 10_000L) { continue; } // grace period: element may not be persisted yet
-                    String sid = (String) r.get("siriusId");
+                    long createdAt = (r.get("created_at") instanceof Number n) ? n.longValue() : 0L;
+                    if (now - createdAt < 3_000L) { continue; } // grace period: element may not be persisted yet
+                    String sid = (String) r.get("sirius_id");
                     if (!docText.contains(sid)) {
-                        relations.remove((String) r.get("id"));
+                        try { jdbcTemplate.update("DELETE FROM dodaf_matrix_relation WHERE id = ?", r.get("id")); } catch (Exception ig) {}
+                        pruned.add(r.get("id"));
                         log.info("getRelations: pruned relation {} (element {} no longer in model)", r.get("id"), sid);
                     }
                 }
             }
         }
-        return new ArrayList<>(relations.values());
-    }
-
-    /** Load the concatenated persisted SysML document text for a project/editing-context id, cached briefly. */
-    private String loadDocumentTextCached(String pid) {
-        long now = System.currentTimeMillis();
-        Object[] cached = docTextCache.get(pid);
-        if (cached != null && now - (Long) cached[0] < 2_000L) { return (String) cached[1]; }
-        String text = loadDocumentText(pid);
-        docTextCache.put(pid, new Object[] { now, text });
-        return text;
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (var row : rows) { if (!pruned.contains(row.get("id"))) { out.add(rowToRelation(row)); } }
+        return out;
     }
 
     private String loadDocumentText(String pid) {
@@ -235,20 +288,39 @@ public class DoDAFMatrixDataService {
         } catch (Exception e) { log.warn("loadDocumentText: {}", e.getMessage()); return null; }
     }
 
-    public Map<String, Object> createRelation(String s, String t, String rt, String siriusId) { String id = UUID.randomUUID().toString(); Map<String, Object> r = new LinkedHashMap<>(); r.put("id",id); r.put("sourceId",s); r.put("targetId",t); r.put("relationType",rt); if (siriusId != null && !siriusId.isBlank()) r.put("siriusId",siriusId); r.put("createdAt",System.currentTimeMillis()); relations.put(id, r); return r; }
-    public void deleteRelation(String id) { relations.remove(id); }
+    public Map<String, Object> createRelation(String s, String t, String rt, String siriusId, String ctxId) {
+        ensureTable();
+        String id = UUID.randomUUID().toString();
+        long now = System.currentTimeMillis();
+        String ecId = (ctxId != null && !ctxId.isBlank()) ? resolveEc(ctxId) : null;
+        String sid = (siriusId != null && !siriusId.isBlank()) ? siriusId : null;
+        try {
+            jdbcTemplate.update("INSERT INTO dodaf_matrix_relation (id, editing_context_id, source_id, target_id, relation_type, sirius_id, created_at) VALUES (?,?,?,?,?,?,?)",
+                    id, ecId, s, t, rt, sid, now);
+        } catch (Exception e) { log.error("createRelation: {}", e.getMessage(), e); }
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("id", id); r.put("sourceId", s); r.put("targetId", t); r.put("relationType", rt);
+        if (sid != null) { r.put("siriusId", sid); }
+        r.put("createdAt", now);
+        return r;
+    }
+
+    public void deleteRelation(String id) {
+        ensureTable();
+        try { jdbcTemplate.update("DELETE FROM dodaf_matrix_relation WHERE id = ?", id); } catch (Exception e) { log.error("deleteRelation: {}", e.getMessage(), e); }
+    }
 
     /** Delete the matrix relation and, if it is backed by a SysML element, delete that element from the model (syncing the Explorer tree). */
     public boolean deleteRelationAndElement(String pid, String id) {
-        Map<String, Object> rel = relations.get(id);
+        ensureTable();
         boolean elementDeleted = false;
-        if (rel != null) {
-            Object siriusId = rel.get("siriusId");
-            if (siriusId instanceof String sid && !sid.isBlank()) {
+        try {
+            var rows = jdbcTemplate.queryForList("SELECT sirius_id FROM dodaf_matrix_relation WHERE id = ?", id);
+            if (!rows.isEmpty() && rows.get(0).get("sirius_id") instanceof String sid && !sid.isBlank()) {
                 elementDeleted = deleteBySiriusId(pid, sid);
             }
-        }
-        relations.remove(id);
+        } catch (Exception e) { log.error("deleteRelationAndElement: {}", e.getMessage(), e); }
+        deleteRelation(id);
         return elementDeleted;
     }
 
