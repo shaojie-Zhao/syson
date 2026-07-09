@@ -712,21 +712,45 @@
             try {
                 var obj = JSON.parse(rawJson);
                 var syms = obj.symbols || [];
-                // Assign sequence numbers per type (sorted by position for consistency)
-                var typeCounts = {};
+                // Save camera viewpoint
+                if (viewer && viewer.camera) {
+                    var camPos = viewer.camera.position;
+                    obj._camera = {
+                        x: camPos.x, y: camPos.y, z: camPos.z,
+                        heading: viewer.camera.heading,
+                        pitch: viewer.camera.pitch,
+                        roll: viewer.camera.roll
+                    };
+                }
+                // Preserve existing _displayName; only assign to new symbols without one
+                var typeMaxSeq = {};
+                // First pass: find max sequence per type from existing _displayName
                 for (var i = 0; i < syms.length; i++) {
                     var s = syms[i];
                     var pos = s.position || {};
                     s._symbolId = 'sym-' + (s.libID||0) + '-' + (s.code||0) + '-' +
                         ((pos.x||0)).toFixed(6) + '-' + ((pos.y||0)).toFixed(6);
-                    var mk = (s.libID||0) + ':' + (s.code||0);
-                    if (!typeCounts[mk]) typeCounts[mk] = 0;
-                    typeCounts[mk]++;
-                    var seq = String(typeCounts[mk]);
-                    while (seq.length < 3) seq = '0' + seq;
-                    var mt = symbolMeta[mk];
-                    var tn = (mt && mt.name) || ('军标_' + mk);
-                    s._displayName = tn + '-' + seq;
+                    if (s._displayName) {
+                        var mk = (s.libID||0) + ':' + (s.code||0);
+                        var parts = s._displayName.split('-');
+                        var sn = parseInt(parts[parts.length - 1], 10);
+                        if (!isNaN(sn) && !typeMaxSeq[mk]) typeMaxSeq[mk] = 0;
+                        if (!isNaN(sn) && sn > (typeMaxSeq[mk]||0)) typeMaxSeq[mk] = sn;
+                    }
+                }
+                // Second pass: assign _displayName only to symbols without one
+                for (var j = 0; j < syms.length; j++) {
+                    var s2 = syms[j];
+                    if (!s2._displayName) {
+                        var mk2 = (s2.libID||0) + ':' + (s2.code||0);
+                        if (!typeMaxSeq[mk2]) typeMaxSeq[mk2] = 0;
+                        typeMaxSeq[mk2]++;
+                        var seq2 = String(typeMaxSeq[mk2]);
+                        while (seq2.length < 3) seq2 = '0' + seq2;
+                        var mt2 = symbolMeta[mk2];
+                        var tn2 = (mt2 && mt2.name) || ('军标_' + mk2);
+                        s2._displayName = tn2 + '-' + seq2;
+                    }
                 }
                 json = JSON.stringify(obj);
             } catch(e) {}
@@ -778,6 +802,19 @@
                         plottingController.ensureSuperPlot(function() {
                             try {
                                 importLayerJsonObject(data);
+                                // Restore camera viewpoint
+                                if (data._camera && viewer && viewer.camera) {
+                                    var cam = data._camera;
+                                    viewer.camera.flyTo({
+                                        destination: new Cesium.Cartesian3(cam.x, cam.y, cam.z),
+                                        orientation: {
+                                            heading: cam.heading || 0,
+                                            pitch: cam.pitch || -0.5,
+                                            roll: cam.roll || 0
+                                        },
+                                        duration: 0.5
+                                    });
+                                }
                                 lastSavedSymbolsJson = plottingLayer ? plottingLayer.toJson() : '';
                                 autoLoadComplete = true;
                                 console.log('[OV-1] autoLoad done');
@@ -934,6 +971,10 @@
             viewer.scene.postRender.addEventListener(function() {
                 updateFloatingLabels();
             });
+            // Save camera state every 3 seconds when moved
+            setInterval(function() {
+                if (autoLoadComplete && representationId) saveCameraState();
+            }, 3000);
 
             /*if (baseTileUrl) {
                 setBaseTileLayer(baseTileUrl);
@@ -981,6 +1022,27 @@
         var leaderSvg = null;
         var labelDataMap = {};  // _symbolId → {labelDiv, lineEl, displayName}
         var labelDirty = true;
+
+        var lastCameraJson = '';
+
+        function saveCameraState() {
+            if (!representationId || !viewer || !viewer.camera) return;
+            var cp = viewer.camera.position;
+            var cam = { x: cp.x, y: cp.y, z: cp.z, heading: viewer.camera.heading, pitch: viewer.camera.pitch, roll: viewer.camera.roll };
+            var camJson = JSON.stringify(cam);
+            if (camJson === lastCameraJson) return;
+            lastCameraJson = camJson;
+            // Read current layer, inject camera, save back
+            fetch('/api/layer/' + encodeURIComponent(representationId))
+                .then(function(r) { if (!r.ok) return { symbols: [] }; return r.json(); })
+                .then(function(layer) {
+                    layer._camera = cam;
+                    return fetch('/api/layer/' + encodeURIComponent(representationId), {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(layer),
+                    });
+                }).catch(function(){});
+        }
 
         function initLabels() {
             labelOverlay = document.getElementById('labelOverlay');
@@ -1061,8 +1123,7 @@
                     entry.labelDiv.style.borderColor = sc;
                 }
                 // Always update content with latest displayName
-                var currentName = entry.displayName || displayName;
-                entry.labelDiv.innerHTML = '<b>' + currentName + '</b><br>' + coordText;
+                entry.labelDiv.innerHTML = '<b>' + (entry.displayName || displayName) + '</b><br>' + coordText;
                 entry.lineEl.setAttribute('stroke', sc);
                 // Position label upper-right, 30° angle, double distance
                 var offsetX = 40;
@@ -1689,6 +1750,7 @@
                 return;
             }
             currentSelectedSymbol.setStrokeWidth(v);
+            labelDirty = true; autoSave();
         }
 
         function propSetStrokeColor(value) {
@@ -1696,6 +1758,7 @@
                 return;
             }
             currentSelectedSymbol.setStrokeColor(value);
+            labelDirty = true; autoSave();
         }
 
         function propSetStrokeOpacity(value) {
@@ -1709,6 +1772,7 @@
             if (v < 0) v = 0;
             if (v > 1) v = 1;
             currentSelectedSymbol.setStrokeOpacity(v);
+            labelDirty = true; autoSave();
         }
 
         function propSetFillEnable(value) {
@@ -1723,6 +1787,7 @@
                 return;
             }
             currentSelectedSymbol.setFillColor(value);
+            labelDirty = true; autoSave();
         }
 
         function propSetFillOpacity(value) {
@@ -1736,6 +1801,7 @@
             if (v < 0) v = 0;
             if (v > 1) v = 1;
             currentSelectedSymbol.setFillOpacity(v);
+            labelDirty = true; autoSave();
         }
 
         function propSetNoteText(value) {
@@ -1743,6 +1809,7 @@
                 return;
             }
             currentSelectedSymbol.setNoteText(value);
+            labelDirty = true; autoSave();
         }
 
         function propSetNoteFont(value) {
@@ -1768,6 +1835,7 @@
                 return;
             }
             currentSelectedSymbol.setNoteFillColor(value);
+            labelDirty = true; autoSave();
         }
 
         function propSetNoteOutlineColor(value) {
@@ -1775,6 +1843,7 @@
                 return;
             }
             currentSelectedSymbol.setNoteOutlineColor(value);
+            labelDirty = true; autoSave();
         }
 
         function propSetNoteOutlineWidth(value) {
@@ -1786,6 +1855,7 @@
                 return;
             }
             currentSelectedSymbol.setNoteOutlineWidth(v);
+            labelDirty = true; autoSave();
         }
 
         function propSetNoteOffset() {
@@ -1798,6 +1868,7 @@
                 return;
             }
             currentSelectedSymbol.setNoteOffset([x, y]);
+            labelDirty = true; autoSave();
         }
 
         function stopInteract() {
@@ -1960,50 +2031,49 @@
                                 var metaKey = (s.libID || 0) + ':' + (s.code || 0);
                                 var meta = symbolMeta[metaKey];
                                 var typeName = (meta && meta.name) || ('军标_' + metaKey);
-                                // Sequence based on PartUsage names in model (source of truth)
-                                var targetObjectId = (new URLSearchParams(window.location.search)).get('targetObjectId');
-                                if (targetObjectId) {
-                                    fetch('/api/partUsageNames/' + encodeURIComponent(representationId) + '/' + encodeURIComponent(targetObjectId))
-                                        .then(function(r) { if (!r.ok) return []; return r.json(); })
-                                        .then(function(names) {
-                                            var maxSeq = 0;
-                                            for (var ni = 0; ni < names.length; ni++) {
-                                                if (names[ni] && names[ni].indexOf(typeName) === 0) {
-                                                    var parts = names[ni].split('-');
-                                                    var sn = parseInt(parts[parts.length - 1], 10);
-                                                    if (!isNaN(sn) && sn > maxSeq) maxSeq = sn;
-                                                }
+                                // Sequence based on saved PartUsage names (from Express names.json)
+                                fetch('/api/partUsageNames/' + encodeURIComponent(representationId))
+                                    .then(function(r) { if (!r.ok) return []; return r.json(); })
+                                    .then(function(names) {
+                                        var maxSeq = 0;
+                                        for (var ni = 0; ni < names.length; ni++) {
+                                            if (names[ni] && names[ni].indexOf(typeName) === 0) {
+                                                var parts = names[ni].split('-');
+                                                var sn = parseInt(parts[parts.length - 1], 10);
+                                                if (!isNaN(sn) && sn > maxSeq) maxSeq = sn;
                                             }
-                                            // Also check pending names in labelDataMap
-                                            for (var lsid in labelDataMap) {
-                                                var lde = labelDataMap[lsid];
-                                                if (lde && lde.displayName && lde.displayName.indexOf(typeName) === 0) {
-                                                    var p2 = lde.displayName.split('-');
-                                                    var sn2 = parseInt(p2[p2.length - 1], 10);
-                                                    if (!isNaN(sn2) && sn2 > maxSeq) maxSeq = sn2;
-                                                }
+                                        }
+                                        // Also check pending names in labelDataMap
+                                        for (var lsid in labelDataMap) {
+                                            var lde = labelDataMap[lsid];
+                                            if (lde && lde.displayName && lde.displayName.indexOf(typeName) === 0) {
+                                                var p2 = lde.displayName.split('-');
+                                                var sn2 = parseInt(p2[p2.length - 1], 10);
+                                                if (!isNaN(sn2) && sn2 > maxSeq) maxSeq = sn2;
                                             }
-                                            var seq = String(maxSeq + 1);
-                                            while (seq.length < 3) seq = '0' + seq;
-                                            var symbolName = typeName + '-' + seq;
-                                            finalizeSymbol(sid, s, symbolName);
-                                        }).catch(function() {
-                                            finalizeSymbol(sid, s, typeName + '-???');
-                                        });
-                                } else {
-                                    finalizeSymbol(sid, s, typeName + '-???');
-                                }
+                                        }
+                                        var seq = String(maxSeq + 1);
+                                        while (seq.length < 3) seq = '0' + seq;
+                                        var symbolName = typeName + '-' + seq;
+                                        finalizeSymbol(sid, s, symbolName);
+                                    }).catch(function() {
+                                        finalizeSymbol(sid, s, typeName + '-???');
+                                    });
                                 function finalizeSymbol(sid, s, symbolName) {
                                 s._displayName = symbolName;
-                                // Store display name for label rendering
                                 if (!labelDataMap[sid]) labelDataMap[sid] = {};
                                 labelDataMap[sid].displayName = symbolName;
+                                // Force update label DOM immediately if it exists
+                                if (labelDataMap[sid].labelDiv) {
+                                    labelDataMap[sid].labelDiv.innerHTML = '<b>' + symbolName + '</b><br>' + (labelDataMap[sid].labelDiv.innerHTML.split('<br>')[1] || '');
+                                }
                                 console.info('[OV-1] new symbol detected:', sid, symbolName);
                                 notifyParent({
                                     type: 'createSymbol',
                                     representationId: representationId,
                                     symbol: { _symbolId: sid, name: symbolName, libID: s.libID, code: s.code, position: pos }
                                 });
+                                }
                             }
                         }
                     }
@@ -2103,6 +2173,25 @@
                 }
                 if (msg.type === 'layerRefresh' && plottingController) {
                     autoLoad();
+                }
+                if (msg.type === 'saveAndClose') {
+                    // Force immediate save with camera state before close
+                    if (plottingLayer && representationId) {
+                        var closeJson = plottingLayer.toJson();
+                        try {
+                            var closeObj = JSON.parse(closeJson);
+                            if (viewer && viewer.camera) {
+                                var cp = viewer.camera.position;
+                                closeObj._camera = { x: cp.x, y: cp.y, z: cp.z, heading: viewer.camera.heading, pitch: viewer.camera.pitch, roll: viewer.camera.roll };
+                            }
+                            closeJson = JSON.stringify(closeObj);
+                        } catch(e) {}
+                        // Synchronous XHR for reliable before-close save
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('PUT', '/api/layer/' + encodeURIComponent(representationId), false);
+                        xhr.setRequestHeader('Content-Type', 'application/json');
+                        try { xhr.send(closeJson); } catch(e) {}
+                    }
                 }
             });
         };

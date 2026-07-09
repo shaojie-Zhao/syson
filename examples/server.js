@@ -41,6 +41,16 @@ if (!fs.existsSync(layersDir)) {
 
 // --- Layer JSON persistence API ---
 
+// GET /api/isOv1View/:repId → check if this is an OV-1 representation (has target_object_id)
+app.get('/api/isOv1View/:representationId', async (req, res) => {
+  try {
+    var result = await pool.query('SELECT target_object_id FROM representation_metadata WHERE id LIKE $1', ['%' + req.params.representationId]);
+    var isOv1 = result.rows.length > 0 && result.rows[0].target_object_id &&
+                result.rows[0].target_object_id.length > 0;
+    res.json({ isOv1: !!isOv1 });
+  } catch(e) { res.json({ isOv1: false }); }
+});
+
 // GET  /api/layer/:representationId  →  load saved layer JSON
 app.get('/api/layer/:representationId', (req, res) => {
   const filePath = path.join(layersDir, `${req.params.representationId}.json`);
@@ -260,6 +270,68 @@ app.post('/api/partUsage/rename', async (req, res) => {
   }
 });
 
+// POST /api/partUsage/metadata → store symbol metadata JSON in PartUsage Documentation
+app.post('/api/partUsage/metadata', async (req, res) => {
+  try {
+    const { editingContextId, elementId, metadata } = req.body;
+    if (!editingContextId || !elementId) return res.status(400).json({ error: 'Missing fields' });
+    const docResult = await pool.query(
+      'SELECT id, content FROM document WHERE semantic_data_id = $1 AND name LIKE $2',
+      [editingContextId, '%.sysml']
+    );
+    let updated = false;
+    const metaJson = JSON.stringify(metadata || {});
+    for (const row of docResult.rows) {
+      let doc = row.content;
+      if (typeof doc === 'string') doc = JSON.parse(doc);
+      const text = JSON.stringify(doc);
+      if (text.indexOf('"id":"' + elementId + '"') < 0) continue;
+      // Find the PartUsage element and ensure it has a Documentation child
+      function findAndSetDoc(obj) {
+        if (!obj || typeof obj !== 'object') return false;
+        if (Array.isArray(obj)) { for (var item of obj) { if (findAndSetDoc(item)) return true; } return false; }
+        if (obj.id === elementId && obj.eClass === 'sysml:PartUsage' && obj.data) {
+          // Find or create OwningMembership → Documentation
+          var rels = obj.data.ownedRelationship || [];
+          var docFound = false;
+          for (var r of rels) {
+            if (r.eClass === 'sysml:OwningMembership' && r.data) {
+              var children = r.data.ownedRelatedElement || [];
+              for (var c of children) {
+                if (c.eClass === 'sysml:Documentation') {
+                  if (!c.data) c.data = {};
+                  c.data.body = metaJson;
+                  docFound = true;
+                  break;
+                }
+              }
+            }
+          }
+          if (!docFound && rels) {
+            // Create Documentation
+            var docId = 'doc-' + elementId.substring(0, 8);
+            rels.push({
+              id: docId, eClass: 'sysml:OwningMembership',
+              data: { elementId: docId, ownedRelatedElement: [
+                { id: docId + '-doc', eClass: 'sysml:Documentation', data: { body: metaJson } }
+              ]}
+            });
+          }
+          return true;
+        }
+        for (var k of Object.keys(obj)) { if (findAndSetDoc(obj[k])) return true; }
+        return false;
+      }
+      if (findAndSetDoc(doc)) {
+        await pool.query('UPDATE document SET content = $1 WHERE id = $2', [JSON.stringify(doc), row.id]);
+        updated = true;
+        break;
+      }
+    }
+    res.json({ ok: updated });
+  } catch (e) { console.error('Metadata save failed', e); res.status(500).json({ error: 'DB error' }); }
+});
+
 // POST /api/partUsage/delete → directly remove PartUsage from document.content JSON
 app.post('/api/partUsage/delete', async (req, res) => {
   try {
@@ -316,6 +388,24 @@ app.post('/api/partUsage/delete', async (req, res) => {
     }
     res.json({ ok: deleted });
   } catch (e) { console.error('Delete failed', e); res.status(500).json({ error: 'DB error' }); }
+});
+
+// PUT /api/partUsageNames/:representationId → save PartUsage names list
+app.put('/api/partUsageNames/:representationId', async (req, res) => {
+  try {
+    const filePath = path.join(layersDir, `${req.params.representationId}.names.json`);
+    fs.writeFileSync(filePath, JSON.stringify(req.body || [], null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// GET /api/partUsageNames/:representationId → list saved PartUsage names
+app.get('/api/partUsageNames/:representationId', async (req, res) => {
+  try {
+    const filePath = path.join(layersDir, `${req.params.representationId}.names.json`);
+    if (fs.existsSync(filePath)) res.json(JSON.parse(fs.readFileSync(filePath, 'utf8')));
+    else res.json([]);
+  } catch(e) { res.status(500).json({ error: 'Failed' }); }
 });
 
 // PUT /api/mapping/:representationId → save symbol→PartUsage mapping for cleanup
