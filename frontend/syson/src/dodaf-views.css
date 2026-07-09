@@ -248,3 +248,19 @@ html body [class*="MuiTableRow-root"] {
   word-wrap: break-word !important;
   border-bottom: none !important;
 }
+
+/* When the DoDAF Matrix overlay is active (#matrix-wrapper present), hide the workbench right
+   panel exactly like the OV-1 view does: hide the selector column, the Details/Query content
+   panel and the resizer, AND collapse the resizable panel that contains site-right to flex 0
+   (hiding inner content alone doesn't reclaim the panel's width). */
+body:has(#matrix-wrapper) [data-testid="sidebar-right"],
+body:has(#matrix-wrapper) [data-testid="site-right"],
+body:has(#matrix-wrapper) [data-testid="right-resizer"] {
+  display: none !important;
+}
+body:has(#matrix-wrapper) [data-panel-id]:has([data-testid="site-right"]) {
+  flex: 0 0 0px !important;
+  max-width: 0 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
