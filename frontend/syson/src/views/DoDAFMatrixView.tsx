@@ -49,7 +49,25 @@ const C: Record<string, string> = {
     Derive: '#8b5cf6',
 };
 const S: Record<string, string> = {Satisfy: '✓', Allocate: '→', Trace: '↗', Dependency: '→', Derive: '⇒'};
+// Chinese display labels for relation types (internal keys stay English for the backend typeMap).
+const RELATION_LABELS: Record<string, string> = {Satisfy: '满足', Allocate: '分配', Trace: '追溯', Dependency: '依赖', Derive: '派生'};
+const relLabel = (t: string): string => (RELATION_LABELS[t] ? RELATION_LABELS[t] + '（' + t + '）' : t);
 const TYPES = ['Capability', 'OperationalNode', 'SystemNode', 'Organization', 'InformationExchange', 'ActionUsage', 'PartUsage', 'InterfaceUsage', 'RequirementUsage', 'Function'];
+// Chinese display labels for element (meta) types (internal keys stay English for filtering/backend).
+const TYPE_LABELS: Record<string, string> = {
+    Capability: '能力', OperationalNode: '作战节点', SystemNode: '系统节点', Organization: '组织',
+    InformationExchange: '信息交换', ActionUsage: '动作', PartUsage: '部件', InterfaceUsage: '接口',
+    RequirementUsage: '需求', Function: '功能',
+};
+const typeLabel = (t: string): string => (TYPE_LABELS[t] ? TYPE_LABELS[t] + '（' + t + '）' : t);
+// DoDAF type icons live under /images/dodaf/{DodafType}.svg; fall back to the SysML class icon
+// under /icons/full/obj16/{SysmlType}.svg for elements without a DoDAF type. (Both are served by the
+// backend and proxied by Vite.)
+const DODAF_ICON_TYPES = new Set(['Capability', 'OperationalNode', 'SystemNode', 'Organization', 'InformationExchange']);
+const typeIconUrl = (dodafType?: string, sysmlType?: string): string =>
+    (dodafType && DODAF_ICON_TYPES.has(dodafType))
+        ? '/images/dodaf/' + dodafType + '.svg'
+        : '/icons/full/obj16/' + (sysmlType || 'Element') + '.svg';
 
 export default function DoDAFMatrixView() {
     const repId = getRepresentationId();
@@ -495,7 +513,7 @@ export default function DoDAFMatrixView() {
                         <div style={{display: 'flex', gap: 4}}>
                             <input
                                 readOnly
-                                value={[...rowT].join(', ') || '全部'}
+                                value={[...rowT].map(typeLabel).join(', ') || '全部'}
                                 style={{...ss, flex: 1, cursor: 'pointer', background: 'rgb(22, 34, 66)'}}
                                 onClick={() => setTypePicker('row')}
                                 title="点击选择元类型"
@@ -536,7 +554,7 @@ export default function DoDAFMatrixView() {
                         <div style={{display: 'flex', gap: 4}}>
                             <input
                                 readOnly
-                                value={[...colT].join(', ') || '全部'}
+                                value={[...colT].map(typeLabel).join(', ') || '全部'}
                                 style={{...ss, flex: 1, cursor: 'pointer', background: 'rgb(22, 34, 66)'}}
                                 onClick={() => setTypePicker('col')}
                                 title="点击选择元类型"
@@ -559,7 +577,7 @@ export default function DoDAFMatrixView() {
                                 }}>
                                 <input type="radio" name="relType" checked={rt === t} onChange={() => setRt(t)}/>
                                 <span style={{width: 10, height: 10, background: C[t], borderRadius: 2}}/>
-                                <span style={{color: '#cbd5e1'}}>{t}</span>
+                                <span style={{color: '#cbd5e1'}}>{relLabel(t)}</span>
                             </label>
                         ))}
                         <h4 style={{margin: '12px 0 4px', color: '#94a3b8', fontSize: 12}}>图例</h4>
@@ -574,9 +592,9 @@ export default function DoDAFMatrixView() {
                                     marginBottom: 2,
                                     opacity: rt === t ? 1 : 0.4,
                                 }}>
-                                <span style={{color: C[t], fontWeight: 700}}>{S[t]}</span>
+                                <span style={{color: C[t], fontWeight: 700, display: 'inline-block', width: 14, textAlign: 'center'}}>{S[t]}</span>
                                 <span style={{width: 10, height: 10, background: C[t], borderRadius: 2}}/>
-                                <span style={{color: '#94a3b8'}}>{t}</span>
+                                <span style={{color: '#94a3b8'}}>{relLabel(t)}</span>
                             </div>
                         ))}
                     </div>
@@ -627,17 +645,17 @@ export default function DoDAFMatrixView() {
                                         setCtm({x: e.clientX, y: e.clientY, type: 'col', id: c.id});
                                     }}
                                     title={c.name + (c.dodafType ? ' (' + c.dodafType + ')' : '')}>
-                                    {/*<span*/}
-                                    {/*  style={{*/}
-                                    {/*    fontSize: 10,*/}
-                                    {/*    color: '#64748b',*/}
-                                    {/*    background: 'rgba(255,255,255,0.06)',*/}
-                                    {/*    padding: '1px 5px',*/}
-                                    {/*    borderRadius: 3,*/}
-                                    {/*    marginRight: 4,*/}
-                                    {/*  }}>*/}
-                                    {/*  {c.dodafType || c.type}*/}
-                                    {/*</span>*/}
+                                    <img
+                                        src={typeIconUrl(c.dodafType, c.type)}
+                                        alt={c.type}
+                                        title={c.dodafType || c.type}
+                                        width={16}
+                                        height={16}
+                                        style={{marginBottom: 6}}
+                                        onError={(e) => {
+                                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                        }}
+                                    />
                                     {c.name}
                                 </th>
                             ))}
@@ -680,17 +698,17 @@ export default function DoDAFMatrixView() {
                                         setCtm({x: e.clientX, y: e.clientY, type: 'row', id: r.id});
                                     }}
                                     title={r.name + ' (' + r.type + ')'}>
-                    <span
-                        style={{
-                            fontSize: 10,
-                            color: '#64748b',
-                            background: 'rgba(255,255,255,0.06)',
-                            padding: '1px 5px',
-                            borderRadius: 3,
-                            marginRight: 6,
-                        }}>
-                      {r.dodafType || r.type}
-                    </span>
+                    <img
+                        src={typeIconUrl(r.dodafType, r.type)}
+                        alt={r.type}
+                        title={r.dodafType || r.type}
+                        width={16}
+                        height={16}
+                        style={{verticalAlign: 'middle', marginRight: 6}}
+                        onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                        }}
+                    />
                                     {r.name}
                                 </td>
                                 <td style={{...td, width: CW, background: '#273B6CFF'}}></td>
@@ -799,7 +817,7 @@ export default function DoDAFMatrixView() {
                                         borderBottom: '1px solid rgba(255,255,255,0.05)',
                                     }}>
                   <span style={{color: C[r.relationType], fontWeight: 700}}>
-                    {S[r.relationType]} {r.relationType}
+                    {S[r.relationType]} {relLabel(r.relationType)}
                   </span>
                                     <span style={{
                                         fontSize: 11,
@@ -902,7 +920,7 @@ export default function DoDAFMatrixView() {
                                             })
                                         }
                                     />
-                                    <span style={{color: '#cbd5e1'}}>{t}</span>
+                                    <span style={{color: '#cbd5e1'}}>{typeLabel(t)}</span>
                                 </label>
                             );
                         })}
