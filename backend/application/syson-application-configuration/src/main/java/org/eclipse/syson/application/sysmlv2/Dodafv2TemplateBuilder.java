@@ -29,7 +29,7 @@ public class Dodafv2TemplateBuilder {
         var av=pkg(root,"AV_全视角");
         cmt(av,"AV-1_概述和摘要信息","本体系架构描述有人/无人协同反潜作战系统");
         cmt(av,"AV-2_综合词典","UUV:无人潜航器 TAS:拖曳阵列声呐 VDS:变深声呐 SOSUS:水下声波监听系统");
-
+        {var v=vu(av,"ViewFlow_流程视图");}
         // CV (7): Capability — sub() for hierarchy, suc() for phases, dep() for mappings
         var cv=pkg(root,"CV_能力视角");
         {var v=vu(cv,"CV-1_能力构想");var a=pd("反潜作战能力","dodaf:capability");add(v,a);var b=pu("水下目标探测能力","dodaf:capability");add(v,b);dep(v,b,a);}

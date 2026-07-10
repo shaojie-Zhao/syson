@@ -18,6 +18,7 @@ import {
   footerExtensionPoint,
   navigationBarIconExtensionPoint,
   navigationBarMenuHelpURLExtensionPoint,
+  navigationBarRightContributionExtensionPoint,
   SiriusWebApplication,
 } from '@eclipse-sirius/sirius-web-application';
 import {
@@ -44,6 +45,8 @@ import React from 'react';
 import DoDAFGanttTimeline from './views/DoDAFGanttTimeline';
 import DoDAFMatrixView from './views/DoDAFMatrixView';
 import { Ov1BlankView } from './views/Ov1BlankView';
+import { ViewFlowBlankView } from './views/ViewFlowBlankView';
+import { ViewFlowNavigator } from './extensions/ViewFlowNavigator';
 
 (window as any).renderDoDAFGantt = (container: HTMLElement) => {
   const root = ReactDOM.createRoot(container);
@@ -75,6 +78,12 @@ sysONExtensionRegistry.addComponent(footerExtensionPoint, {
   Component: SysONFooter,
 });
 
+sysONExtensionRegistry.addComponent(navigationBarRightContributionExtensionPoint, {
+  identifier: `syson_${navigationBarRightContributionExtensionPoint.identifier}_viewFlowNav`,
+  Component: ViewFlowNavigator,
+});
+
+
 sysONExtensionRegistry.putData(representationFactoryExtensionPoint, {
   identifier: `syson_${representationFactoryExtensionPoint.identifier}`,
   data: [
@@ -84,6 +93,8 @@ sysONExtensionRegistry.putData(representationFactoryExtensionPoint, {
       // DoDAFOV1ViewDiagramDescriptionProvider has viewId="DoDAFOV1ViewDiagram" → UUID is deterministic
       var descId = representationMetadata?.description?.id || '';
       if (descId.indexOf('5058ff41-3a74-3fad-93f4-0854893bd3b6') >= 0) return Ov1BlankView;
+      // ViewFlow
+      if (representationMetadata?.label?.includes('ViewFlow')) return ViewFlowBlankView;
       return null;
     },
   ],
@@ -99,9 +110,14 @@ class SysONRepresentationSafeMergeStrategy extends SysONExtensionRegistryMergeSt
       const exData = Array.isArray(existingValues?.data) ? existingValues.data : [];
       const nvData = Array.isArray(newValues?.data) ? newValues.data : [];
       const existingIsSysON = String(existingValues?.identifier || '').startsWith('syson_');
-      // Ensure the SysON/OV-1 factory is tried first so it can override default diagram rendering.
       const data = existingIsSysON ? [...exData, ...nvData] : [...nvData, ...exData];
       return { identifier: newValues?.identifier ?? existingValues?.identifier, data };
+    }
+    // Navigation bar: concatenate components (both syson and sirius-web)
+    if (identifier === 'navigationBar#leftContribution' || identifier === 'navigationBar#rightContribution') {
+      const exData = Array.isArray(existingValues?.data) ? existingValues.data : [];
+      const nvData = Array.isArray(newValues?.data) ? newValues.data : [];
+      return { identifier: newValues?.identifier ?? existingValues?.identifier, data: [...exData, ...nvData] };
     }
     return super.mergeDataExtensions(identifier, existingValues, newValues);
   }

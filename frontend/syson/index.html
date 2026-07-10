@@ -146,6 +146,8 @@
       }).observe(document.body, { childList: true, subtree: true });
       // Periodic scan for dynamic content (SVG, canvas text, etc.)
       setInterval(function() { translateAllText(document); }, 2000);
+      // ViewFlow navigation: handled by ViewFlowNavigator.tsx (React Router useNavigate)
+
       // ===== Custom DoDAF Gantt View =====
       var ganttAppInjected = false;
       var ganttRepId = 'default-gantt';
