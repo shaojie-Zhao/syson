@@ -409,11 +409,18 @@ public class SysMLv2EditService implements IEditServiceDelegate {
     );
 
     private void tagDoDAFAlias(Element element, String childCreationDescriptionId) {
-        // Override: PartDefinition with "Capability" suffix → dodaf:capability
-        if (childCreationDescriptionId != null && childCreationDescriptionId.startsWith("SysMLv2EditService-PartDefinition") &&
-            (childCreationDescriptionId.contains("Capability") || childCreationDescriptionId.contains("capability"))) {
-            if (!element.getAliasIds().contains("dodaf:capability")) {
-                element.getAliasIds().add("dodaf:capability");
+        if (childCreationDescriptionId != null && childCreationDescriptionId.startsWith("SysMLv2EditService-PartDefinition")) {
+            String n = childCreationDescriptionId.contains(":") ? childCreationDescriptionId.substring(childCreationDescriptionId.lastIndexOf(':')+1) : "";
+            // Remove ":Name" suffix before looking up
+            String aliasedId = n.isEmpty() ? childCreationDescriptionId : childCreationDescriptionId.substring(0, childCreationDescriptionId.lastIndexOf(':'));
+            // Map by menu item name
+            if ("Capability".equals(n)) setAlias(element, "dodaf:capability");
+            else if ("OperationalNode".equals(n)) setAlias(element, "dodaf:operational");
+            else if ("SystemNode".equals(n)) setAlias(element, "dodaf:system");
+            else if ("Organization".equals(n)) setAlias(element, "dodaf:organization");
+            else {
+                String alias = DODAF_TYPE_TO_ALIAS.get(aliasedId);
+                if (alias != null && !element.getAliasIds().contains(alias)) element.getAliasIds().add(alias);
             }
             return;
         }
@@ -421,5 +428,8 @@ public class SysMLv2EditService implements IEditServiceDelegate {
         if (alias != null && !element.getAliasIds().contains(alias)) {
             element.getAliasIds().add(alias);
         }
+    }
+    private void setAlias(Element element, String alias) {
+        if (!element.getAliasIds().contains(alias)) element.getAliasIds().add(alias);
     }
 }
