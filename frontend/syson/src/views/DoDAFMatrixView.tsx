@@ -924,17 +924,26 @@ export default function DoDAFMatrixView() {
                                 </label>
                             );
                         })}
-                        <div style={{display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end'}}>
+                        <div style={{display: 'flex', gap: 8, marginTop: 16, justifyContent: 'space-between'}}>
+                            <div style={{display: 'flex', gap: 8}}>
+                                <button onClick={() => {
+                                    const setFn = typePicker === 'row' ? setRowT : setColT;
+                                    setFn(new Set(TYPES.filter(t => t !== 'ALL')));
+                                }}
+                                style={{background: '#475569', color: '#cbd5e1', border: 'none', padding: '6px 16px', borderRadius: 4, cursor: 'pointer'}}>
+                                    全选
+                                </button>
+                                <button onClick={() => {
+                                    const setFn = typePicker === 'row' ? setRowT : setColT;
+                                    setFn(new Set());
+                                }}
+                                style={{background: '#475569', color: '#cbd5e1', border: 'none', padding: '6px 16px', borderRadius: 4, cursor: 'pointer'}}>
+                                    全不选
+                                </button>
+                            </div>
                             <button
                                 onClick={() => setTypePicker(null)}
-                                style={{
-                                    background: '#475569',
-                                    color: '#cbd5e1',
-                                    border: 'none',
-                                    padding: '6px 16px',
-                                    borderRadius: 4,
-                                    cursor: 'pointer',
-                                }}>
+                                style={{background: '#475569', color: '#cbd5e1', border: 'none', padding: '6px 16px', borderRadius: 4, cursor: 'pointer'}}>
                                 确定
                             </button>
                         </div>
