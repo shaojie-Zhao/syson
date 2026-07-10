@@ -28,6 +28,13 @@ public class DoDAFGanttController {
     @GetMapping("/api/matrix/{repId}/target-object-id") public Map<String,String> getTargetObjectId(@PathVariable String repId, @RequestParam String ctxId, @RequestParam(defaultValue="") String matrixRepId, @RequestParam(defaultValue="true") boolean tableOnly) { String effectiveRepId = matrixRepId.isBlank() ? repId : matrixRepId; String toi = s.getTargetObjectId(ctxId, effectiveRepId, tableOnly); String ec = s.getEditingContextId(ctxId); Map<String,String> r = new java.util.HashMap<>(); r.put("targetObjectId", toi == null ? "" : toi); r.put("editingContextId", ec == null ? "" : ec); return r; }
     @GetMapping("/api/matrix/{repId}/scope-name") public Map<String,String> getScopeName(@PathVariable String repId, @RequestParam String id, @RequestParam(defaultValue="") String ctxId) { return Map.of("id",id,"name",s.getPackageName(ctxId,id)); }
     @GetMapping("/api/matrix/{repId}/element-id") public Map<String,String> getElementId(@PathVariable String repId, @RequestParam String ctxId, @RequestParam String objectId) { return Map.of("elementId",s.getElementIdByObjectId(ctxId,objectId)); }
+    @PostMapping("/api/matrix/{repId}/create-capability") public Map<String,String> createCapability(@PathVariable String repId, @RequestBody Map<String,String> b) {
+        return s.createDoDAFElement(b.get("ctxId"), b.get("objectId"), b.get("name"), b.get("dodafType"));
+    }
+    @PostMapping("/api/matrix/{repId}/set-dodaf-alias") public Map<String,String> setDodafAlias(@PathVariable String repId, @RequestBody Map<String,String> b) {
+        boolean ok = s.setDodafAlias(b.get("ctxId"), b.get("siriusId"), b.get("alias"), b.get("elementName"));
+        return Map.of("result", ok ? "ok" : "failed");
+    }
     @GetMapping("/api/matrix/{repId}/find-package-ancestor") public Map<String,String> findPackageAncestor(@PathVariable String repId, @RequestParam String ctxId, @RequestParam String elementId) {
         String pkgId = s.findPackageAncestor(ctxId, elementId);
         return Map.of("packageId", pkgId != null ? pkgId : elementId);
