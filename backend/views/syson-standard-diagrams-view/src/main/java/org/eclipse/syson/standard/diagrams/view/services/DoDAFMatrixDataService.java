@@ -89,25 +89,26 @@ public class DoDAFMatrixDataService {
     }
 
     public String getTargetObjectId(String pid, String repId) {
+        return getTargetObjectId(pid, repId, true);
+    }
+
+    /** When tableOnly=false, also accepts diagram/tree representations (used by General View palette). */
+    public String getTargetObjectId(String pid, String repId, boolean tableOnly) {
         try {
             String s = ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid));
             var metas = representationMetadataRepository.findAllRepresentationMetadataBySemanticDataId(java.util.UUID.fromString(s));
-            // 1) Exact match by the real matrix representation id — but only on a Table representation.
             if (repId != null && !repId.isBlank() && !"default-matrix".equals(repId)) {
                 for (var m : metas) {
-                    if (m.getTargetObjectId() != null && isTableRepresentation(m) && m.getId() != null && m.getId().contains(repId)) {
-                        return m.getTargetObjectId();
+                    if (m.getTargetObjectId() != null && m.getId() != null && m.getId().contains(repId)) {
+                        if (!tableOnly || isTableRepresentation(m)) return m.getTargetObjectId();
                     }
                 }
             }
-            // 2) Otherwise pick a Table representation (the DoDAF matrix is always a Table). NEVER fall back to
-            //    non-Table representations (e.g. OV-1 Gantt / Diagram), which previously mis-targeted created elements.
             for (var m : metas) {
-                if (m.getTargetObjectId() != null && isTableRepresentation(m)) {
-                    return m.getTargetObjectId();
+                if (m.getTargetObjectId() != null) {
+                    if (!tableOnly || isTableRepresentation(m)) return m.getTargetObjectId();
                 }
             }
-            log.warn("getTargetObjectId: no Table representation found for ec={} (repId={})", s, repId);
         } catch (Exception e) { log.warn("TOI: {}", e.getMessage()); }
         return null;
     }
@@ -153,13 +154,18 @@ public class DoDAFMatrixDataService {
     }
 
     public boolean renameBySiriusId(String pid, String siriusId, String newName) {
-        log.info("renameBySiriusId: pid={} siriusId={} newName={}", pid, siriusId, newName);
+        return renameBySiriusId(pid, siriusId, newName, null);
+    }
+    public boolean renameBySiriusId(String pid, String siriusId, String newName, String dodafAlias) {
+        log.info("renameBySiriusId: pid={} siriusId={} newName={} alias={}", pid, siriusId, newName, dodafAlias);
         String elementId = getElementIdByObjectId(pid, siriusId);
         if (elementId == null) { log.warn("elementId not found"); return false; }
         try {
             String ecId = ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid));
-            // Dispatch through the editing context event processor so the change is applied on the LIVE
-            // editing context, triggers a refresh of the explorer tree, and is persisted.
+            // Set DoDAF alias on the EMF element via ResourceSet BEFORE dispatching rename
+            if (dodafAlias != null && !dodafAlias.isEmpty()) {
+                setAliasOnElement(pid, elementId, dodafAlias);
+            }
             var input = new RenameMatrixElementInput(java.util.UUID.randomUUID(), ecId, elementId, newName);
             var payload = eventProcessorRegistry.dispatchEvent(ecId, input).block();
             boolean ok = payload instanceof org.eclipse.sirius.components.core.api.SuccessPayload;
@@ -167,6 +173,23 @@ public class DoDAFMatrixDataService {
             return ok;
         } catch (Exception e) { log.error("renameBySiriusId: {}", e.getMessage(), e); }
         return false;
+    }
+    private void setAliasOnElement(String pid, String elementId, String alias) {
+        try {
+            var rs = getRS(pid);
+            if (rs == null) return;
+            for (var r : rs.getResources()) {
+                EObject obj = r.getEObject(elementId);
+                if (obj instanceof org.eclipse.syson.sysml.Element el) {
+                    // Remove any existing dodaf:* aliases
+                    el.getAliasIds().removeIf(a -> a.startsWith("dodaf:"));
+                    // Add the correct alias
+                    el.getAliasIds().add("dodaf:" + alias);
+                    log.info("Set alias {} on element {}", alias, elementId);
+                    return;
+                }
+            }
+        } catch (Exception e) { log.warn("setAliasOnElement: {}", e.getMessage()); }
     }
 
     public List<String> getParentChain(String pid, String scopeId) {
@@ -204,6 +227,50 @@ public class DoDAFMatrixDataService {
     private String ed(EObject o) { try { var f = o.eClass().getEStructuralFeature("aliasIds"); if (f != null && o.eGet(f) instanceof java.util.List<?> l) for (Object a : l) if (a instanceof String s && DODAF_MAP.containsKey(s)) return DODAF_MAP.get(s); } catch (Exception ig) {} return null; }
     private String en(EObject o) { try { if (o instanceof PartUsage x) return x.getDeclaredName(); if (o instanceof RequirementUsage x) return x.getDeclaredName(); if (o instanceof ActionUsage x) return x.getDeclaredName(); if (o instanceof InterfaceUsage x) return x.getDeclaredName(); if (o instanceof org.eclipse.syson.sysml.Package x) return x.getDeclaredName(); } catch (Exception ig) {} try { var f = o.eClass().getEStructuralFeature("declaredName"); if (f != null && o.eGet(f) instanceof String s && !s.isBlank()) return s; } catch (Exception ig) {} return null; }
     private boolean mt(EObject o, java.util.Set<String> ts) { String cn = o.eClass().getName(); for (String t : ts) if (cn.contains(t) || cn.equalsIgnoreCase(t)) return true; return false; }
+
+    private static final Map<String,String> DODAF_ALIAS = Map.of(
+        "capability","dodaf:capability", "node","dodaf:node", "organization","dodaf:organization",
+        "exchange","dodaf:exchange", "activity","dodaf:capability");
+
+    public String findPackageAncestor(String pid, String elementId) { try { var rs = getRS(pid); if (rs == null) return null; for (var r : rs.getResources()) { EObject obj = r.getEObject(elementId); if (obj != null) { EObject cur = obj; while (cur != null) { if (cur instanceof org.eclipse.syson.sysml.Package) return cur.eResource().getURIFragment(cur); cur = cur.eContainer(); } break; } } } catch (Exception e) { log.warn("fpa: {}", e.getMessage()); } return null; }
+
+    public String createDoDAFElement(String pid, String parentId, String name, String dodafType) {
+        try {
+            var rs = getRS(pid);
+            if (rs == null) return null;
+            EObject parent = null;
+            for (var r : rs.getResources()) {
+                parent = r.getEObject(parentId);
+                if (parent != null) break;
+            }
+            if (parent == null) {
+                for (var r : rs.getResources()) {
+                    for (EObject obj : r.getContents()) {
+                        if (obj instanceof org.eclipse.syson.sysml.Package || obj instanceof org.eclipse.syson.sysml.Namespace) {
+                            parent = obj; break;
+                        }
+                    }
+                    if (parent != null) break;
+                }
+            }
+            if (parent == null || !(parent instanceof org.eclipse.syson.sysml.Element parentEl)) return null;
+            var pd = SysmlFactory.eINSTANCE.createPartDefinition();
+            pd.setDeclaredName(name != null && !name.isEmpty() ? name : dodafType);
+            String alias = DODAF_ALIAS.getOrDefault(dodafType != null ? dodafType : "capability", "dodaf:capability");
+            pd.getAliasIds().add(alias);
+            var membership = SysmlFactory.eINSTANCE.createOwningMembership();
+            membership.getOwnedRelatedElement().add(pd);
+            parentEl.getOwnedRelationship().add(membership);
+            String ecId = ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid));
+            try {
+                var optCtx = editingContextSearchService.findById(ecId);
+                if (optCtx.isPresent()) editingContextPersistenceService.persist(null, optCtx.get());
+            } catch (Exception pe) { log.warn("persist failed: {}", pe.getMessage()); }
+            elementCache.clear();
+            return pd.eResource().getURIFragment(pd);
+        } catch (Exception e) { log.error("createDoDAFElement: {}", e.getMessage(), e); }
+        return null;
+    }
 
     private String resolveEc(String pid) { return ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid)); }
 
