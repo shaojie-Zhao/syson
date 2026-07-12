@@ -34,7 +34,15 @@ function callGraphQL(query: string, variables: any) {
 
 export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref) {
   var editingContextId = (props && props.editingContextId) || '';
-  var representationId = (props && props.representationId) || '';
+  // representationId may come directly (Sirius Web spreads representationMetadata)
+  // or nested inside representationMetadata.id (from state injection).
+  var representationId = (props && props.representationId)
+      || (props && props.representationMetadata && props.representationMetadata.id)
+      || '';
+  // Handle "projectId#uuid" format from database
+  if (representationId.indexOf('#') >= 0) {
+      representationId = representationId.split('#')[1];
+  }
   var iframeRef = useRef<HTMLIFrameElement>(null);
   React.useEffect(function() {
     var pendingSymbols: any[] = [];
@@ -178,15 +186,9 @@ export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(siriusMap),
           }).catch(function(){});
-          // Remove from saved names too
-          if (sid) {
-            fetch(PLOTTING_ORIGIN + '/api/partUsageNames/' + encodeURIComponent(representationId))
-              .then(function(r) { return r.json(); })
-              .then(function(names) {
-                // Find and remove name matching the sid's pattern
-                // We don't have the exact name, so just update with current map values
-              }).catch(function(){});
-          }
+          // The iframe handles names file cleanup when it receives the
+          // deleteSymbol postMessage (see plotting.html deleteSymbol handler).
+          // No additional cleanup needed here — siriusMap & partUsageMap already updated above.
           if (iframeRef.current && iframeRef.current.contentWindow) {
             iframeRef.current.contentWindow.postMessage({ type: 'deleteSymbol', symbolId: sid }, PLOTTING_ORIGIN);
           }
