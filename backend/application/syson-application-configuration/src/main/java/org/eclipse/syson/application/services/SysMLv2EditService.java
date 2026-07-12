@@ -413,11 +413,11 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             String n = childCreationDescriptionId.contains(":") ? childCreationDescriptionId.substring(childCreationDescriptionId.lastIndexOf(':')+1) : "";
             // Remove ":Name" suffix before looking up
             String aliasedId = n.isEmpty() ? childCreationDescriptionId : childCreationDescriptionId.substring(0, childCreationDescriptionId.lastIndexOf(':'));
-            // Map by menu item name
-            if ("Capability".equals(n)) setAlias(element, "dodaf:capability");
-            else if ("OperationalNode".equals(n)) setAlias(element, "dodaf:operational");
-            else if ("SystemNode".equals(n)) setAlias(element, "dodaf:system");
-            else if ("Organization".equals(n)) setAlias(element, "dodaf:organization");
+            // Map by menu item base name (strip trailing numbers from auto-numbering)
+            if (n.startsWith("Capability")) setAlias(element, "dodaf:capability");
+            else if (n.startsWith("OperationalNode")) setAlias(element, "dodaf:operational");
+            else if (n.startsWith("SystemNode")) setAlias(element, "dodaf:system");
+            else if (n.startsWith("Organization")) setAlias(element, "dodaf:organization");
             else {
                 String alias = DODAF_TYPE_TO_ALIAS.get(aliasedId);
                 if (alias != null && !element.getAliasIds().contains(alias)) element.getAliasIds().add(alias);

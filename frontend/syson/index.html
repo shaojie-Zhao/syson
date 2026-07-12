@@ -507,7 +507,9 @@
             .catch(function(){});
         }
         var _lastMenuX=0,_lastMenuY=0;
-        function createElement(alias, name, descId) { var u='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);}); var desc=(descId||'SysMLv2EditService-PartDefinition')+':'+name; var pid=targetObjId||editingCtxId; var repId = getRepId(); // Get container-relative position
+        var _nameCounter = {};
+        function nextName(base) { _nameCounter[base] = (_nameCounter[base] || 0) + 1; return base + _nameCounter[base]; }
+        function createElement(alias, name, descId) { var u='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);}); var fullName = nextName(name); var desc=(descId||'SysMLv2EditService-PartDefinition')+':'+fullName; var pid=targetObjId||editingCtxId; var repId = getRepId(); // Get container-relative position
           var container = document.querySelector('.react-flow__renderer') || document.querySelector('.react-flow') || document.querySelector('[data-representationid]');
           var rx=100,ry=100;
           if(container){ var b=container.getBoundingClientRect(); rx=_lastMenuX-b.left; ry=_lastMenuY-b.top;
@@ -515,7 +517,7 @@
             if(vp){ var t=vp.style.transform||''; var m=t.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)\s*scale\(([-\d.]+)\)/);
               if(m){ var tx=parseFloat(m[1]),ty=parseFloat(m[2]),s=parseFloat(m[3]);
                 rx=(rx-tx)/s; ry=(ry-ty)/s; } } }
-          console.log('[DoDAF] create name=',name,'pos=',rx,ry);
+          console.log('[DoDAF] create name=',fullName,'pos=',rx,ry);
           fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:pid,childCreationDescriptionId:desc}}})}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] create:',JSON.stringify(d));var sid=d&&d.data&&d.data.createChild&&d.data.createChild.object;if(!sid)return;
           return fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'mutation d($i:DropOnDiagramInput!){dropOnDiagram(input:$i){__typename ... on ErrorPayload{message}}}',variables:{i:{id:crypto.randomUUID(),editingContextId:editingCtxId,representationId:repId,objectIds:[sid.id],startingPositionX:rx,startingPositionY:ry,diagramTargetElementId:''}}})}).then(function(r){return r.json()}).then(function(d2){console.log('[DoDAF] drop:',JSON.stringify(d2))})}).catch(function(e){console.error('[DoDAF] err:',e)})
         }
