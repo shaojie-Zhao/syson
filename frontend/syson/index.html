@@ -483,6 +483,65 @@
       window._injectMatrix = function() {
         teardownMatrix(); scanForMatrix();
       };
+      // ===== DoDAFv2 General View Custom Right-Click Menu =====
+      (function() {
+        function isDoDAFv2() { return true; } // Always intercept for now - refine DoDAFv2 detection later
+        var editingCtxId = null, targetObjId = null, repIdFromUrl = null;
+        function getRepId() {
+          // Get the CURRENT diagram's representation ID from the DOM
+          var el = document.querySelector('[data-representationid]');
+          var domId = el ? el.getAttribute('data-representationid') : '';
+          if (domId) return domId;
+          // fallback to URL
+          var m = window.location.search.match(/[?&]selection=([^&]+)/);
+          if (m && m[1]) return m[1];
+          m = window.location.search.match(/[?&]representation=([^&]+)/);
+          return m ? m[1] : window.location.pathname.split('/').pop();
+        }
+        function getCtxAndTarget(cb) {
+          var m = window.location.pathname.match(/\/projects\/([^/]+)\/edit/);
+          editingCtxId = m ? m[1] : null;
+          if (!editingCtxId) return;
+          var rid = getRepId() || 'default-matrix';
+          fetch('/api/matrix/' + rid + '/target-object-id?ctxId=' + editingCtxId + '&tableOnly=false')
+            .then(function(r){return r.json();})
+            .then(function(d){ console.log('[DoDAF] repId='+rid+' target:',JSON.stringify(d)); targetObjId = d.targetObjectId; if(!targetObjId){ targetObjId = rid; console.log('[DoDAF] fallback obj=',targetObjId); } if(d.editingContextId) editingCtxId = d.editingContextId; console.log('[DoDAF] final ctx=',editingCtxId,'obj=',targetObjId); cb(); })
+            .catch(function(){});
+        }
+        var _lastMenuX=0,_lastMenuY=0;
+        var _nameCounter = {};
+        function nextName(base) { _nameCounter[base] = (_nameCounter[base] || 0) + 1; return base + _nameCounter[base]; }
+        function createElement(alias, name, descId) { var u='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);}); var fullName = nextName(name); var desc=(descId||'SysMLv2EditService-PartDefinition')+':'+fullName; var pid=targetObjId||editingCtxId; var repId = getRepId(); // Get container-relative position
+          var container = document.querySelector('.react-flow__renderer') || document.querySelector('.react-flow') || document.querySelector('[data-representationid]');
+          var rx=100,ry=100;
+          if(container){ var b=container.getBoundingClientRect(); rx=_lastMenuX-b.left; ry=_lastMenuY-b.top;
+            var vp=document.querySelector('.react-flow__viewport');
+            if(vp){ var t=vp.style.transform||''; var m=t.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)\s*scale\(([-\d.]+)\)/);
+              if(m){ var tx=parseFloat(m[1]),ty=parseFloat(m[2]),s=parseFloat(m[3]);
+                rx=(rx-tx)/s; ry=(ry-ty)/s; } } }
+          console.log('[DoDAF] create name=',fullName,'pos=',rx,ry);
+          fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:pid,childCreationDescriptionId:desc}}})}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] create:',JSON.stringify(d));var sid=d&&d.data&&d.data.createChild&&d.data.createChild.object;if(!sid)return;
+          return fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'mutation d($i:DropOnDiagramInput!){dropOnDiagram(input:$i){__typename ... on ErrorPayload{message}}}',variables:{i:{id:crypto.randomUUID(),editingContextId:editingCtxId,representationId:repId,objectIds:[sid.id],startingPositionX:rx,startingPositionY:ry,diagramTargetElementId:''}}})}).then(function(r){return r.json()}).then(function(d2){console.log('[DoDAF] drop:',JSON.stringify(d2))})}).catch(function(e){console.error('[DoDAF] err:',e)})
+        }
+        function show(x,y){_lastMenuX=x;_lastMenuY=y;var e=document.getElementById('dodaf-ctx');if(e){e.style.display='block';e.style.left=Math.min(x,innerWidth-250)+'px';e.style.top=Math.min(y,innerHeight-320)+'px';return}
+          var i1=[{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战节点(OperationalNode)',a:'node',n:'OperationalNode',d:'SysMLv2EditService-PartDefinition'},{l:'系统节点(SystemNode)',a:'node',n:'SystemNode',d:'SysMLv2EditService-PartDefinition'},{l:'组织(Organization)',a:'organization',n:'Organization',d:'SysMLv2EditService-PartDefinition'},{l:'作战活动(Action)',a:'',n:'Action',d:'SysMLv2EditService-ActionUsage'}];
+          var i2=[{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+          var h='<div style="width:240px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+          h+='<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+          i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+          h+='<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+          h+='<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+          i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+          h+='</div>';
+          e=document.createElement('div');e.id='dodaf-ctx';e.innerHTML=h;
+          e.style.cssText='position:fixed;z-index:99999;box-shadow:0 8px 30px rgba(0,0,0,0.6);left:'+Math.min(x,innerWidth-250)+'px;top:'+Math.min(y,innerHeight-320)+'px';
+          document.body.appendChild(e);
+          e.querySelectorAll('.di').forEach(function(it){it.onmouseenter=function(){this.style.background='rgba(255,255,255,0.08)'};it.onmouseleave=function(){this.style.background='transparent'};it.onclick=function(){var a=it.getAttribute('data-a'),n=it.getAttribute('data-n'),d=it.getAttribute('data-d');console.log('[DoDAF] Click:',n,a);getCtxAndTarget(function(){createElement(a,n,d)});e.style.display='none'}});
+        }
+        function intercept(e){if(!isDoDAFv2())return;var t=e.target;if(t.closest('.react-flow__node')||t.closest('button')||t.closest('input')||t.closest('[class*="explorer"]')||t.closest('[class*="sidebar"]')||t.closest('[class*="tree"]'))return;if(!t.closest('#mainArea')&&!t.closest('[data-testid="representation-area"]'))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();show(e.clientX,e.clientY)}
+        window.addEventListener('contextmenu',intercept,true);
+        document.addEventListener('click',function(ev){var e=document.getElementById('dodaf-ctx');if(e&&!ev.target.closest('#dodaf-ctx'))e.style.display='none'});
+      })();
     </script>
     <script type="module" src="/src/index.tsx"></script>
   </body>

@@ -215,7 +215,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             new ElementInitializerSwitch().doSwitch(eObject);
             // Tag DoDAF elements with appropriate aliasId
             if (eObject instanceof Element created && this.isDoDAFProject(container)) {
-                this.tagDoDAFAlias(created, resolvedId);
+                this.tagDoDAFAlias(created, childCreationDescriptionId);
             }
             if (initName != null && !initName.isEmpty() && eObject instanceof Element newElement) {
                 newElement.setDeclaredName(initName);
@@ -409,9 +409,27 @@ public class SysMLv2EditService implements IEditServiceDelegate {
     );
 
     private void tagDoDAFAlias(Element element, String childCreationDescriptionId) {
+        if (childCreationDescriptionId != null && childCreationDescriptionId.startsWith("SysMLv2EditService-PartDefinition")) {
+            String n = childCreationDescriptionId.contains(":") ? childCreationDescriptionId.substring(childCreationDescriptionId.lastIndexOf(':')+1) : "";
+            // Remove ":Name" suffix before looking up
+            String aliasedId = n.isEmpty() ? childCreationDescriptionId : childCreationDescriptionId.substring(0, childCreationDescriptionId.lastIndexOf(':'));
+            // Map by menu item base name (strip trailing numbers from auto-numbering)
+            if (n.startsWith("Capability")) setAlias(element, "dodaf:capability");
+            else if (n.startsWith("OperationalNode")) setAlias(element, "dodaf:operational");
+            else if (n.startsWith("SystemNode")) setAlias(element, "dodaf:system");
+            else if (n.startsWith("Organization")) setAlias(element, "dodaf:organization");
+            else {
+                String alias = DODAF_TYPE_TO_ALIAS.get(aliasedId);
+                if (alias != null && !element.getAliasIds().contains(alias)) element.getAliasIds().add(alias);
+            }
+            return;
+        }
         String alias = DODAF_TYPE_TO_ALIAS.get(childCreationDescriptionId);
         if (alias != null && !element.getAliasIds().contains(alias)) {
             element.getAliasIds().add(alias);
         }
+    }
+    private void setAlias(Element element, String alias) {
+        if (!element.getAliasIds().contains(alias)) element.getAliasIds().add(alias);
     }
 }

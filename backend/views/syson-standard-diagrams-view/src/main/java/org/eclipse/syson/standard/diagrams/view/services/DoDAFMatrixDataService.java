@@ -89,25 +89,26 @@ public class DoDAFMatrixDataService {
     }
 
     public String getTargetObjectId(String pid, String repId) {
+        return getTargetObjectId(pid, repId, true);
+    }
+
+    /** When tableOnly=false, also accepts diagram/tree representations (used by General View palette). */
+    public String getTargetObjectId(String pid, String repId, boolean tableOnly) {
         try {
             String s = ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid));
             var metas = representationMetadataRepository.findAllRepresentationMetadataBySemanticDataId(java.util.UUID.fromString(s));
-            // 1) Exact match by the real matrix representation id — but only on a Table representation.
             if (repId != null && !repId.isBlank() && !"default-matrix".equals(repId)) {
                 for (var m : metas) {
-                    if (m.getTargetObjectId() != null && isTableRepresentation(m) && m.getId() != null && m.getId().contains(repId)) {
-                        return m.getTargetObjectId();
+                    if (m.getTargetObjectId() != null && m.getId() != null && m.getId().contains(repId)) {
+                        if (!tableOnly || isTableRepresentation(m)) return m.getTargetObjectId();
                     }
                 }
             }
-            // 2) Otherwise pick a Table representation (the DoDAF matrix is always a Table). NEVER fall back to
-            //    non-Table representations (e.g. OV-1 Gantt / Diagram), which previously mis-targeted created elements.
             for (var m : metas) {
-                if (m.getTargetObjectId() != null && isTableRepresentation(m)) {
-                    return m.getTargetObjectId();
+                if (m.getTargetObjectId() != null) {
+                    if (!tableOnly || isTableRepresentation(m)) return m.getTargetObjectId();
                 }
             }
-            log.warn("getTargetObjectId: no Table representation found for ec={} (repId={})", s, repId);
         } catch (Exception e) { log.warn("TOI: {}", e.getMessage()); }
         return null;
     }
@@ -122,51 +123,115 @@ public class DoDAFMatrixDataService {
         }
     }
 
-    /** Map Sirius Object ID (from createChild) to EMF elementId */
+    /** Map Sirius Object ID (from createChild) to EMF elementId via IObjectSearchService */
     public String getElementIdByObjectId(String pid, String objectId) {
+        // Use IObjectSearchService to resolve siriusId → EMF element
         try {
             String ecId = ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid));
-            log.info("EIO: looking up objectId={} ecId={}", objectId, ecId);
+            var optCtx = editingContextSearchService.findById(ecId);
+            if (optCtx.isPresent() && optCtx.get() instanceof IEditingContext ctx) {
+                var optObj = objectSearchService.getObject(ctx, objectId);
+                if (optObj.isPresent()) {
+                    Object o = optObj.get();
+                    if (o instanceof EObject eObj) {
+                        try { return eObj.eResource().getURIFragment(eObj); } catch (Exception ig) {}
+                    }
+                    log.info("EIO: resolved siriusId {} to type {}", objectId, o.getClass().getSimpleName());
+                }
+            }
+        } catch (Exception e) { log.debug("EIO via IObjectSearchService: {}", e.getMessage()); }
+        // Fallback: search document table for elementId near siriusId
+        return fallbackEIO(pid, objectId);
+    }
+    private String fallbackEIO(String pid, String objectId) {
+        try {
+            String ecId = ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid));
             var rows = jdbcTemplate.queryForList(
-                "SELECT content AS txt FROM document WHERE semantic_data_id = ?::uuid AND name LIKE '%sysml'",
+                "SELECT content FROM document WHERE semantic_data_id = ?::uuid AND name LIKE '%sysml'",
                 java.util.UUID.fromString(ecId));
-            log.info("EIO: {} docs found", rows.size());
             for (var row : rows) {
-                String text = (String) row.get("txt");
+                String text = (String) row.get("content");
                 if (text != null && text.contains(objectId)) {
-                    // Robust regex: find "elementId": "..." near the objectId
                     int idx = text.indexOf("\"id\":\"" + objectId + "\"");
                     if (idx > 0) {
-                        int searchEnd = Math.min(idx + 2000, text.length());
+                        int se = Math.min(idx + 3000, text.length());
                         var m = java.util.regex.Pattern.compile("\"elementId\"\\s*:\\s*\"([^\"]+)\"")
-                                .matcher(text.substring(idx, searchEnd));
-                        if (m.find()) {
-                            String eid = m.group(1);
-                            log.info("EIO: found elementId {}", eid);
-                            return eid;
-                        }
+                                .matcher(text.substring(idx, se));
+                        if (m.find()) { log.info("EIO fallback: {}", m.group(1)); return m.group(1); }
                     }
                 }
             }
-        } catch (Exception e) { log.warn("EIO: {}", e.getMessage(), e); }
+        } catch (Exception e) { log.debug("EIO fallback: {}", e.getMessage()); }
         return null;
     }
 
     public boolean renameBySiriusId(String pid, String siriusId, String newName) {
-        log.info("renameBySiriusId: pid={} siriusId={} newName={}", pid, siriusId, newName);
+        return renameBySiriusId(pid, siriusId, newName, null);
+    }
+    public boolean renameBySiriusId(String pid, String siriusId, String newName, String dodafAlias) {
+        log.info("renameBySiriusId: pid={} siriusId={} newName={} alias={}", pid, siriusId, newName, dodafAlias);
         String elementId = getElementIdByObjectId(pid, siriusId);
-        if (elementId == null) { log.warn("elementId not found"); return false; }
+        if (elementId == null) { log.warn("elementId not found, using siriusId"); elementId = siriusId; }
         try {
             String ecId = ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid));
-            // Dispatch through the editing context event processor so the change is applied on the LIVE
-            // editing context, triggers a refresh of the explorer tree, and is persisted.
             var input = new RenameMatrixElementInput(java.util.UUID.randomUUID(), ecId, elementId, newName);
             var payload = eventProcessorRegistry.dispatchEvent(ecId, input).block();
             boolean ok = payload instanceof org.eclipse.sirius.components.core.api.SuccessPayload;
+            // Set DoDAF alias on the LIVE editing context (regardless of rename result)
+            if (dodafAlias != null && !dodafAlias.isEmpty()) {
+                var optCtx = editingContextSearchService.findById(ecId);
+                if (optCtx.isPresent() && optCtx.get() instanceof IEMFEditingContext emfCtx) {
+                    for (var r : emfCtx.getDomain().getResourceSet().getResources()) {
+                        // Try direct elementId lookup first, then search by elementId attribute
+                        EObject obj = r.getEObject(elementId);
+                        if (obj == null) {
+                            var it = r.getAllContents();
+                            while (it.hasNext()) {
+                                var candidate = it.next();
+                                if (candidate instanceof org.eclipse.syson.sysml.Element el2) {
+                                    try {
+                                        // Match by elementId attribute (SysON custom UUID)
+                                        var eidFeature = candidate.eClass().getEStructuralFeature("elementId");
+                                        if (eidFeature != null && elementId.equals(candidate.eGet(eidFeature))) {
+                                            obj = candidate; break;
+                                        }
+                                    } catch (Exception ig) {}
+                                    // Fallback: match by declaredName
+                                    if (newName.equals(el2.getDeclaredName())) { obj = candidate; break; }
+                                }
+                            }
+                        }
+                        if (obj instanceof org.eclipse.syson.sysml.Element el) {
+                            el.getAliasIds().removeIf(a -> a.startsWith("dodaf:"));
+                            el.getAliasIds().add("dodaf:" + dodafAlias);
+                            editingContextPersistenceService.persist(null, optCtx.get());
+                            log.info("Set alias dodaf:{} on element {}", dodafAlias, el.getDeclaredName());
+                            break;
+                        }
+                    }
+                }
+            }
             log.info("renameBySiriusId dispatch result: {} (payload={})", ok, payload);
             return ok;
         } catch (Exception e) { log.error("renameBySiriusId: {}", e.getMessage(), e); }
         return false;
+    }
+    private void setAliasOnElement(String pid, String elementId, String alias) {
+        try {
+            var rs = getRS(pid);
+            if (rs == null) return;
+            for (var r : rs.getResources()) {
+                EObject obj = r.getEObject(elementId);
+                if (obj instanceof org.eclipse.syson.sysml.Element el) {
+                    // Remove any existing dodaf:* aliases
+                    el.getAliasIds().removeIf(a -> a.startsWith("dodaf:"));
+                    // Add the correct alias
+                    el.getAliasIds().add("dodaf:" + alias);
+                    log.info("Set alias {} on element {}", alias, elementId);
+                    return;
+                }
+            }
+        } catch (Exception e) { log.warn("setAliasOnElement: {}", e.getMessage()); }
     }
 
     public List<String> getParentChain(String pid, String scopeId) {
@@ -204,6 +269,103 @@ public class DoDAFMatrixDataService {
     private String ed(EObject o) { try { var f = o.eClass().getEStructuralFeature("aliasIds"); if (f != null && o.eGet(f) instanceof java.util.List<?> l) for (Object a : l) if (a instanceof String s && DODAF_MAP.containsKey(s)) return DODAF_MAP.get(s); } catch (Exception ig) {} return null; }
     private String en(EObject o) { try { if (o instanceof PartUsage x) return x.getDeclaredName(); if (o instanceof RequirementUsage x) return x.getDeclaredName(); if (o instanceof ActionUsage x) return x.getDeclaredName(); if (o instanceof InterfaceUsage x) return x.getDeclaredName(); if (o instanceof org.eclipse.syson.sysml.Package x) return x.getDeclaredName(); } catch (Exception ig) {} try { var f = o.eClass().getEStructuralFeature("declaredName"); if (f != null && o.eGet(f) instanceof String s && !s.isBlank()) return s; } catch (Exception ig) {} return null; }
     private boolean mt(EObject o, java.util.Set<String> ts) { String cn = o.eClass().getName(); for (String t : ts) if (cn.contains(t) || cn.equalsIgnoreCase(t)) return true; return false; }
+
+    private static final Map<String,String> DODAF_ALIAS = Map.of(
+        "capability","dodaf:capability", "node","dodaf:node", "organization","dodaf:organization",
+        "exchange","dodaf:exchange", "activity","dodaf:capability");
+
+    public boolean setDodafAlias(String pid, String siriusId, String alias, String elementName) {
+        try {
+            String ecId = ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid));
+            var optCtx = editingContextSearchService.findById(ecId);
+            if (optCtx.isEmpty() || !(optCtx.get() instanceof IEMFEditingContext emfCtx)) return false;
+            for (var r : emfCtx.getDomain().getResourceSet().getResources()) {
+                // siriusId IS the EMF URI fragment — try direct lookup
+                EObject obj = r.getEObject(siriusId);
+                if (obj instanceof org.eclipse.syson.sysml.Element el) {
+                    el.getAliasIds().removeIf(a -> a.startsWith("dodaf:"));
+                    el.getAliasIds().add("dodaf:" + alias);
+                    editingContextPersistenceService.persist(null, optCtx.get());
+                    log.info("setDodafAlias: set dodaf:{} on {}", alias, el.getDeclaredName());
+                    return true;
+                }
+                // Fallback: search by name
+                var it = r.getAllContents();
+                while (it.hasNext()) {
+                    EObject candidate = it.next();
+                    if (candidate instanceof org.eclipse.syson.sysml.Element el2) {
+                        String dn = en(el2);
+                        if (dn != null && dn.equals(elementName)) {
+                            el2.getAliasIds().removeIf(a -> a.startsWith("dodaf:"));
+                            el2.getAliasIds().add("dodaf:" + alias);
+                            editingContextPersistenceService.persist(null, optCtx.get());
+                            log.info("setDodafAlias(by-name): set dodaf:{} on {}", alias, elementName);
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) { log.warn("setDodafAlias: {}", e.getMessage()); }
+        return false;
+    }
+
+    public String findPackageAncestor(String pid, String elementId) { try { var rs = getRS(pid); if (rs == null) return null; for (var r : rs.getResources()) { EObject obj = r.getEObject(elementId); if (obj != null) { EObject cur = obj; while (cur != null) { if (cur instanceof org.eclipse.syson.sysml.Package) return cur.eResource().getURIFragment(cur); cur = cur.eContainer(); } break; } } } catch (Exception e) { log.warn("fpa: {}", e.getMessage()); } return null; }
+
+    public Map<String,String> createDoDAFElement(String pid, String parentId, String name, String dodafType) {
+        try {
+            String ecId = ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid));
+            var optCtx = editingContextSearchService.findById(ecId);
+            if (optCtx.isEmpty() || !(optCtx.get() instanceof IEMFEditingContext emfCtx)) return null;
+            var rs = emfCtx.getDomain().getResourceSet();
+            EObject parent = null;
+            for (var r : rs.getResources()) { parent = r.getEObject(parentId); if (parent != null) break; }
+            if (parent == null || !(parent instanceof org.eclipse.syson.sysml.Element parentEl)) return null;
+            var pd = SysmlFactory.eINSTANCE.createPartDefinition();
+            pd.setDeclaredName(name != null && !name.isEmpty() ? name : dodafType);
+            String alias = DODAF_ALIAS.getOrDefault(dodafType != null ? dodafType : "capability", "dodaf:capability");
+            pd.getAliasIds().add(alias);
+            var membership = SysmlFactory.eINSTANCE.createOwningMembership();
+            membership.getOwnedRelatedElement().add(pd);
+            parentEl.getOwnedRelationship().add(membership);
+            editingContextPersistenceService.persist(null, optCtx.get());
+            elementCache.clear();
+            resourceSetCache.remove(pid);
+            String elementId = pd.eResource().getURIFragment(pd);
+            // Find siriusId from document JSON
+            String siriusId = findSiriusIdForElement(pid, elementId);
+            return Map.of("elementId", elementId, "siriusId", siriusId != null ? siriusId : elementId);
+        } catch (Exception e) { log.error("createDoDAFElement: {}", e.getMessage(), e); }
+        return null;
+    }
+    private String findSiriusIdForElement(String pid, String elementId) {
+        try {
+            String ecId = ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid));
+            var rows = jdbcTemplate.queryForList("SELECT content FROM document WHERE semantic_data_id = ?::uuid AND name LIKE '%sysml'", java.util.UUID.fromString(ecId));
+            for (var row : rows) {
+                String text = (String) row.get("content");
+                if (text != null && text.contains(elementId)) {
+                    // Find "id":"siriusId" before "elementId":"..."
+                    int eidIdx = text.indexOf(elementId);
+                    if (eidIdx > 0) {
+                        int searchStart = Math.max(0, eidIdx - 200);
+                        var m = java.util.regex.Pattern.compile("\"id\"\\s*:\\s*\"([^\"]+)\"[^}]*\"elementId\"\\s*:\\s*\"" + java.util.regex.Pattern.quote(elementId)).matcher(text.substring(searchStart, Math.min(eidIdx + 100, text.length())));
+                        // Simpler: find the JSON object containing this elementId
+                        int objStart = text.lastIndexOf("{\"id\":\"", eidIdx);
+                        if (objStart > 0) {
+                            int idStart = objStart + 6;
+                            int idEnd = text.indexOf("\"", idStart);
+                            if (idEnd > idStart) {
+                                String sid = text.substring(idStart, idEnd);
+                                log.info("Found siriusId {} for elementId {}", sid, elementId);
+                                return sid;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) { log.warn("findSiriusId: {}", e.getMessage()); }
+        return null;
+    }
 
     private String resolveEc(String pid) { return ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(pid)); }
 
