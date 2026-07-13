@@ -34,15 +34,7 @@ function callGraphQL(query: string, variables: any) {
 
 export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref) {
   var editingContextId = (props && props.editingContextId) || '';
-  // representationId may come directly (Sirius Web spreads representationMetadata)
-  // or nested inside representationMetadata.id (from state injection).
-  var representationId = (props && props.representationId)
-      || (props && props.representationMetadata && props.representationMetadata.id)
-      || '';
-  // Handle "projectId#uuid" format from database
-  if (representationId.indexOf('#') >= 0) {
-      representationId = representationId.split('#')[1];
-  }
+  var representationId = (props && props.representationId) || '';
   var iframeRef = useRef<HTMLIFrameElement>(null);
   React.useEffect(function() {
     var pendingSymbols: any[] = [];
@@ -173,6 +165,62 @@ export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref
 
     window.addEventListener('message', handleMessage);
 
+    // ── MutationObserver: detect RM renames → sync to iframe ──────────
+    // When a tree item is renamed in the Explorer, the DOM text content
+    // changes. We track [data-treeitemid] elements and compare their
+    // textContent against the known names in siriusMap.
+    var treeTextCache: Record<string, string> = {};
+    var renameObserver = new MutationObserver(function(mutations) {
+      for (var mi = 0; mi < mutations.length; mi++) {
+        var m = mutations[mi];
+        if (m.type === 'characterData' && m.target.parentElement) {
+          var el = m.target.parentElement.closest('[data-treeitemid]') as HTMLElement;
+          if (!el) el = (m.target as any).closest?.('[data-treeitemid]');
+          if (el) checkRename(el);
+        }
+        if (m.type === 'childList') {
+          var items = document.querySelectorAll('[data-treeitemid]');
+          for (var ii = 0; ii < items.length; ii++) {
+            checkRename(items[ii] as HTMLElement);
+          }
+        }
+      }
+    });
+    function checkRename(el: HTMLElement) {
+      var treeItemId = el.getAttribute('data-treeitemid');
+      if (!treeItemId) return;
+      var newText = (el.textContent || '').trim();
+      var oldText = treeTextCache[treeItemId];
+      if (oldText !== undefined && oldText !== newText && newText) {
+        treeTextCache[treeItemId] = newText;
+        // Find matching symbol in siriusMap
+        var siriusMap = getMaps(representationId).sirius;
+        for (var sid in siriusMap) {
+          if (siriusMap[sid] === treeItemId) {
+            if (iframeRef.current && iframeRef.current.contentWindow) {
+              iframeRef.current.contentWindow.postMessage({
+                type: 'renameSymbol',
+                symbolId: sid,
+                newName: newText
+              }, PLOTTING_ORIGIN);
+            }
+            console.info('[OV-1] rename detected (DOM):', sid, '→', newText);
+            break;
+          }
+        }
+      } else if (oldText === undefined) {
+        treeTextCache[treeItemId] = newText;
+      }
+    }
+    // Populate initial cache from current DOM
+    var allItems = document.querySelectorAll('[data-treeitemid]');
+    for (var ai = 0; ai < allItems.length; ai++) {
+      var item = allItems[ai] as HTMLElement;
+      var tid = item.getAttribute('data-treeitemid');
+      if (tid) treeTextCache[tid] = (item.textContent || '').trim();
+    }
+    renameObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+
     // Listen for tree item deletions from RM. Cannot use polling (DB out of sync).
     // Instead, expose a callback on window for Apollo Link to call when deleteTreeItem succeeds.
     (window as any).__ov1OnDeleteItem = function(treeItemId: string) {
@@ -198,12 +246,33 @@ export var Ov1BlankView = forwardRef<any, any>(function Ov1BlankView(props, _ref
       }
     };
 
+    // Listen for tree item renames from RM. Exposed on window for the
+    // renameTreeItem Apollo Link interceptor to call.
+    (window as any).__ov1OnRenameItem = function(treeItemId: string, newName: string) {
+      var siriusMap = getMaps(representationId).sirius;
+      for (var sid in siriusMap) {
+        if (siriusMap[sid] === treeItemId) {
+          if (iframeRef.current && iframeRef.current.contentWindow) {
+            iframeRef.current.contentWindow.postMessage({
+              type: 'renameSymbol',
+              symbolId: sid,
+              newName: newName
+            }, PLOTTING_ORIGIN);
+          }
+          console.info('[OV-1] RM→iframe rename:', sid, '→', newName);
+          break;
+        }
+      }
+    };
+
     return function() {
       // Notify iframe to save camera state before closing
       if (iframeRef.current && iframeRef.current.contentWindow) {
         iframeRef.current.contentWindow.postMessage({ type: 'saveAndClose' }, PLOTTING_ORIGIN);
       }
+      renameObserver.disconnect();
       delete (window as any).__ov1OnDeleteItem;
+      delete (window as any).__ov1OnRenameItem;
       var el = document.getElementById(HIDE_RIGHT_PANEL_STYLE_ID);
       if (el) el.remove();
       window.removeEventListener('message', handleMessage);
