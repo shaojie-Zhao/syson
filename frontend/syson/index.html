@@ -546,6 +546,16 @@
             h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
             i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
             h += '</div>';
+          } else if (vn && vn.indexOf('CV-4') >= 0) {
+            var i1 = [{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationCapability)',a:'capability',n:'OperationCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
           } else {
           var i1=[{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战节点(OperationalNode)',a:'node',n:'OperationalNode',d:'SysMLv2EditService-PartDefinition'},{l:'系统节点(SystemNode)',a:'node',n:'SystemNode',d:'SysMLv2EditService-PartDefinition'},{l:'组织(Organization)',a:'organization',n:'Organization',d:'SysMLv2EditService-PartDefinition'},{l:'作战活动(Action)',a:'',n:'Action',d:'SysMLv2EditService-ActionUsage'}];
           var i2=[{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
