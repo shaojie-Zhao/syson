@@ -728,9 +728,11 @@
           h+='</div>';
           }
           e=document.createElement('div');e.id='dodaf-ctx';e.innerHTML=h;
-          e.style.cssText='position:fixed;z-index:99999;max-height:500px;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.6);left:'+Math.min(x,innerWidth-250)+'px;top:'+Math.min(y,innerHeight-320)+'px';
+          e.style.cssText='position:fixed;z-index:99999;background:#111827;max-height:500px;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.6);left:'+Math.min(x,innerWidth-250)+'px;top:'+Math.min(y,innerHeight-320)+'px';
           document.body.appendChild(e);
-          e.querySelectorAll('.di').forEach(function(it){it.onmouseenter=function(){this.style.background='rgba(255,255,255,0.08)'};it.onmouseleave=function(){this.style.background='transparent'};it.onclick=function(){var a=it.getAttribute('data-a'),n=it.getAttribute('data-n'),d=it.getAttribute('data-d');console.log('[DoDAF] Click:',n,a);getCtxAndTarget(function(){createElement(a,n,d)});e.style.display='none'}});
+          var inner = e.querySelector('div');
+          if (inner) inner.style.background = '#111827';
+          e.querySelectorAll('.di').forEach(function(it){it.onmouseenter=function(){this.style.background='#102334'};it.onmouseleave=function(){this.style.background='transparent'};it.onclick=function(){var a=it.getAttribute('data-a'),n=it.getAttribute('data-n'),d=it.getAttribute('data-d');console.log('[DoDAF] Click:',n,a);getCtxAndTarget(function(){createElement(a,n,d)});e.style.display='none'}});
         }
         function intercept(e){if(!isDoDAFv2())return;var t=e.target;if(t.closest('.react-flow__node')||t.closest('button')||t.closest('input')||t.closest('[class*="explorer"]')||t.closest('[class*="sidebar"]')||t.closest('[class*="tree"]'))return;if(!t.closest('#mainArea')&&!t.closest('[data-testid="representation-area"]')&&!t.closest('.react-flow__viewport')&&!t.closest('.react-flow__pane'))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();var cx=e.clientX,cy=e.clientY;getCtxAndTarget(function(){show(cx,cy)})}
         window.addEventListener('contextmenu',intercept,true);
