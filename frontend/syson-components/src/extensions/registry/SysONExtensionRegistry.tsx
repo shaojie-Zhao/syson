@@ -225,9 +225,37 @@ const deleteTreeItemInterceptor: ApolloClientOptionsConfigurer = (currentOptions
   });
   return { ...currentOptions, link: currentOptions.link ? deleteLink.concat(currentOptions.link) : deleteLink };
 };
+// Apollo Link: intercept renameTreeItem to sync RM renames → OV-1 iframe
+const renameTreeItemInterceptor: ApolloClientOptionsConfigurer = (currentOptions) => {
+  const renameLink = new ApolloLink((operation, forward) => {
+    return new Observable((observer: any) => {
+      const subscription = forward(operation).subscribe({
+        next: (response: any) => {
+          if (operation.operationName === 'renameTreeItem') {
+            try {
+              const treeItemId = operation.variables?.input?.treeItemId;
+              const newName = operation.variables?.input?.newName;
+              console.info('[OV-1 Link] renameTreeItem treeItemId=' + treeItemId + ' newName=' + newName + ' cbSet=' + !!((window as any).__ov1OnRenameItem));
+              if (treeItemId && newName && (window as any).__ov1OnRenameItem) {
+                (window as any).__ov1OnRenameItem(treeItemId, newName);
+              }
+            } catch(e) { console.warn('[OV-1 Link] rename error', e); }
+          }
+          observer.next(response);
+        },
+        error: (err: any) => observer.error(err),
+        complete: () => observer.complete(),
+      });
+      return () => subscription.unsubscribe();
+    });
+  });
+  return { ...currentOptions, link: currentOptions.link ? renameLink.concat(currentOptions.link) : renameLink };
+};
+
+// Register BOTH interceptors in a single data array to avoid overwrite
 sysONExtensionRegistry.putData(apolloClientOptionsConfigurersExtensionPoint, {
-  identifier: `syson_${apolloClientOptionsConfigurersExtensionPoint.identifier}_deleteTreeItemInterceptor`,
-  data: [deleteTreeItemInterceptor],
+  identifier: `syson_${apolloClientOptionsConfigurersExtensionPoint.identifier}_treeItemInterceptors`,
+  data: [deleteTreeItemInterceptor, renameTreeItemInterceptor],
 });
 
 sysONExtensionRegistry.addComponent(navigationBarMenuIconExtensionPoint, {

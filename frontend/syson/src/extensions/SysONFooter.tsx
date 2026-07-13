@@ -40,7 +40,7 @@ export const SysONFooter = ({}: FooterProps) => {
           &copy; 2026 ModelingTool v2026.1.0. Powered by&nbsp;
         </Typography>
       </Tooltip>
-      <Link variant="caption" href="https://www.eclipse.dev/sirius" rel="noopener noreferrer" target="_blank">
+      <Link variant="caption" href="https://www.rengutech.com/" rel="noopener noreferrer" target="_blank">
         RenGu
       </Link>
     </footer>

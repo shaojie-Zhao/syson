@@ -62,6 +62,15 @@ body:not(.on-homepage) [class*="MuiToolbar-root"] {
   background-color: transparent !important;
 }
 
+/* Logo: logo0.png on homepage, logo1.png on project pages */
+body.on-homepage .logo-project { display: none !important; }
+body:not(.on-homepage) .logo-home { display: none !important; }
+
+/* Hide right-side panel on homepage */
+body.on-homepage [class*="1qiikhi-right"] {
+  display: none !important;
+}
+
 /* Text primary button: neutral dark bg */
 .MuiButton-textPrimary {
   background-color: rgba(17, 24, 39, 0.8) !important;
