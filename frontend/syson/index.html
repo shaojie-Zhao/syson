@@ -485,7 +485,10 @@
       };
       // ===== DoDAFv2 General View Custom Right-Click Menu =====
       (function() {
-        function isDoDAFv2() { return true; } // Always intercept for now - refine DoDAFv2 detection later
+        function isDoDAFv2() {
+          var tree = document.querySelector('[class*="tree"]');
+          return tree && /DoDAF/i.test(tree.textContent);
+        }
         var editingCtxId = null, targetObjId = null, repIdFromUrl = null;
         function getRepId() {
           // Get the CURRENT diagram's representation ID from the DOM
