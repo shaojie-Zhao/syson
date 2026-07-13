@@ -37,6 +37,9 @@ syson/
 │   ├── server.js                                      ← Express 静态 + REST API
 │   ├── plotting.html                                  ← Cesium 军标标绘页面
 │   └── layers/                                        ← 图层 JSON 持久化目录
+├── dodaf-viewFlow/                                    ← ViewFlow 流程导航图
+│   ├── index.html                                     ← DoDAF 视图流程页面
+│   └── css/                                           ← 样式文件
 └── doc/                                               ← 设计文档
     ├── detaileddesign.md                              ← 详细设计文档
     └── nodeCreate.md                                  ← 模型对象创建机制文档
@@ -79,7 +82,23 @@ OV-1 View 是 DoDAF 8 个视角中**作战视角 (OV)** 的第一个视图。本
 
 - **保存**: 每次绘制/编辑/删除后自动保存到 `layers/{representationId}.json`
 - **加载**: 重新打开 OV-1 View 时自动恢复上次状态
-- **ID 稳定**: 使用 `sym-{libID}-{code}-{pos.x}-{pos.y}` 算法（跨会话不变）
+- **ID 稳定**: 使用 `sym-{libID}-{code}-{pos.x}-{pos.y}` 确定性算法（跨会话不变）
+- **名称注入**: `labelDataMap` 内存缓存 + `autoSave(force)` 确保 `_displayName` 不丢失
+
+#### RM 重命名同步
+
+RM 中重命名 PartUsage 后自动同步到 OV-1 军标标签：
+- **实现**: `MutationObserver` 监听 Explorer 树 DOM 文本变更
+- **回调**: `__ov1OnRenameItem` → postMessage → iframe 更新标签 + names 文件 + 持久化
+- **备用**: Apollo Link 拦截 `renameTreeItem` mutation（`SysONExtensionRegistry`）
+
+### ViewFlow 流程视图
+
+ViewFlow 提供 DoDAF 视图之间的流程导航图，支持点击视图图标直接打开对应 representation。
+
+- **导航**: 点击图标 → postMessage `viewFlowNavigate` → state 注入打开对应 view tab
+- **缩放**: Ctrl+滚轮缩放（0.3x~3.0x），缩放比例 + 滚动位置通过 `sessionStorage` 跨 tab 持久化
+- **模板**: `Dodafv2TemplateBuilder` 创建 `全视图导航` package + `ViewFlow_流程视图` ViewUsage
 
 ### 其他 DoDAF 功能
 
