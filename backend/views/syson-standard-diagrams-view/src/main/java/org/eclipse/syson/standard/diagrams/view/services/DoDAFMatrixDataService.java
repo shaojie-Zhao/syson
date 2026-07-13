@@ -77,6 +77,14 @@ public class DoDAFMatrixDataService {
         });
     }
 
+    public String getViewName(String pid, String elementId) {
+        if (elementId == null || elementId.isEmpty()) return null;
+        try { var rs = getRS(pid); if (rs == null) return null;
+            for (var r : rs.getResources()) { EObject obj = r.getEObject(elementId); if (obj != null) return en(obj); }
+        } catch (Exception e) {}
+        return null;
+    }
+
     public String getEditingContextId(String pid) { return ctxIdCache.computeIfAbsent(pid, p -> projectEditingContextService.getEditingContextId(p).orElse(null)); }
     public String getPackageName(String pid, String pkid) {
         String ck = pid + ":" + pkid; String c = packageNameCache.get(ck); if (c != null) return c;
