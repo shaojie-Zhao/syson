@@ -76,6 +76,12 @@ body:not(.on-homepage) [class*="MuiToolbar-root"] {
 /* Hide appBarHeader */
 [class*="bqb3q2-appBarHeader"] { display: none !important; }
 
+/* Homepage: fill vertical space */
+[class*="1lojfr9-MuiGrid-root"] {
+  height: 100% !important;
+  flex: 1 !important;
+}
+
 /* Right panel: show on all pages, right-aligned */
 [class*="1qiikhi-right"] {
   text-align: right !important;
