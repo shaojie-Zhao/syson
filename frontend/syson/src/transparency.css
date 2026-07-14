@@ -2,6 +2,17 @@
  * Transparency overrides for specific MUI components.
  *******************************************************************************/
 
+/* Homepage light theme: replace canvas with static image */
+body.theme-light.on-homepage canvas {
+  display: none !important;
+}
+body.theme-light.on-homepage {
+  background: url('/light-theme-bg.jpg') center/cover no-repeat fixed !important;
+}
+body.theme-light.on-homepage #root {
+  background: transparent !important;
+}
+
 /* Toolbar - homepage: transparent; project: dark bg */
 body.on-homepage [class*="MuiToolbar-root"] {
   background-color: transparent !important;
@@ -62,6 +73,9 @@ body:not(.on-homepage) [class*="MuiToolbar-root"] {
   background-color: transparent !important;
 }
 
+/* Hide appBarHeader */
+[class*="bqb3q2-appBarHeader"] { display: none !important; }
+
 /* Right panel: show on all pages, right-aligned */
 [class*="1qiikhi-right"] {
   text-align: right !important;
@@ -79,6 +93,10 @@ body.theme-light:not(.on-homepage) [class*="MuiToolbar-root"] {
   background-color: rgb(238, 239, 245) !important;
   color: #000 !important;
   border-bottom: 1px solid #000 !important;
+}
+body.theme-light.on-homepage [class*="MuiToolbar-root"] {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #333 !important;
 }
 body.theme-light [class*="viewSelector"],
 body.theme-light [class*="-container"][data-testid],
@@ -127,6 +145,9 @@ html body:not(.theme-light) img[src*="Resource.svg"] {
 }
 body.theme-light .MuiTypography-root {
   color: #222 !important;
+}
+body.theme-light [class*="footer"] .MuiTypography-root {
+  color: inherit !important;
 }
 body.theme-light .MuiSvgIcon-root {
   color: #333 !important;
@@ -305,12 +326,15 @@ body.theme-light [data-panel-id] {
   box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06) !important;
 }
 
-/* Logo: logo0.png on homepage, logo1.png on project dark, logo2.png on project light */
-body.on-homepage .logo-project,
-body.on-homepage .logo-light { display: none !important; }
-body:not(.on-homepage) .logo-home { display: none !important; }
-body:not(.theme-light) .logo-light { display: none !important; }
-body.theme-light .logo-project { display: none !important; }
+/* Logo: logo0.png homepage dark, logo2.png homepage light, logo1.png project dark, logo2.png project light */
+body.on-homepage:not(.theme-light) .logo-project,
+body.on-homepage:not(.theme-light) .logo-light { display: none !important; }
+body.on-homepage.theme-light .logo-home,
+body.on-homepage.theme-light .logo-project { display: none !important; }
+body:not(.on-homepage):not(.theme-light) .logo-home,
+body:not(.on-homepage):not(.theme-light) .logo-light { display: none !important; }
+body:not(.on-homepage).theme-light .logo-home,
+body:not(.on-homepage).theme-light .logo-project { display: none !important; }
 
 
 /* Text primary button: neutral dark bg */
