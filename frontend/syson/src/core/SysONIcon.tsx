@@ -16,6 +16,7 @@ export const SysONIcon = (props: any) => {
     <>
       <img src="/logo0.png" alt="RenGu" className="logo-home" style={{ height: 48, width: 'auto' }} {...props} />
       <img src="/logo1.png" alt="RenGu" className="logo-project" style={{ height: 48, width: 'auto' }} {...props} />
+      <img src="/logo2.png" alt="RenGu" className="logo-light" style={{ height: 48, width: 'auto' }} {...props} />
     </>
   );
 };

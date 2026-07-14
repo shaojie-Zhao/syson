@@ -6,7 +6,7 @@
 body.on-homepage [class*="MuiToolbar-root"] {
   background-color: transparent !important;
 }
-body.on-homepage [class*="MuiToolbar-root"] * {
+body.on-homepage [class*="MuiToolbar-root"] :not(#theme-toggle):not(#theme-toggle *) {
   background-color: transparent !important;
 }
 /* Toolbar in project views */
@@ -62,14 +62,239 @@ body:not(.on-homepage) [class*="MuiToolbar-root"] {
   background-color: transparent !important;
 }
 
-/* Logo: logo0.png on homepage, logo1.png on project pages */
-body.on-homepage .logo-project { display: none !important; }
-body:not(.on-homepage) .logo-home { display: none !important; }
-
-/* Hide right-side panel on homepage */
-body.on-homepage [class*="1qiikhi-right"] {
-  display: none !important;
+/* Right panel: show on all pages, right-aligned */
+[class*="1qiikhi-right"] {
+  text-align: right !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px;
 }
+
+/* ── Light theme ──────────────────────────────────────────────────── */
+body.theme-light:not(.on-homepage) {
+  color: #000 !important;
+}
+body.theme-light:not(.on-homepage) [class*="MuiToolbar-root"] {
+  background-color: rgb(238, 239, 245) !important;
+  color: #000 !important;
+  border-bottom: 1px solid #000 !important;
+}
+body.theme-light [class*="viewSelector"],
+body.theme-light [class*="-container"][data-testid],
+body.theme-light .react-flow__background {
+  background-color: rgb(247, 252, 249) !important;
+}
+body.theme-light [class*="viewContent"],
+body.theme-light .MuiCardContent-root,
+body.theme-light [class$="-view"][data-testid],
+body.theme-light .MuiPaper-elevation1,
+body.theme-light [class*="MuiTabs-root"],
+body.theme-light [class*="MuiCardActions-root"] {
+  background-color: rgb(238, 239, 245) !important;
+}
+body.theme-light .MuiPaper-elevation2,
+body.theme-light .MuiPaper-elevation2:not([class*="MuiMenu"]):not([class*="MuiPopover"]) {
+  background-color: rgba(247, 252, 249, 0.9) !important;
+}
+body.theme-light .MuiButton-textPrimary {
+  background-color: rgba(238, 239, 245, 0.9) !important;
+}
+body.theme-light [class*="verticalResizer"] {
+  background-color: rgb(122, 122, 124) !important;
+}
+body.theme-light [class*="verticalResizer"]::before,
+body.theme-light [class*="verticalResizer"]::after {
+  border-color: rgb(122, 122, 124) !important;
+}
+/* ── Light theme: text & icons ────────────────────────────────────── */
+body.theme-light .MuiTypography-root {
+  color: #222 !important;
+}
+body.theme-light .MuiSvgIcon-root {
+  color: #333 !important;
+}
+body.theme-light svg[class*="MuiSvgIcon"] {
+  color: #333 !important;
+}
+body.theme-light .MuiIconButton-root {
+  color: #333 !important;
+}
+body.theme-light .react-flow__node {
+  background: #f5f5f5 !important;
+  color: #222 !important;
+}
+body.theme-light .react-flow__node * {
+  color: #222 !important;
+}
+/* ── Light theme: form / table / tree internals ────────────────────── */
+body.theme-light .MuiInputBase-root,
+body.theme-light .MuiTreeItem-content {
+  color: #222 !important;
+}
+body.theme-light .MuiInput-underline::before {
+  border-bottom-color: rgba(0,0,0,0.3) !important;
+}
+body.theme-light .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(0,0,0,0.15) !important;
+}
+/* ── Light theme: Gantt (gantt-task-react) ──────────────────────────── */
+html body.theme-light [class*="ganttContainer"],
+html body.theme-light [data-testid="gantt-representation"],
+html body.theme-light #custom-gantt-wrapper,
+html body.theme-light #custom-gantt-wrapper > div {
+  background: #f0f2f5 !important;
+}
+html body.theme-light [class*="_wrapper_"] {
+  background: #f0f2f5 !important;
+}
+html body.theme-light [class*="_ganttTaskContent"] > div {
+  background-image: linear-gradient(transparent 50px, #f5f5f5 50px) !important;
+}
+html body.theme-light [class*="_ganttTaskContent"] > div > div {
+  background-image: linear-gradient(to right, #e0e0e0 1px, transparent 1px), linear-gradient(transparent 50px, #f5f5f5 50px) !important;
+}
+html body.theme-light [class*="_taskListContent"] > div {
+  background-image: linear-gradient(transparent 50px, #f5f5f5 50px) !important;
+}
+html body.theme-light [class*="_ganttTable_Header"] {
+  background: #e4e6eb !important;
+}
+html body.theme-light [class*="_ganttTable_Header"] * {
+  color: #444 !important;
+}
+html body.theme-light [class*="ganttContainer"] svg text,
+html body.theme-light [class*="ganttContainer"] svg tspan {
+  fill: #444 !important;
+}
+html body.theme-light [class*="_calendar__header"] text {
+  fill: #444 !important;
+}
+/* Override CSS variables set by custom-gantt-wrapper's <style> tag */
+html body.theme-light #custom-gantt-wrapper {
+  --gantt-bg: #f0f2f5 !important;
+  --gantt-surface: #e4e6eb !important;
+  --gantt-text: #333 !important;
+  --gantt-muted: #666 !important;
+  --gantt-border: rgba(0,0,0,0.08) !important;
+}
+html body.theme-light #custom-gantt-wrapper [style*="rgb(30, 51, 102)"] {
+  background: rgb(240, 240, 240) !important;
+}
+html body.theme-light #custom-gantt-wrapper [style*="color:#e2e8f0"],
+html body.theme-light #custom-gantt-wrapper [style*="color: rgb(226"],
+html body.theme-light #custom-gantt-wrapper [style*="color: rgb(148"],
+html body.theme-light #custom-gantt-wrapper [style*="color: rgb(100"],
+html body.theme-light #custom-gantt-wrapper [style*="color:#94a3b8"],
+html body.theme-light #custom-gantt-wrapper [style*="color:#64748b"],
+html body.theme-light #custom-gantt-wrapper [style*="color:#cbd5e1"],
+html body.theme-light #custom-gantt-wrapper [style*="color: rgb(203"] {
+  color: #222 !important;
+}
+/* Table / Matrix — override dodaf-views.css dark theme */
+html body.theme-light [data-testid="table-representation"],
+html body.theme-light [data-testid="table-representation"] .MuiTable-root,
+html body.theme-light [data-testid="table-representation"] .MuiTableContainer-root,
+html body.theme-light [data-testid="table-representation"] .MuiTableRow-root,
+html body.theme-light [data-testid="table-representation"] .MuiTableCell-root,
+html body.theme-light [data-testid="table-representation"] .MuiToolbar-root,
+html body.theme-light [data-testid="table-representation"] .MuiTablePagination-root,
+html body.theme-light [data-testid="table-representation"] .MuiPaper-root,
+html body.theme-light [data-testid="table-representation"] .MuiInputBase-root,
+html body.theme-light [data-testid="table-representation"] .MuiInput-root,
+html body.theme-light [data-testid="table-representation"] .MuiOutlinedInput-root,
+html body.theme-light [data-testid="table-representation"] input[type="text"],
+html body.theme-light [data-testid="table-representation"] textarea,
+html body.theme-light [data-testid="table-representation"] [class*="MuiBox-root"],
+html body.theme-light [data-testid="table-representation"] [class*="MuiTableCell-head"],
+html body.theme-light [data-testid="table-representation"] [class*="MuiTableCell-stickyHeader"] {
+  background-color: #f5f5f5 !important;
+  color: #222 !important;
+}
+html body.theme-light [data-testid="table-representation"] td::before,
+html body.theme-light [data-testid="table-representation"] th::before {
+  background-color: #f5f5f5 !important;
+}
+html body.theme-light [data-testid="table-representation"] td,
+html body.theme-light [data-testid="table-representation"] th,
+html body.theme-light [data-testid="table-representation"] .MuiTableCell-root,
+html body.theme-light [data-testid="table-representation"] .MuiTableRow-root,
+html body.theme-light #matrix-wrapper td,
+html body.theme-light #matrix-wrapper th,
+html body.theme-light #matrix-wrapper .MuiTable-root {
+  border-color: rgb(51, 51, 51) !important;
+}
+html body.theme-light [data-testid="table-representation"] .MuiTableRow-root:nth-of-type(even) .MuiTableCell-root {
+  background-color: #ebebeb !important;
+}
+html body.theme-light [data-testid="table-representation"] [class*="MuiToolbar"] {
+  background-color: #e4e6eb !important;
+}
+/* ── Light theme: Matrix view (inline style overrides) ──────────────── */
+html body.theme-light [style*="background: rgb(25, 40, 79)"] {
+  background: #f5f5f5 !important;
+}
+html body.theme-light [style*="background: rgb(22, 34, 66)"] {
+  background: #fff !important;
+}
+html body.theme-light [style*="background: rgb(82, 74, 115)"] {
+  background: #e0e0e0 !important;
+}
+html body.theme-light [style*="background: rgb(39, 59, 108)"] {
+  background: #fafafa !important;
+}
+html body.theme-light [style*="background: rgb(51, 65, 85)"] {
+  background: #d0d0d0 !important;
+}
+/* Borders */
+html body.theme-light [style*="border-right: 1px solid rgba(255"],
+html body.theme-light [style*="border-bottom: 2px solid rgba(255"],
+html body.theme-light [style*="border-bottom: 1px solid rgba(255"],
+html body.theme-light [style*="border: 1px solid rgba(255"] {
+  border-color: rgb(51, 51, 51) !important;
+}
+/* Text colors */
+html body.theme-light [style*="color: rgb(203, 213, 225)"],
+html body.theme-light [style*="color: rgb(148, 163, 184)"],
+html body.theme-light [style*="color: rgb(100, 116, 139)"] {
+  color: #333 !important;
+}
+html body.theme-light [data-testid="table-representation"] {
+  background-color: #f5f5f5 !important;
+}
+html body.theme-light [data-testid="table-representation"] div,
+html body.theme-light [data-testid="table-representation"] span {
+  color: #222 !important;
+}
+html body.theme-light .MuiTableCell-root {
+  background-color: #fafafa !important;
+  color: #222 !important;
+  border-color: rgba(0,0,0,0.08) !important;
+}
+html body.theme-light .MuiTableRow-root:nth-of-type(even) .MuiTableCell-root {
+  background-color: #f0f0f0 !important;
+}
+html body.theme-light [data-testid="table-representation"] [class*="MuiToolbar"] {
+  background-color: rgb(238, 239, 245) !important;
+}
+body.theme-light [class*="zone"],
+body.theme-light [class*="wrapper"],
+body.theme-light .MuiPaper-root,
+body.theme-light [class*="MuiCard"],
+body.theme-light [class*="MuiOutlinedInput"] fieldset,
+body.theme-light [class*="-container"],
+body.theme-light [data-panel-id] {
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06) !important;
+}
+
+/* Logo: logo0.png on homepage, logo1.png on project dark, logo2.png on project light */
+body.on-homepage .logo-project,
+body.on-homepage .logo-light { display: none !important; }
+body:not(.on-homepage) .logo-home { display: none !important; }
+body:not(.theme-light) .logo-light { display: none !important; }
+body.theme-light .logo-project { display: none !important; }
+
 
 /* Text primary button: neutral dark bg */
 .MuiButton-textPrimary {
