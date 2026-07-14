@@ -108,6 +108,23 @@ body.theme-light [class*="verticalResizer"]::after {
   border-color: rgb(122, 122, 124) !important;
 }
 /* ── Light theme: text & icons ────────────────────────────────────── */
+/* Light theme: darken tree icons for light backgrounds */
+body.theme-light [class*="MuiTreeItem"] img:not([src*="Resource.svg"]),
+body.theme-light [data-testid*="tree"] img:not([src*="Resource.svg"]),
+body.theme-light [class*="explorer"] img:not([src*="Resource.svg"]) {
+  filter: brightness(0) saturate(100%);
+}
+/* Resource / LibraryResource: white in dark theme, black in light theme */
+html body.theme-light img[alt*="Resource"],
+html body.theme-light img[alt*="LibrariesDirectory"],
+html body.theme-light img[src*="Resource.svg"] {
+  filter: brightness(0) !important;
+}
+html body:not(.theme-light) img[alt*="Resource"],
+html body:not(.theme-light) img[alt*="LibrariesDirectory"],
+html body:not(.theme-light) img[src*="Resource.svg"] {
+  filter: brightness(0) invert(1) !important;
+}
 body.theme-light .MuiTypography-root {
   color: #222 !important;
 }
