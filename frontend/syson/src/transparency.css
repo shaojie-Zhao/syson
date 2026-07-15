@@ -127,6 +127,123 @@ body.theme-light .MuiPaper-elevation2:not([class*="MuiMenu"]):not([class*="MuiPo
 body.theme-light .MuiButton-textPrimary {
   background-color: rgba(238, 239, 245, 0.9) !important;
 }
+/* ── Light theme: RM context menu only ──────────────────────────────── */
+body.theme-light ul:has([data-testid="new-object"]) {
+  background-color: #fff !important;
+  color: #222 !important;
+}
+body.theme-light ul:has([data-testid="new-object"]) .MuiTypography-root {
+  color: #222 !important;
+}
+body.theme-light ul:has([data-testid="new-object"]) .MuiSvgIcon-root {
+  color: #333 !important;
+}
+body.theme-light ul:has([data-testid="new-object"]) .MuiMenuItem-root:hover {
+  background-color: rgba(0,0,0,0.06) !important;
+}
+/* ── Light theme: create-object dialog ──────────────────────────────── */
+body.theme-light .MuiDialog-paper {
+  background-color: #fff !important;
+  color: #222 !important;
+}
+body.theme-light .MuiDialog-paper .MuiTypography-root {
+  color: #333 !important;
+}
+body.theme-light .MuiDialog-paper .MuiOutlinedInput-root {
+  background: #f5f5f5 !important;
+}
+body.theme-light .MuiDialog-paper .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(0,0,0,0.2) !important;
+}
+body.theme-light .MuiDialog-paper [class*="borderStyle"] {
+  background: #f5f5f5 !important;
+  border-color: rgba(0,0,0,0.1) !important;
+}
+body.theme-light .MuiDialog-paper input {
+  color: #222 !important;
+  background-color: #f5f5f5 !important;
+}
+body.theme-light .MuiDialog-paper [data-testid="filterbar-textfield"] {
+  background-color: #f5f5f5 !important;
+}
+body.theme-light .MuiDialog-paper [data-testid="filterbar-textfield"] input {
+  color: #222 !important;
+}
+body.theme-light .MuiDialog-paper .MuiSelect-select {
+  color: #222 !important;
+}
+body.theme-light .MuiDialog-paper .MuiInputAdornment-root .MuiSvgIcon-root {
+  color: #666 !important;
+}
+body.theme-light .MuiDialog-paper [data-testid*="tree-root"] {
+  background-color: #f5f5f5 !important;
+}
+body.theme-light .MuiDialog-paper [class*="treeItem"] {
+  background-color: #f5f5f5 !important;
+}
+body.theme-light .MuiDialog-paper [class*="treeItem"] .MuiTypography-root {
+  color: #222 !important;
+}
+body.theme-light .MuiDialog-paper .MuiDialogActions-root {
+  background-color: #f5f5f5 !important;
+  border-top: 1px solid rgba(0,0,0,0.1) !important;
+}
+/* Dialog select dropdown (MUI Portal renders popover as body sibling) */
+body.theme-light [class*="MuiPopover-paper"] {
+  --Paper-overlay: none !important;
+  background-color: #fff !important;
+}
+body.theme-light .MuiTooltip-tooltip {
+  background-color: #fff !important;
+  color: #222 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+body.theme-light .MuiTooltip-arrow::before {
+  background-color: #fff !important;
+}
+body.theme-light [class*="MuiPopover-root"] [role="listbox"] {
+  background-color: #fff !important;
+}
+body.theme-light [class*="MuiPopover-root"] [role="option"] {
+  color: #222 !important;
+}
+body.theme-light [class*="MuiPopover-root"] [role="option"]:hover {
+  background-color: rgba(0,0,0,0.06) !important;
+}
+body.theme-light [class*="MuiPopover-paper"] .MuiSvgIcon-root {
+  color: #333 !important;
+}
+body.theme-light [class*="MuiPopover-paper"] img {
+  filter: brightness(0) !important;
+}
+/* ── Light theme: Details panel autocomplete / chips ────────────────── */
+body.theme-light .MuiAutocomplete-tag .MuiChip-icon img,
+body.theme-light [class*="MuiChip"] img {
+  filter: brightness(0) !important;
+}
+body.theme-light .MuiChip-root {
+  background-color: #e0e0e0 !important;
+  color: #222 !important;
+}
+body.theme-light .MuiChip-deleteIcon {
+  color: #555 !important;
+}
+body.theme-light .MuiAutocomplete-inputRoot {
+  color: #222 !important;
+}
+body.theme-light .MuiAutocomplete-inputRoot input {
+  color: #222 !important;
+}
+/* Details panel inputs */
+body.theme-light [data-testid*="input-"],
+body.theme-light .MuiInputBase-input {
+  color: #222 !important;
+  -webkit-text-fill-color: #222 !important;
+}
+body.theme-light [data-testid*="input-"]::placeholder,
+body.theme-light .MuiInputBase-input::placeholder {
+  color: #999 !important;
+}
 body.theme-light [class*="verticalResizer"] {
   background-color: rgb(122, 122, 124) !important;
 }
@@ -142,7 +259,8 @@ body.theme-light [class*="explorer"] img:not([src*="Resource.svg"]):not([src*="D
   filter: brightness(0) saturate(100%);
 }
 /* DoDAF custom node icons: invert in light theme (dark by design) */
-body.theme-light img[src*="Dodaf"] {
+body.theme-light img[src*="Dodaf"],
+body.theme-light img[src*="Comment.svg"] {
   filter: invert(1) !important;
 }
 /* Resource / LibraryResource: white in dark theme, black in light theme */

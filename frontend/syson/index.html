@@ -176,6 +176,10 @@
         'Toggle visibility': '切换可见性', 'Ungroup by column': '取消分组',
         'Explorer': '资源管理器', 'Details': '详情', 'Views': '视图',
         'Validations': '验证', 'Validation': '验证', 'Search': '搜索',
+        'Query': '查询', 'Related Views': '关联视图', 'Related Elements': '关联元素',
+        'createModal.title': '新建对象', 'createModal.container.label': '选择容器',
+        'createModal.type.label': '对象类型', 'createModal.submit': '创建',
+        'newObjectModal.title': '创建对象',
       };
       // One-time patch for table representation text
       var tablePatchDone = false;
@@ -206,8 +210,10 @@
               if (t && allZh[t]) { node.textContent = allZh[t]; }
             }
           }
-          // Also translate title/tooltip attributes
+          // Also translate title/tooltip/aria-label attributes
           if (el.title && allZh[el.title]) { el.title = allZh[el.title]; }
+          var aria = el.getAttribute('aria-label');
+          if (aria && allZh[aria]) { el.setAttribute('aria-label', allZh[aria]); }
         });
       }
       // MutationObserver for new nodes
