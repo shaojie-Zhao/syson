@@ -76,6 +76,9 @@ body:not(.on-homepage) [class*="MuiToolbar-root"] {
 /* Hide appBarHeader */
 [class*="bqb3q2-appBarHeader"] { display: none !important; }
 
+/* Hide omnibox button */
+[class*="omniboxButton"] { display: none !important; }
+
 /* Homepage: fill vertical space */
 [class*="1lojfr9-MuiGrid-root"] {
   height: 100% !important;
@@ -133,10 +136,14 @@ body.theme-light [class*="verticalResizer"]::after {
 }
 /* ── Light theme: text & icons ────────────────────────────────────── */
 /* Light theme: darken tree icons for light backgrounds */
-body.theme-light [class*="MuiTreeItem"] img:not([src*="Resource.svg"]),
-body.theme-light [data-testid*="tree"] img:not([src*="Resource.svg"]),
-body.theme-light [class*="explorer"] img:not([src*="Resource.svg"]) {
+body.theme-light [class*="MuiTreeItem"] img:not([src*="Resource.svg"]):not([src*="Dodaf"]),
+body.theme-light [data-testid*="tree"] img:not([src*="Resource.svg"]):not([src*="Dodaf"]),
+body.theme-light [class*="explorer"] img:not([src*="Resource.svg"]):not([src*="Dodaf"]) {
   filter: brightness(0) saturate(100%);
+}
+/* DoDAF custom node icons: invert in light theme (dark by design) */
+body.theme-light img[src*="Dodaf"] {
+  filter: invert(1) !important;
 }
 /* Resource / LibraryResource: white in dark theme, black in light theme */
 html body.theme-light img[alt*="Resource"],
