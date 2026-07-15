@@ -283,7 +283,8 @@
     "description": "描述"
   },
   "detailsView": {
-    "noObjectSelected": "未选择对象"
+    "noObjectSelected": "未选择对象",
+    "title": "详情"
   },
   "synchronizationButton": {
     "tooltipPinned": "已固定。点击以跟随全局选择。",
@@ -398,6 +399,7 @@
     "title": "通用设置"
   },
   "viewsExplorerView": {
-    "noRepresentation": "没有可用的视图"
+    "noRepresentation": "没有可用的视图",
+    "title": "资源管理器"
   }
 }

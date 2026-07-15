@@ -166,7 +166,7 @@ const toolInLeftSidebarConfigurer: ApolloClientOptionsConfigurer = (currentOptio
 
 sysONExtensionRegistry.putData(apolloClientOptionsConfigurersExtensionPoint, {
   identifier: `syson_${apolloClientOptionsConfigurersExtensionPoint.identifier}`,
-  data: [zhLocaleConfigurer, apolloClientOptionsConfigurer, toolInLeftSidebarConfigurer],
+  data: [zhLocaleConfigurer, apolloClientOptionsConfigurer],
 });
 
 // Register the Tool sidebar as a workbench view contribution

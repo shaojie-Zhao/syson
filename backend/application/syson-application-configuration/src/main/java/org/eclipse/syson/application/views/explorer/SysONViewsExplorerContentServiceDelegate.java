@@ -84,9 +84,16 @@ public class SysONViewsExplorerContentServiceDelegate implements IViewsExplorerC
         return viewDefinitionToMetadataMap.entrySet().stream()
                 .map(entry -> {
                     ViewDefinition viewDefinition = entry.getKey();
-                    String viewDefinitionName = viewDefinition.getDeclaredShortName();
                     RepresentationMetadata firstMetadata = entry.getValue().get(0);
                     String descriptionId = firstMetadata.getDescriptionId();
+                    String vdn = viewDefinition.getDeclaredShortName();
+                    if (vdn == null || vdn.isEmpty()) {
+                        vdn = viewDefinition.getDeclaredName();
+                    }
+                    if (vdn == null || vdn.isEmpty()) {
+                        vdn = descriptionId != null ? descriptionId : "unknown";
+                    }
+                    final String viewDefinitionName = vdn;
                     IRepresentationDescription representationDescription = allDescriptions.get(descriptionId);
 
                     return Optional.ofNullable(representationDescription)

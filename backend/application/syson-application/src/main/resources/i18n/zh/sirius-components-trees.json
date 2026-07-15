@@ -25,5 +25,7 @@
   },
   "filterButton": {
     "filter": "筛选"
-  }
+  },
+  "displayDetail": "显示详情",
+  "hideDetail": "隐藏详情"
 }

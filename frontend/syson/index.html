@@ -52,6 +52,78 @@
       Intl.DateTimeFormat.prototype = _origDTF.prototype;
       localStorage.setItem('i18nextLng', 'zh');
       document.documentElement.lang = 'zh-CN';
+      // ── Theme toggle ──
+      if (localStorage.getItem('theme') === 'light') document.body.classList.add('theme-light');
+      (function() {
+        setInterval(function() {
+          var bar = document.querySelector('[class*="1qiikhi-right"]');
+          if (!bar) return;
+          var existing = document.getElementById('theme-toggle');
+          if (existing) {
+            var isL = document.body.classList.contains('theme-light');
+            existing.querySelector('span:last-child').style.background = isL ? '#3b82f6' : '#64748b';
+            existing.querySelector('span:last-child span').style.left = isL ? '18px' : '2px';
+            existing.querySelector('span:first-child').textContent = isL ? '浅色' : '深色';
+            existing.style.color = isL ? '#333' : '#e2e8f0';
+            return;
+          }
+          var isLight = document.body.classList.contains('theme-light');
+          var wrap = document.createElement('span');
+          wrap.id = 'theme-toggle';
+          wrap.title = '浅色/深色主题切换';
+          var isDark = !isLight;
+          wrap.style.cssText = 'display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:' + (isDark ? '#e2e8f0' : '#333') + ';';
+          var track = document.createElement('span');
+          track.style.cssText = 'width:36px;height:20px;border-radius:10px;display:inline-block;position:relative;transition:background 0.2s;background:' + (isLight ? '#3b82f6' : '#64748b') + ';';
+          var thumb = document.createElement('span');
+          thumb.style.cssText = 'width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;transition:left 0.2s;' + (isLight ? 'left:18px;' : 'left:2px;');
+          track.appendChild(thumb);
+          var label = document.createElement('span');
+          label.style.cssText = 'display:inline-block;width:28px;text-align:center;';
+          label.textContent = isLight ? '浅色' : '深色';
+          wrap.appendChild(label);
+          wrap.appendChild(track);
+          wrap.onclick = function(){
+            document.body.classList.toggle('theme-light');
+            var il = document.body.classList.contains('theme-light');
+            localStorage.setItem('theme', il?'light':'dark');
+            track.style.background = il ? '#3b82f6' : '#64748b';
+            thumb.style.left = il ? '18px' : '2px';
+            wrap.querySelector('span:first-child').textContent = il ? '浅色' : '深色';
+            wrap.style.color = il ? '#333' : '#e2e8f0';
+            applyGanttTheme();
+          };
+          bar.appendChild(wrap);
+        }, 1000);
+        window.applyGanttTheme = function() {
+          var isLight = document.body.classList.contains('theme-light');
+          var map = isLight ? [
+            ['#1a1f35','#f0f2f5'],['#e0e0e0','#333'],['#1e2540','#e4e6eb'],
+            ['#64748b','#666'],['#94a3b8','#888'],['#e2e8f0','#444'],
+            ['#f1f5f9','#222'],['rgba(255,255,255,0.015)','#f5f5f5'],
+            ['rgba(255,255,255,0.06)','rgba(0,0,0,0.04)'],
+            ['rgba(255,255,255,0.08)','rgba(0,0,0,0.04)'],
+            ['rgba(255,255,255,0.05)','#fff'],
+            ['rgba(255,255,255,0.1)','rgba(0,0,0,0.05)'],
+            ['rgba(255,255,255,0.04)','rgba(0,0,0,0.02)']
+          ] : [
+            ['#f0f2f5','#1a1f35'],['#333','#e0e0e0'],['#e4e6eb','#1e2540'],
+            ['#666','#64748b'],['#888','#94a3b8'],['#444','#e2e8f0'],
+            ['#222','#f1f5f9'],['#f5f5f5','rgba(255,255,255,0.015)'],
+            ['rgba(0,0,0,0.04)','rgba(255,255,255,0.06)'],
+            ['rgba(0,0,0,0.04)','rgba(255,255,255,0.08)'],
+            ['#fff','rgba(255,255,255,0.05)'],
+            ['rgba(0,0,0,0.05)','rgba(255,255,255,0.1)'],
+            ['rgba(0,0,0,0.02)','rgba(255,255,255,0.04)']
+          ];
+          document.querySelectorAll('.custom-gantt-root [style]').forEach(function(el){
+            var s = el.getAttribute('style');
+            if(!s) return;
+            map.forEach(function(m){ while(s.indexOf(m[0])>=0) s=s.replace(m[0],m[1]); });
+            el.setAttribute('style', s);
+          });
+        };
+      })();
       // Gantt DOM-level Chinese translation observer - covers ALL text nodes
       var allZh = {
         // Gantt
@@ -102,6 +174,8 @@
         'Clear': '清除', 'Pin': '固定', 'Drop to group by': '拖放到分组',
         'Click to copy': '点击复制', 'Copied to clipboard': '已复制到剪贴板',
         'Toggle visibility': '切换可见性', 'Ungroup by column': '取消分组',
+        'Explorer': '资源管理器', 'Details': '详情', 'Views': '视图',
+        'Validations': '验证', 'Validation': '验证', 'Search': '搜索',
       };
       // One-time patch for table representation text
       var tablePatchDone = false;
