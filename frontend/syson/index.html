@@ -812,6 +812,37 @@
         window.addEventListener('contextmenu',intercept,true);
         document.addEventListener('click',function(ev){var e=document.getElementById('dodaf-ctx');if(e&&!ev.target.closest('#dodaf-ctx'))e.style.display='none'});
       })();
+      // ===== Custom DoDAF Rules View injection =====
+      (function() {
+      var rulesInjected = false;
+      function injectRules(containerEl) {
+        if (rulesInjected) return;
+        rulesInjected = true;
+        containerEl.style.display = 'none';
+        var wrapper = document.createElement('div');
+        wrapper.id = 'rules-wrapper';
+        wrapper.style.cssText = 'height:100%;overflow:hidden';
+        containerEl.parentElement.insertBefore(wrapper, containerEl.nextSibling);
+        console.log('[Rules] Injecting custom Rules View');
+        if (window.renderDoDAFRules) window.renderDoDAFRules(wrapper);
+        else { var check = setInterval(function() { if (window.renderDoDAFRules) { clearInterval(check); window.renderDoDAFRules(wrapper); } }, 50); }
+      }
+      function scanForRules() {
+        var wrapper = document.getElementById('rules-wrapper');
+        var reps = document.querySelectorAll('[data-testid="table-representation"]');
+        for (var r = 0; r < reps.length; r++) {
+          var rep = reps[r];
+          if (rep.offsetParent === null) continue;
+          if (rep.closest('[class*="ganttContainer"], [class*="explorer"], [class*="sidebar"], [class*="tree"]')) continue;
+          var headers = rep.querySelectorAll('th');
+          for (var h = 0; h < headers.length; h++) {
+            if (headers[h].textContent.indexOf('规则') >= 0 || headers[h].textContent.indexOf('应用于') >= 0) { injectRules(rep); return; }
+          }
+        }
+        if (wrapper && !wrapper.previousElementSibling?.closest?.('[data-testid="table-representation"]')) { wrapper.remove(); rulesInjected = false; }
+      }
+      setInterval(function() { scanForRules(); }, 500);
+      })();
     </script>
     <script type="module" src="/src/index.tsx"></script>
   </body>

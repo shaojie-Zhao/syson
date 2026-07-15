@@ -44,6 +44,7 @@ import ReactDOM from 'react-dom/client';
 import React from 'react';
 import DoDAFGanttTimeline from './views/DoDAFGanttTimeline';
 import DoDAFMatrixView from './views/DoDAFMatrixView';
+import DoDAFRulesView from './views/DoDAFRulesView';
 import { Ov1BlankView } from './views/Ov1BlankView';
 import { ViewFlowBlankView } from './views/ViewFlowBlankView';
 import { ViewFlowNavigator } from './extensions/ViewFlowNavigator';
