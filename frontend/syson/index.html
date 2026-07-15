@@ -819,30 +819,23 @@
       })();
       // ===== Custom DoDAF Rules View injection =====
       (function() {
-      var rulesInjected = false;
-      function injectRules(containerEl) {
-        if (rulesInjected) return;
-        rulesInjected = true;
-        containerEl.style.display = 'none';
-        var wrapper = document.createElement('div');
-        wrapper.id = 'rules-wrapper';
-        wrapper.style.cssText = 'height:100%;overflow:hidden';
-        containerEl.parentElement.insertBefore(wrapper, containerEl.nextSibling);
-        console.log('[Rules] Injecting custom Rules View');
-        if (window.renderDoDAFRules) window.renderDoDAFRules(wrapper);
-        else { var check = setInterval(function() { if (window.renderDoDAFRules) { clearInterval(check); window.renderDoDAFRules(wrapper); } }, 50); }
-        matrixInjected = true;
-      }
-      function scanForRules() {
+      // Only add add-row button as fallback if custom component doesn't render
+      setTimeout(function() {
         if (document.getElementById('rules-wrapper')) return;
-        var rep = document.querySelector('[data-testid="table-representation"]');
-        if (!rep || rep.offsetParent === null) return;
         var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
-        if (tab && (tab.textContent.indexOf('OV-6a') >= 0 || tab.textContent.indexOf('规则') >= 0)) { injectRules(rep); return; }
-        var ths = rep.querySelectorAll('th');
-        for (var h = 0; h < ths.length; h++) { if (ths[h].textContent.indexOf('规则') >= 0 || ths[h].textContent.indexOf('应用于') >= 0) { injectRules(rep); return; } }
-      }
-      setInterval(scanForRules, 50);
+        if (!tab || (tab.textContent.indexOf('OV-6a') < 0 && tab.textContent.indexOf('规则') < 0)) return;
+        var tableArea = document.querySelector('[data-testid="table-representation"]');
+        if (!tableArea || tableArea.offsetParent === null) return;
+        var btn = document.createElement('button');
+        btn.textContent = '＋ 添加行';
+        btn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:12px 28px;cursor:pointer;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,0.3)';
+        btn.onclick = function() {
+          var ctxId = (window.location.pathname.match(/\/projects\/([^/]+)\/edit/) || [])[1] || 'default-rules';
+          fetch('/api/rules/default-rules/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ctxId: ctxId }) })
+            .then(function(r) { return r.json(); }).then(function() { location.reload(); });
+        };
+        document.body.appendChild(btn);
+      }, 2000);
       })();
     </script>
     <script type="module" src="/src/index.tsx"></script>

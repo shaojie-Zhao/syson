@@ -35,6 +35,9 @@ export default function DoDAFRulesView() {
   const [editing, setEditing] = useState<{ id: string; field: string } | null>(null);
   const [editVal, setEditVal] = useState('');
   const [syncLoading, setSyncLoading] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; count: number }>({ open: false, count: 0 });
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
 
   // Filters
   const [scopeFilter, setScopeFilter] = useState('');
@@ -82,13 +85,8 @@ export default function DoDAFRulesView() {
   };
 
   const handleDelete = async () => {
-    if (selected.size === 0) { alert('请先选择要删除的数据行'); return; }
-    if (!confirm('确定删除选中的 ' + selected.size + ' 行？')) return;
-    for (const id of selected) {
-      await fetch(API + '/' + id, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ctxId }) }).catch(() => {});
-    }
-    setSelected(new Set());
-    load();
+    if (selected.size === 0) { showToast('请先选择要删除的数据行'); return; }
+    setDeleteDialog({ open: true, count: selected.size });
   };
 
   const handleSync = async () => {
@@ -125,9 +123,13 @@ export default function DoDAFRulesView() {
     setSelected(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   };
 
+  var _rowIdx = 0;
   const renderRows = (items: Rule[], depth: number = 0): React.ReactNode[] => {
+    if (depth === 0) _rowIdx = 0;
     const result: React.ReactNode[] = [];
     for (const r of items) {
+      _rowIdx++;
+      var idx = _rowIdx;
       const hasChildren = r.children && r.children.length > 0;
       const isExpanded = expanded.has(r.id);
       const isSelected = selected.has(r.id);
@@ -136,6 +138,7 @@ export default function DoDAFRulesView() {
           onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
           onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = depth % 2 ? 'rgba(255,255,255,0.01)' : 'transparent'; }}>
           <td style={cellStyle}><input type="checkbox" checked={isSelected} onChange={() => toggleSelect(r.id)} /></td>
+          <td style={{ ...cellStyle, width: 50, textAlign: 'center', color: '#94a3b8' }}>{idx}</td>
           <td style={{ ...cellStyle, paddingLeft: 10 + depth * 20 }}>
             {hasChildren && <span onClick={() => toggleExpand(r.id)} style={{ cursor: 'pointer', marginRight: 4, color: '#3b82f6' }}>{isExpanded ? '▼' : '▶'}</span>}
             {editing?.id === r.id && editing?.field === 'applied' ?
@@ -166,6 +169,7 @@ export default function DoDAFRulesView() {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#111827', color: '#e0e0e0', fontFamily: 'system-ui, sans-serif', fontSize: 13 }}>
+      {toast && <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: '#ef4444', color: '#fff', padding: '10px 24px', borderRadius: 8, fontSize: 14, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>{toast}</div>}
       {/* Toolbar */}
       <div style={{ display: 'flex', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <button onClick={() => handleAdd()} style={btnStyle}>＋ 添加行</button>
@@ -187,10 +191,29 @@ export default function DoDAFRulesView() {
         <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="全局搜索..." style={{ ...inputStyle, width: 200 }} />
         <button onClick={() => {}} style={{ ...btnSmall, padding: '6px 10px' }}>🔍</button>
       </div>
+      {/* Delete Confirmation Dialog */}
+      {deleteDialog.open && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)' }} onClick={() => setDeleteDialog({ open: false, count: 0 })}>
+          <div style={{ background: '#1e293b', borderRadius: 12, padding: '24px 32px', minWidth: 360, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 12px', color: '#f1f5f9', fontSize: 16 }}>确认删除</h3>
+            <p style={{ margin: '0 0 20px', color: '#94a3b8', fontSize: 14 }}>确定删除选中的 {deleteDialog.count} 行数据？此操作不可撤销。</p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button onClick={() => setDeleteDialog({ open: false, count: 0 })} style={{ background: '#334155', color: '#cbd5e1', border: 'none', borderRadius: 6, padding: '8px 20px', cursor: 'pointer', fontSize: 13 }}>取消</button>
+              <button onClick={async () => {
+                setDeleteDialog({ open: false, count: 0 });
+                for (const id of selected) { await fetch(API + '/' + id, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ctxId }) }).catch(() => {}); }
+                setSelected(new Set());
+                load();
+              }} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', cursor: 'pointer', fontSize: 13 }}>确认删除</button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Table */}
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
+        <button onClick={() => handleAdd()} style={{ ...btnStyle, position: 'absolute', top: 8, left: 8, zIndex: 10, padding: '6px 14px', fontSize: 12 }}>＋ 添加行</button>
         {filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>暂无规则数据，请点击添加行新建</div>
+          <div style={{ textAlign: 'center', padding: 80, color: '#64748b' }}>暂无规则数据<br/><br/><button onClick={() => handleAdd()} style={btnStyle}>＋ 添加行</button></div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto' }}>
             <thead>

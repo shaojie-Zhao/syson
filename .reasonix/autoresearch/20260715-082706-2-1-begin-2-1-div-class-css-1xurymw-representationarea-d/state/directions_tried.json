@@ -1,0 +1,9 @@
+[
+  {
+    "fingerprint": "ctrl-shift-r-ov-6a-rules-4f4071a4",
+    "summary": "已添加诊断日志。**请 Ctrl+Shift+R 强制刷新**，打开 \"OV-6a_作战规则模型\"，然后看控制台输出以 `[Rules]` 开头的日志，发给\ufffd\ufffd",
+    "first_seen_iteration": 1,
+    "last_seen_iteration": 1,
+    "count": 1
+  }
+]
