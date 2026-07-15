@@ -541,6 +541,7 @@
           teardownMatrix(); w = null;
         }
         if (matrixInjected && !document.getElementById('matrix-wrapper')) matrixInjected = false;
+        if (document.getElementById('rules-wrapper')) return;
         if (matrixInjected) return;
         if (window.location.pathname.indexOf('/projects/') < 0) return;
         var reps = document.querySelectorAll('[data-testid="table-representation"]');
@@ -565,6 +566,8 @@
         }
         var editingCtxId = null, targetObjId = null, repIdFromUrl = null;
         function getRepId() {
+          var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
+          if (tab) { var rid = tab.getAttribute('data-representationid'); if (rid) return rid; }
           var m = window.location.search.match(/[?&]selection=([^&]+)/);
           if (m && m[1]) return m[1];
           m = window.location.search.match(/[?&]representation=([^&]+)/);
@@ -597,8 +600,10 @@
         }
         var _viewName = null;
         function getViewName() { return _viewName; }
-        function show(x,y){_lastMenuX=x;_lastMenuY=y;var vn = getViewName();console.log('[DoDAF] show viewName=',vn);var old=document.getElementById('dodaf-ctx');if(old) old.remove();
-          var vn = getViewName();
+        function show(x,y){_lastMenuX=x;_lastMenuY=y;var old=document.getElementById('dodaf-ctx');if(old) old.remove();
+          var vn = getViewName();console.log('[DoDAF] show viewName=',vn);
+          var e = document.getElementById('dodaf-ctx'); if(e) e.remove();
+          var h = '';
           // CV-1_能力构想 specific menu
           if (vn && vn.indexOf('CV-1') >= 0) {
             var i1 = [{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationCapability)',a:'capability',n:'OperationCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'任务阶段(TaskStage)',a:'capability',n:'TaskStage',d:'SysMLv2EditService-PartDefinition'},{l:'任务意图(TaskIntent)',a:'capability',n:'TaskIntent',d:'SysMLv2EditService-PartDefinition'},{l:'实施阶段(ImplementationPhase)',a:'capability',n:'ImplementationPhase',d:'SysMLv2EditService-PartDefinition'},{l:'愿景(Vision)',a:'capability',n:'Vision',d:'SysMLv2EditService-PartDefinition'},{l:'愿景描述(VisionDescription)',a:'capability',n:'VisionDescription',d:'SysMLv2EditService-PartDefinition'},{l:'目标(Target)',a:'capability',n:'Target',d:'SysMLv2EditService-PartDefinition'},{l:'时间标尺(TimeScale)',a:'capability',n:'TimeScale',d:'SysMLv2EditService-PartDefinition'}];
@@ -807,8 +812,8 @@
           var inner = e.querySelector('div');
           if (inner) inner.style.background = '#111827';
           e.querySelectorAll('.di').forEach(function(it){it.onmouseenter=function(){this.style.background='#102334'};it.onmouseleave=function(){this.style.background='transparent'};it.onclick=function(){var a=it.getAttribute('data-a'),n=it.getAttribute('data-n'),d=it.getAttribute('data-d');console.log('[DoDAF] Click:',n,a);getCtxAndTarget(function(){createElement(a,n,d)});e.style.display='none'}});
-        }
-        function intercept(e){if(!isDoDAFv2())return;var t=e.target;if(t.closest('.react-flow__node')||t.closest('button')||t.closest('input')||t.closest('[class*="explorer"]')||t.closest('[class*="sidebar"]')||t.closest('[class*="tree"]'))return;if(!t.closest('#mainArea')&&!t.closest('[data-testid="representation-area"]')&&!t.closest('.react-flow__viewport')&&!t.closest('.react-flow__pane'))return;if(document.querySelector('[class*="gantt"]')||document.querySelector('[class*="Gantt"]')||document.querySelector('[data-testid*="gantt"]')||document.querySelector('[data-testid*="Gantt"]'))return;if(document.querySelector('[data-testid="table-representation"]'))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();var cx=e.clientX,cy=e.clientY;getCtxAndTarget(function(){show(cx,cy)})}
+          }); }
+        function intercept(e){if(!isDoDAFv2())return;var t=e.target;if(t.closest('.react-flow__node')||t.closest('button')||t.closest('input')||t.closest('[class*="explorer"]')||t.closest('[class*="sidebar"]')||t.closest('[class*="tree"]'))return;if(!t.closest('#mainArea')&&!t.closest('[data-testid="representation-area"]')&&!t.closest('.react-flow__viewport')&&!t.closest('.react-flow__pane'))return;if(document.querySelector('[class*="gantt"]')||document.querySelector('[class*="Gantt"]')||document.querySelector('[data-testid*="gantt"]')||document.querySelector('[data-testid*="Gantt"]'))return;if(document.querySelector('[data-testid="table-representation"]'))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();_viewName = null; targetObjId = null; getCtxAndTarget(function(){show(e.clientX,e.clientY)})}
         window.addEventListener('contextmenu',intercept,true);
         document.addEventListener('click',function(ev){var e=document.getElementById('dodaf-ctx');if(e&&!ev.target.closest('#dodaf-ctx'))e.style.display='none'});
       })();
@@ -826,22 +831,18 @@
         console.log('[Rules] Injecting custom Rules View');
         if (window.renderDoDAFRules) window.renderDoDAFRules(wrapper);
         else { var check = setInterval(function() { if (window.renderDoDAFRules) { clearInterval(check); window.renderDoDAFRules(wrapper); } }, 50); }
+        matrixInjected = true;
       }
       function scanForRules() {
-        var wrapper = document.getElementById('rules-wrapper');
-        var reps = document.querySelectorAll('[data-testid="table-representation"]');
-        for (var r = 0; r < reps.length; r++) {
-          var rep = reps[r];
-          if (rep.offsetParent === null) continue;
-          if (rep.closest('[class*="ganttContainer"], [class*="explorer"], [class*="sidebar"], [class*="tree"]')) continue;
-          var headers = rep.querySelectorAll('th');
-          for (var h = 0; h < headers.length; h++) {
-            if (headers[h].textContent.indexOf('规则') >= 0 || headers[h].textContent.indexOf('应用于') >= 0) { injectRules(rep); return; }
-          }
-        }
-        if (wrapper && !wrapper.previousElementSibling?.closest?.('[data-testid="table-representation"]')) { wrapper.remove(); rulesInjected = false; }
+        if (document.getElementById('rules-wrapper')) return;
+        var rep = document.querySelector('[data-testid="table-representation"]');
+        if (!rep || rep.offsetParent === null) return;
+        var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
+        if (tab && (tab.textContent.indexOf('OV-6a') >= 0 || tab.textContent.indexOf('规则') >= 0)) { injectRules(rep); return; }
+        var ths = rep.querySelectorAll('th');
+        for (var h = 0; h < ths.length; h++) { if (ths[h].textContent.indexOf('规则') >= 0 || ths[h].textContent.indexOf('应用于') >= 0) { injectRules(rep); return; } }
       }
-      setInterval(function() { scanForRules(); }, 500);
+      setInterval(scanForRules, 50);
       })();
     </script>
     <script type="module" src="/src/index.tsx"></script>
