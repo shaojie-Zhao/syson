@@ -38,6 +38,22 @@ export default function DoDAFRulesView() {
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; count: number }>({ open: false, count: 0 });
   const [toast, setToast] = useState<string | null>(null);
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
+  // Tree node picker for applied column
+  const [treePicker, setTreePicker] = useState<{ open: boolean; ruleId: string }>({ open: false, ruleId: '' });
+  const [treeNodes, setTreeNodes] = useState<{id:string;label:string;type:string}[]>([]);
+  const [treeSearch, setTreeSearch] = useState('');
+  const [treeLoading, setTreeLoading] = useState(false);
+  const openTreePicker = (ruleId: string) => {
+    setTreePicker({ open: true, ruleId });
+    setTreeSearch('');
+    setTreeLoading(true);
+    fetch(API + '/tree-nodes?ctxId=' + ctxId).then(r => r.json()).then(d => { setTreeNodes(d || []); }).finally(() => setTreeLoading(false));
+  };
+  const selectTreeNode = async (nodeId: string, nodeLabel: string) => {
+    await fetch(API + '/' + treePicker.ruleId, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ctxId, field: 'applied', value: nodeLabel }) });
+    setTreePicker({ open: false, ruleId: '' });
+    load();
+  };
 
   // Filters
   const [scopeFilter, setScopeFilter] = useState('');
@@ -143,7 +159,7 @@ export default function DoDAFRulesView() {
             {hasChildren && <span onClick={() => toggleExpand(r.id)} style={{ cursor: 'pointer', marginRight: 4, color: '#3b82f6' }}>{isExpanded ? '▼' : '▶'}</span>}
             {editing?.id === r.id && editing?.field === 'applied' ?
               <input autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} onBlur={() => handleEdit(r.id, 'applied', editVal)} onKeyDown={e => { if (e.key === 'Enter') handleEdit(r.id, 'applied', editVal); if (e.key === 'Escape') setEditing(null); }} style={{ ...inputStyle, width: '80%' }} />
-              : <span onClick={() => { setEditing({ id: r.id, field: 'applied' }); setEditVal(r.applied || ''); }} style={{ color: r.applied ? '#e2e8f0' : '#64748b', cursor: 'pointer' }}>{r.applied || '双击编辑...'}</span>}
+              : <span onDoubleClick={() => openTreePicker(r.id)} style={{ color: r.applied ? '#e2e8f0' : '#64748b', cursor: 'pointer' }}>{r.applied || '双击选择树节点...'}</span>}
             <span style={{ marginLeft: 6 }}>{hasChildren && <><button onClick={() => handleAdd(r.id)} style={{ ...btnSmall, background: 'rgba(59,130,246,0.15)', color: '#60a5fa' }} title="添加子行">+</button></>}</span>
           </td>
           {(['name', 'description', 'owner'] as const).map(f => (
@@ -170,6 +186,7 @@ export default function DoDAFRulesView() {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#111827', color: '#e0e0e0', fontFamily: 'system-ui, sans-serif', fontSize: 13 }}>
       {toast && <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: '#ef4444', color: '#fff', padding: '10px 24px', borderRadius: 8, fontSize: 14, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>{toast}</div>}
+      {treePicker.open && <div style={{ position:'fixed',inset:0,zIndex:9998,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.5)' }} onClick={()=>setTreePicker({open:false,ruleId:''})}><div style={{ background:'#1e293b',borderRadius:12,padding:'20px 24px',width:440,maxHeight:520,display:'flex',flexDirection:'column',boxShadow:'0 8px 32px rgba(0,0,0,0.5)',border:'1px solid rgba(255,255,255,0.1)' }} onClick={e=>e.stopPropagation()}><h3 style={{ margin:'0 0 12px',color:'#f1f5f9',fontSize:16 }}>选择树节点</h3><input value={treeSearch} onChange={e=>setTreeSearch(e.target.value)} placeholder="搜索节点..." style={{ ...inputStyle,marginBottom:12 }} autoFocus/><div style={{ flex:1,overflow:'auto',minHeight:200 }}>{treeLoading?<div style={{ color:'#64748b',textAlign:'center',padding:30 }}>加载中...</div>:treeNodes.length===0?<div style={{ color:'#64748b',textAlign:'center',padding:30 }}>暂无树节点数据</div>:treeNodes.filter(n=>!treeSearch||n.label.toLowerCase().includes(treeSearch.toLowerCase())).slice(0,100).map(n=><div key={n.id} onClick={()=>selectTreeNode(n.id,n.label)} style={{ padding:'8px 12px',cursor:'pointer',fontSize:13,color:'#e2e8f0',borderBottom:'1px solid rgba(255,255,255,0.04)',borderRadius:4 }} onMouseEnter={e=>(e.currentTarget as HTMLElement).style.background='rgba(59,130,246,0.15)'} onMouseLeave={e=>(e.currentTarget as HTMLElement).style.background='transparent'}><span style={{ fontSize:11,color:'#64748b',marginRight:8 }}>[{n.type}]</span>{n.label}</div>)}</div></div></div>}
       {/* Toolbar */}
       <div style={{ display: 'flex', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <button onClick={() => handleAdd()} style={btnStyle}>＋ 添加行</button>

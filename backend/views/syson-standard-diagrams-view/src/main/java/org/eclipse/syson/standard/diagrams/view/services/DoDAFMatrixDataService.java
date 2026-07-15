@@ -510,5 +510,32 @@ public class DoDAFMatrixDataService {
         return false;
     }
 
+    public List<Map<String, Object>> getTreeNodes(String pid) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        var rs = getRS(pid);
+        if (rs == null || rs.getResources().isEmpty()) return result;
+        var projectResource = rs.getResources().get(0);
+        // Find root Package and return its direct children (same as Explorer tree top level)
+        for (EObject rootObj : projectResource.getContents()) {
+            if (rootObj instanceof org.eclipse.syson.sysml.Package pkg) {
+                for (var member : pkg.getOwnedMember()) {
+                    if (member instanceof org.eclipse.syson.sysml.Element el) {
+                        String name = en(member);
+                        if (name == null || name.isBlank()) continue;
+                        Map<String, Object> node = new LinkedHashMap<>();
+                        node.put("id", member.eResource().getURIFragment(member));
+                        node.put("label", name);
+                        node.put("type", member.eClass().getName());
+                        if (el.getAliasIds().stream().anyMatch(a -> a.startsWith("dodaf:"))) {
+                            el.getAliasIds().stream().filter(a -> a.startsWith("dodaf:")).findFirst().ifPresent(a -> node.put("type", a.replace("dodaf:", "")));
+                        }
+                        result.add(node);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     public List<String> getAllElementTypes(String pid) { java.util.LinkedHashSet<String> types = new java.util.LinkedHashSet<>(); var rs = getRS(pid); if (rs == null) return List.of(); for (var r : rs.getResources()) { var it = r.getAllContents(); while (it.hasNext()) types.add(it.next().eClass().getName()); } types.removeIf(t -> t.startsWith("org.eclipse") || t.equals("Usage") || t.contains("Impl")); return new ArrayList<>(types); }
 }

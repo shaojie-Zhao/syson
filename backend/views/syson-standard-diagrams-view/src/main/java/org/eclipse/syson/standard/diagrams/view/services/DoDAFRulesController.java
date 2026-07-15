@@ -3,7 +3,10 @@ package org.eclipse.syson.standard.diagrams.view.services;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.syson.sysml.util.SysmlSwitch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -14,14 +17,19 @@ public class DoDAFRulesController {
     private static final Logger log = LoggerFactory.getLogger(DoDAFRulesController.class);
     private final Map<String, Rule> rules = new ConcurrentHashMap<>();
     private final AtomicInteger seq = new AtomicInteger(0);
+    private final DoDAFMatrixDataService dataService;
 
     public static class Rule {
         public String id, name, applied, description, ruleType, owner, parentId;
         public List<Rule> children;
     }
 
-    public DoDAFRulesController() {
-        // Demo data
+    public static class TreeNode {
+        public String id, label, type;
+    }
+
+    public DoDAFRulesController(DoDAFMatrixDataService dataService) {
+        this.dataService = dataService;
         var r1 = new Rule(); r1.id = "1"; r1.applied = "待战状态"; r1.name = ""; r1.description = ""; r1.ruleType = "红方状态"; r1.owner = "";
         rules.put(r1.id, r1);
         seq.set(1);
@@ -89,10 +97,25 @@ public class DoDAFRulesController {
         return Map.of("result", "ok");
     }
 
+    @GetMapping("/tree-nodes")
+    public List<TreeNode> treeNodes(@RequestParam(defaultValue = "") String ctxId, @RequestParam(defaultValue = "") String pid) {
+        log.info("GET /tree-nodes ctxId={} pid={}", ctxId, pid);
+        List<TreeNode> result = new ArrayList<>();
+        try {
+            var elements = dataService.getTreeNodes(pid.isEmpty() ? ctxId : pid);
+            if (elements != null) {
+                for (var e : elements) {
+                    var tn = new TreeNode(); tn.id = (String) e.get("id"); tn.label = (String) e.get("label"); tn.type = (String) e.getOrDefault("kind", "");
+                    result.add(tn);
+                }
+            }
+        } catch (Exception ex) { log.warn("tree-nodes: {}", ex.getMessage()); }
+        return result;
+    }
+
     @PostMapping("/sync")
     public Map<String, String> sync(@RequestParam(defaultValue = "") String ctxId) {
         log.info("POST /sync ctxId={}", ctxId);
-        // Simulate sync - in real impl would fetch from remote
         return Map.of("result", "ok", "message", "同步完成");
     }
 }

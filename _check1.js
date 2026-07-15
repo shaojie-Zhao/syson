@@ -1,26 +1,4 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <link href="/favicon.png" rel="icon" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>RGMT</title>
-    <script>
-      // polyfill crypto.randomUUID for non-secure context (IP access)
-      if (typeof crypto !== 'undefined' && !crypto.randomUUID) {
-        crypto.randomUUID = function () {
-          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-          });
-        };
-      }
-    </script>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <script>
+
       // Force Chinese language - intercept ALL i18n API calls
       (function() {
         var _fetch = window.fetch;
@@ -834,7 +812,4 @@
           document.body.appendChild(btn);
         }, 2000);
       })();
-    </script>
-    <script type="module" src="/src/index.tsx"></script>
-  </body>
-</html>
+    
