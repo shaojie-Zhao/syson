@@ -273,7 +273,7 @@ public class DoDAFMatrixDataService {
     }
     private EObject findR(EObject o, String tid) { if (o == null) return null; try { if (tid.equals(o.eResource().getURIFragment(o))) return o; } catch (Exception ig) {} for (EObject c : o.eContents()) { EObject f = findR(c, tid); if (f != null) return f; } return null; }
     private void coll(EObject p, List<Map<String, Object>> r, java.util.Set<String> ts) { coll(p, r, ts, 50); }
-    private void coll(EObject p, List<Map<String, Object>> r, java.util.Set<String> ts, int d) { if (d <= 0) return; for (EObject c : p.eContents()) { String n = en(c); String et = c.eClass().getName(); if (n != null && !n.isEmpty()) { String dt = ed(c); if (ts.isEmpty() || ts.contains(et) || ts.contains(dt) || mt(c, ts)) { Map<String, Object> el = new LinkedHashMap<>(); try { el.put("id", c.eResource().getURIFragment(c)); } catch (Exception e) { el.put("id",""); } el.put("name",n); el.put("type",et); el.put("dodafType",dt!=null?dt:""); el.put("parentPath",""); r.add(el); } } coll(c, r, ts, d - 1); } }
+    private void coll(EObject p, List<Map<String, Object>> r, java.util.Set<String> ts, int d) { if (d <= 0) return; for (EObject c : p.eContents()) { String n = en(c); String et = c.eClass().getName(); if (n != null && !n.isEmpty()) { String dt = ed(c); if (ts.isEmpty() || ts.contains(et) || ts.contains(dt) || mt(c, ts) || (dt != null && ts.stream().anyMatch(t -> t.equalsIgnoreCase(dt)))) { Map<String, Object> el = new LinkedHashMap<>(); try { el.put("id", c.eResource().getURIFragment(c)); } catch (Exception e) { el.put("id",""); } el.put("name",n); el.put("type",et); el.put("dodafType",dt!=null?dt:""); el.put("parentPath",""); r.add(el); } } coll(c, r, ts, d - 1); } }
     private String ed(EObject o) { try { var f = o.eClass().getEStructuralFeature("aliasIds"); if (f != null && o.eGet(f) instanceof java.util.List<?> l) for (Object a : l) if (a instanceof String s && DODAF_MAP.containsKey(s)) return DODAF_MAP.get(s); } catch (Exception ig) {} return null; }
     private String en(EObject o) { try { if (o instanceof PartUsage x) return x.getDeclaredName(); if (o instanceof RequirementUsage x) return x.getDeclaredName(); if (o instanceof ActionUsage x) return x.getDeclaredName(); if (o instanceof InterfaceUsage x) return x.getDeclaredName(); if (o instanceof org.eclipse.syson.sysml.Package x) return x.getDeclaredName(); } catch (Exception ig) {} try { var f = o.eClass().getEStructuralFeature("declaredName"); if (f != null && o.eGet(f) instanceof String s && !s.isBlank()) return s; } catch (Exception ig) {} return null; }
     private boolean mt(EObject o, java.util.Set<String> ts) { String cn = o.eClass().getName(); for (String t : ts) if (cn.contains(t) || cn.equalsIgnoreCase(t)) return true; return false; }
@@ -514,27 +514,38 @@ public class DoDAFMatrixDataService {
         List<Map<String, Object>> result = new ArrayList<>();
         var rs = getRS(pid);
         if (rs == null || rs.getResources().isEmpty()) return result;
-        var projectResource = rs.getResources().get(0);
-        // Find root Package and return its direct children (same as Explorer tree top level)
-        for (EObject rootObj : projectResource.getContents()) {
-            if (rootObj instanceof org.eclipse.syson.sysml.Package pkg) {
-                for (var member : pkg.getOwnedMember()) {
-                    if (member instanceof org.eclipse.syson.sysml.Element el) {
-                        String name = en(member);
-                        if (name == null || name.isBlank()) continue;
-                        Map<String, Object> node = new LinkedHashMap<>();
-                        node.put("id", member.eResource().getURIFragment(member));
-                        node.put("label", name);
-                        node.put("type", member.eClass().getName());
-                        if (el.getAliasIds().stream().anyMatch(a -> a.startsWith("dodaf:"))) {
-                            el.getAliasIds().stream().filter(a -> a.startsWith("dodaf:")).findFirst().ifPresent(a -> node.put("type", a.replace("dodaf:", "")));
-                        }
-                        result.add(node);
-                    }
+        // Find the user project resource (not library/SysML standard library)
+        for (var resource : rs.getResources()) {
+            boolean isLibrary = resource.getURI() != null && (resource.getURI().toString().contains("kerml") || resource.getURI().toString().contains("sysml"));
+            if (isLibrary) continue;
+            for (EObject rootObj : resource.getContents()) {
+                if (rootObj instanceof org.eclipse.syson.sysml.Package pkg) {
+                    addPackageChildren(pkg, result);
                 }
             }
         }
         return result;
+    }
+    
+    private void addPackageChildren(org.eclipse.syson.sysml.Package pkg, List<Map<String, Object>> result) {
+        for (var member : pkg.getOwnedMember()) {
+            if (member instanceof org.eclipse.syson.sysml.Element el) {
+                String name = en(member);
+                if (name == null || name.isBlank()) continue;
+                Map<String, Object> node = new LinkedHashMap<>();
+                node.put("id", member.eResource().getURIFragment(member));
+                node.put("label", name);
+                node.put("type", member.eClass().getName());
+                if (el.getAliasIds().stream().anyMatch(a -> a.startsWith("dodaf:"))) {
+                    el.getAliasIds().stream().filter(a -> a.startsWith("dodaf:")).findFirst().ifPresent(a -> node.put("type", a.replace("dodaf:", "")));
+                }
+                result.add(node);
+                // recurse into sub-packages
+                if (member instanceof org.eclipse.syson.sysml.Package subPkg) {
+                    addPackageChildren(subPkg, result);
+                }
+            }
+        }
     }
 
     public List<String> getAllElementTypes(String pid) { java.util.LinkedHashSet<String> types = new java.util.LinkedHashSet<>(); var rs = getRS(pid); if (rs == null) return List.of(); for (var r : rs.getResources()) { var it = r.getAllContents(); while (it.hasNext()) types.add(it.next().eClass().getName()); } types.removeIf(t -> t.startsWith("org.eclipse") || t.equals("Usage") || t.contains("Impl")); return new ArrayList<>(types); }

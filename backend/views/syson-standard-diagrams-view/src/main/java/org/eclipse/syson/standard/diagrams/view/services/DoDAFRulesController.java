@@ -79,6 +79,7 @@ public class DoDAFRulesController {
             switch (field) {
                 case "name": r.name = value; break;
                 case "applied": r.applied = value; break;
+                case "nodeId": r.applied = body.getOrDefault("value", r.applied); break; // store nodeId, display uses label
                 case "description": r.description = value; break;
                 case "ruleType": r.ruleType = value; break;
                 case "owner": r.owner = value; break;
@@ -97,12 +98,25 @@ public class DoDAFRulesController {
         return Map.of("result", "ok");
     }
 
+    @GetMapping("/elements")
+    public List<Map<String, Object>> elements(@RequestParam(defaultValue = "") String ctxId, @RequestParam(defaultValue = "") String pid,
+          @RequestParam(defaultValue = "") String types, @RequestParam(defaultValue = "") String scope) {
+        log.info("GET /elements ctxId={} pid={} types={} scope={}", ctxId, pid, types, scope);
+        return dataService.getElements(types.isEmpty() ? null : types, pid.isEmpty() ? ctxId : pid, scope.isEmpty() ? null : scope, null);
+    }
+
+    @GetMapping("/scope-name")
+    public Map<String, String> scopeName(@RequestParam(defaultValue = "") String ctxId, @RequestParam(defaultValue = "") String id) {
+        String name = dataService.getPackageName(ctxId, id);
+        return Map.of("id", id, "name", name == null ? "" : name);
+    }
+
     @GetMapping("/tree-nodes")
     public List<TreeNode> treeNodes(@RequestParam(defaultValue = "") String ctxId, @RequestParam(defaultValue = "") String pid) {
         log.info("GET /tree-nodes ctxId={} pid={}", ctxId, pid);
         List<TreeNode> result = new ArrayList<>();
         try {
-            var elements = dataService.getTreeNodes(pid.isEmpty() ? ctxId : pid);
+            var elements = dataService.getElements(null, pid.isEmpty() ? ctxId : pid, null, null);
             if (elements != null) {
                 for (var e : elements) {
                     var tn = new TreeNode(); tn.id = (String) e.get("id"); tn.label = (String) e.get("label"); tn.type = (String) e.getOrDefault("kind", "");
