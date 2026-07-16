@@ -547,6 +547,7 @@
           teardownMatrix(); w = null;
         }
         if (matrixInjected && !document.getElementById('matrix-wrapper')) matrixInjected = false;
+        if (document.getElementById('rules-wrapper')) return;
         if (matrixInjected) return;
         if (window.location.pathname.indexOf('/projects/') < 0) return;
         var reps = document.querySelectorAll('[data-testid="table-representation"]');
@@ -571,6 +572,8 @@
         }
         var editingCtxId = null, targetObjId = null, repIdFromUrl = null;
         function getRepId() {
+          var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
+          if (tab) { var rid = tab.getAttribute('data-representationid'); if (rid) return rid; }
           var m = window.location.search.match(/[?&]selection=([^&]+)/);
           if (m && m[1]) return m[1];
           m = window.location.search.match(/[?&]representation=([^&]+)/);
@@ -603,8 +606,10 @@
         }
         var _viewName = null;
         function getViewName() { return _viewName; }
-        function show(x,y){_lastMenuX=x;_lastMenuY=y;var vn = getViewName();console.log('[DoDAF] show viewName=',vn);var old=document.getElementById('dodaf-ctx');if(old) old.remove();
-          var vn = getViewName();
+        function show(x,y){_lastMenuX=x;_lastMenuY=y;var old=document.getElementById('dodaf-ctx');if(old) old.remove();
+          var vn = getViewName();console.log('[DoDAF] show viewName=',vn);
+          var e = document.getElementById('dodaf-ctx'); if(e) e.remove();
+          var h = '';
           // CV-1_能力构想 specific menu
           if (vn && vn.indexOf('CV-1') >= 0) {
             var i1 = [{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationCapability)',a:'capability',n:'OperationCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'任务阶段(TaskStage)',a:'capability',n:'TaskStage',d:'SysMLv2EditService-PartDefinition'},{l:'任务意图(TaskIntent)',a:'capability',n:'TaskIntent',d:'SysMLv2EditService-PartDefinition'},{l:'实施阶段(ImplementationPhase)',a:'capability',n:'ImplementationPhase',d:'SysMLv2EditService-PartDefinition'},{l:'愿景(Vision)',a:'capability',n:'Vision',d:'SysMLv2EditService-PartDefinition'},{l:'愿景描述(VisionDescription)',a:'capability',n:'VisionDescription',d:'SysMLv2EditService-PartDefinition'},{l:'目标(Target)',a:'capability',n:'Target',d:'SysMLv2EditService-PartDefinition'},{l:'时间标尺(TimeScale)',a:'capability',n:'TimeScale',d:'SysMLv2EditService-PartDefinition'}];
@@ -808,13 +813,31 @@
           h+='</div>';
           }
           e=document.createElement('div');e.id='dodaf-ctx';e.innerHTML=h;
-          e.style.cssText='position:fixed;z-index:99999;max-height:500px;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.6);left:'+Math.min(x,innerWidth-250)+'px;top:'+Math.min(y,innerHeight-320)+'px';
+          e.style.cssText='position:fixed;z-index:99999;background:#111827;max-height:500px;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.6);left:'+Math.min(x,innerWidth-250)+'px;top:'+Math.min(y,innerHeight-320)+'px';
           document.body.appendChild(e);
-          e.querySelectorAll('.di').forEach(function(it){it.onmouseenter=function(){this.style.background='rgba(255,255,255,0.08)'};it.onmouseleave=function(){this.style.background='transparent'};it.onclick=function(){var a=it.getAttribute('data-a'),n=it.getAttribute('data-n'),d=it.getAttribute('data-d');console.log('[DoDAF] Click:',n,a);getCtxAndTarget(function(){createElement(a,n,d)});e.style.display='none'}});
-        }
-        function intercept(e){if(!isDoDAFv2())return;var t=e.target;if(t.closest('.react-flow__node')||t.closest('button')||t.closest('input')||t.closest('[class*="explorer"]')||t.closest('[class*="sidebar"]')||t.closest('[class*="tree"]'))return;if(!t.closest('#mainArea')&&!t.closest('[data-testid="representation-area"]')&&!t.closest('.react-flow__viewport')&&!t.closest('.react-flow__pane'))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();var cx=e.clientX,cy=e.clientY;getCtxAndTarget(function(){show(cx,cy)})}
+          var inner = e.querySelector('div');
+          if (inner) inner.style.background = '#111827';
+          e.querySelectorAll('.di').forEach(function(it){it.onmouseenter=function(){this.style.background='#102334'};it.onmouseleave=function(){this.style.background='transparent'};it.onclick=function(){var a=it.getAttribute('data-a'),n=it.getAttribute('data-n'),d=it.getAttribute('data-d');getCtxAndTarget(function(){createElement(a,n,d)});e.style.display='none'}}); }
+        function intercept(e){if(!isDoDAFv2())return;var t=e.target;if(t.closest('.react-flow__node')||t.closest('button')||t.closest('input')||t.closest('[class*="explorer"]')||t.closest('[class*="sidebar"]')||t.closest('[class*="tree"]'))return;if(!t.closest('#mainArea')&&!t.closest('[data-testid="representation-area"]')&&!t.closest('.react-flow__viewport')&&!t.closest('.react-flow__pane'))return;if(document.querySelector('[class*="gantt"]')||document.querySelector('[class*="Gantt"]')||document.querySelector('[data-testid*="gantt"]')||document.querySelector('[data-testid*="Gantt"]'))return;if(document.querySelector('[data-testid="table-representation"]')||document.getElementById('rules-wrapper'))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();_viewName = null; targetObjId = null; getCtxAndTarget(function(){show(e.clientX,e.clientY)})}
         window.addEventListener('contextmenu',intercept,true);
         document.addEventListener('click',function(ev){var e=document.getElementById('dodaf-ctx');if(e&&!ev.target.closest('#dodaf-ctx'))e.style.display='none'});
+      })();
+      // ===== Custom DoDAF Rules View injection =====
+      (function() {
+        setTimeout(function() {
+          var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
+          if (!tab) return;
+          if (tab.textContent.indexOf('OV-6a') < 0 && tab.textContent.indexOf('规则') < 0) return;
+          var btn = document.createElement('button');
+          btn.textContent = '＋ 添加行';
+          btn.setAttribute('style', 'position:fixed;bottom:20px;right:20px;z-index:99999;background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:14px 28px;cursor:pointer;font-size:16px;box-shadow:0 4px 16px rgba(0,0,0,0.4)');
+          btn.onclick = function() {
+            var m = window.location.pathname.match(/\/projects\/([^/]+)\/edit/);
+            var ctxId = m ? m[1] : 'default-rules';
+            fetch('/api/rules/default-rules/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ctxId: ctxId }) }).then(function(r) { return r.json(); }).then(function() { location.reload(); });
+          };
+          document.body.appendChild(btn);
+        }, 2000);
       })();
     </script>
     <script type="module" src="/src/index.tsx"></script>

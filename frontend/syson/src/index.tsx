@@ -44,6 +44,7 @@ import ReactDOM from 'react-dom/client';
 import React from 'react';
 import DoDAFGanttTimeline from './views/DoDAFGanttTimeline';
 import DoDAFMatrixView from './views/DoDAFMatrixView';
+import DoDAFRulesView from './views/DoDAFRulesView';
 import { Ov1BlankView } from './views/Ov1BlankView';
 import { ViewFlowBlankView } from './views/ViewFlowBlankView';
 import { ViewFlowNavigator } from './extensions/ViewFlowNavigator';
@@ -56,6 +57,11 @@ import { ViewFlowNavigator } from './extensions/ViewFlowNavigator';
   const root = ReactDOM.createRoot(container);
   (container as any).__matrixRoot = root;
   root.render(React.createElement(DoDAFMatrixView));
+};
+(window as any).renderDoDAFRules = (container: HTMLElement) => {
+  const root = ReactDOM.createRoot(container);
+  (container as any).__rulesRoot = root;
+  root.render(React.createElement(DoDAFRulesView));
 };
 
 if (process.env.NODE_ENV !== 'production') {
@@ -95,6 +101,8 @@ sysONExtensionRegistry.putData(representationFactoryExtensionPoint, {
       if (descId.indexOf('5058ff41-3a74-3fad-93f4-0854893bd3b6') >= 0) return Ov1BlankView;
       // ViewFlow
       if (representationMetadata?.label?.includes('ViewFlow')) return ViewFlowBlankView;
+      // DoDAF Rules View (OV-6a etc.)
+      if (representationMetadata?.label?.includes('OV-6a') || representationMetadata?.label?.includes('规则')) return DoDAFRulesView;
       return null;
     },
   ],
