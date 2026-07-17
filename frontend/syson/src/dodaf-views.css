@@ -270,7 +270,12 @@ body:has(#rules-wrapper) [data-testid="site-right"],
 body:has(#rules-wrapper) [data-testid="right-resizer"] {
   display: none !important;
 }
-body:has(#rules-wrapper) [data-panel-id]:has([data-testid="site-right"]) {
+body:has(#prediction-wrapper) [data-testid="sidebar-right"],
+body:has(#prediction-wrapper) [data-testid="site-right"],
+body:has(#prediction-wrapper) [data-testid="right-resizer"] {
+  display: none !important;
+}
+body:has(#prediction-wrapper) [data-panel-id]:has([data-testid="site-right"]) {
   flex: 0 0 0px !important;
   max-width: 0 !important;
   min-width: 0 !important;
