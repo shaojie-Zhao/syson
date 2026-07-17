@@ -25,9 +25,11 @@ export default function DoDAFRulesView() {
   const [treeNodes, setTreeNodes] = useState<{id:string;label:string;type:string}[]>([]);
   const [treeSearch, setTreeSearch] = useState('');
   const [treeLoading, setTreeLoading] = useState(false);
+  const [treeSelected, setTreeSelected] = useState<Set<string>>(new Set());
   const openTreePicker = (ruleId: string) => {
     setTreePicker({ open: true, ruleId });
     setTreeSearch('');
+    setTreeSelected(new Set());
     setTreeLoading(true);
     var params = new URLSearchParams();
     params.set('ctxId', ctxId);
@@ -51,8 +53,16 @@ export default function DoDAFRulesView() {
         setTreeNodes(nodes);
       }).catch(function() { setTreeNodes([]); }).finally(function() { setTreeLoading(false); });
   };
-  const selectTreeNode = async (nodeId: string, nodeLabel: string) => {
-    await fetch(API + '/' + treePicker.ruleId, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ctxId, field: 'applied', value: nodeLabel, nodeId }) });
+  const selectTreeNode = (nodeId: string) => {
+    var s = new Set(treeSelected);
+    if (s.has(nodeId)) s.delete(nodeId); else s.add(nodeId);
+    setTreeSelected(s);
+  };
+  const confirmTreeSelection = async () => {
+    if (treeSelected.size === 0) return;
+    var items: string[] = [];
+    treeSelected.forEach(function(id) { var n = treeNodes.find(function(tn: any) { return tn.id === id; }); if (n) items.push(id + '|' + n.label); });
+    await fetch(API + '/' + treePicker.ruleId, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ctxId, field: 'applied', value: items.join('\\n') }) });
     setTreePicker({ open: false, ruleId: '' }); load();
   };
 
@@ -109,7 +119,7 @@ export default function DoDAFRulesView() {
   useEffect(() => {
     let result = [...rules];
     if (searchQuery) { const q = searchQuery.toLowerCase(); result = result.filter(r => (r.name||'').toLowerCase().includes(q) || (r.applied||'').toLowerCase().includes(q) || (r.description||'').toLowerCase().includes(q) || (r.ruleType||'').toLowerCase().includes(q) || (r.owner||'').toLowerCase().includes(q)); }
-    if (appliedFilter) result = result.filter(r => (r.applied||'') === appliedFilter);
+    if (appliedFilter) result = result.filter(r => (r.applied||'').split('\\n').map(extractLabel).includes(appliedFilter));
     setFiltered(result);
   }, [rules, appliedFilter, searchQuery]);
 
@@ -132,23 +142,25 @@ export default function DoDAFRulesView() {
   const toggleExpand = (id: string) => { const s = new Set(expanded); if (s.has(id)) s.delete(id); else s.add(id); setExpanded(s); };
 
   var _rowIdx = 0;
+  var _flatIdx = 0;
   const renderRows = (items: Rule[], depth: number = 0): React.ReactNode[] => {
-    if (depth === 0) _rowIdx = 0;
+    if (depth === 0) { _rowIdx = 0; _flatIdx = 0; }
     const result: React.ReactNode[] = [];
     for (const r of items) {
       _rowIdx++; var idx = _rowIdx;
       const hasChildren = r.children && r.children.length > 0;
       const isExpanded = expanded.has(r.id);
       const isSelected = selected.has(r.id);
+      const isEven = _flatIdx % 2 === 0; _flatIdx++;
       result.push(
-        <tr key={r.id} style={{ background: isSelected ? 'rgba(59,130,246,0.12)' : 'transparent' }}
-          onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-          onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+        <tr key={r.id} style={{ background: isSelected ? 'rgba(59,130,246,0.15)' : (isEven ? '#19284f' : '#162242') }}
+          onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
+          onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = isEven ? '#19284f' : '#162242'; }}>
           <td style={cellStyle}><input type="checkbox" checked={isSelected} onChange={() => toggleSelect(r.id)} /></td>
           <td style={{ ...cellStyle, width: 50, textAlign: 'center', color: '#94a3b8' }}>{idx}</td>
           <td style={{ ...cellStyle, paddingLeft: 10 + depth * 20 }}>
             {hasChildren && <span onClick={() => toggleExpand(r.id)} style={{ cursor: 'pointer', marginRight: 4, color: '#3b82f6' }}>{isExpanded ? '▼' : '▶'}</span>}
-            <span onDoubleClick={() => openTreePicker(r.id)} style={{ color: r.applied ? '#e2e8f0' : '#64748b', cursor: 'pointer' }}>{r.applied || '双击选择树节点...'}</span>
+            <span onDoubleClick={() => openTreePicker(r.id)} style={{ color: r.applied ? '#e2e8f0' : '#64748b', cursor: 'pointer', whiteSpace: 'pre-line' }}>{(r.applied || '').split('\\n').map(function(s: any) { var p = (s||'').indexOf('|'); return p > 0 ? s.substring(p + 1) : s; }).filter(Boolean).join('\n') || '双击选择树节点...'}</span>
             {hasChildren && <button onClick={() => handleAdd(r.id)} style={{ ...btnSmall, marginLeft: 6, background: 'rgba(59,130,246,0.15)', color: '#60a5fa' }} title="添加子行">+</button>}
           </td>
           {(['name', 'description', 'owner'] as const).map(f => (
@@ -177,13 +189,14 @@ export default function DoDAFRulesView() {
   const cellStyle: React.CSSProperties = { padding: '6px 10px', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
   const thStyle: React.CSSProperties = { ...cellStyle, background: '#19284f', fontWeight: 600, position: 'sticky', top: 0, zIndex: 1 };
 
-  const appliedOptions = [...new Set(rules.map(r => r.applied).filter(Boolean))];
+  const extractLabel = (s: string) => { var p = (s || '').indexOf('|'); return p > 0 ? s.substring(p + 1) : s; };
+  const appliedOptions = [...new Set(rules.flatMap(r => (r.applied || '').split('\\n').filter(Boolean).map(extractLabel)))];
 
   return (
     <div id="rules-wrapper" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#19284f', color: '#e0e0e0', fontFamily: 'system-ui, sans-serif', fontSize: 13 }}>
       {toast && <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: '#ef4444', color: '#fff', padding: '10px 24px', borderRadius: 8, fontSize: 14, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>{toast}</div>}
       {/* Tree Picker Modal */}
-      {treePicker.open && <div style={{ position:'fixed',inset:0,zIndex:9998,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.5)' }} onClick={()=>setTreePicker({open:false,ruleId:''})}><div style={{ background:'#19284f',borderRadius:12,padding:'20px 24px',width:440,maxHeight:520,display:'flex',flexDirection:'column',boxShadow:'0 8px 32px rgba(0,0,0,0.5)',border:'1px solid rgba(255,255,255,0.1)' }} onClick={e=>e.stopPropagation()}><h3 style={{ margin:'0 0 12px',color:'#f1f5f9',fontSize:16 }}>选择树节点</h3><input value={treeSearch} onChange={e=>setTreeSearch(e.target.value)} placeholder="搜索节点..." style={{ ...inputStyle,marginBottom:12 }} autoFocus/><div style={{ flex:1,overflow:'auto',minHeight:200 }}>{treeLoading?<div style={{ color:'#64748b',textAlign:'center',padding:30 }}>加载中...</div>:treeNodes.length===0?<div style={{ color:'#64748b',textAlign:'center',padding:30 }}>暂无树节点数据<br/><small>请先在Explorer中展开需要的节点层级</small></div>:treeNodes.filter(n=>!treeSearch||n.label.toLowerCase().includes(treeSearch.toLowerCase())).slice(0,100).map(n=><div key={n.id} onClick={()=>selectTreeNode(n.id,n.label)} style={{ padding:'8px 12px',cursor:'pointer',fontSize:13,color:'#e2e8f0',borderBottom:'1px solid rgba(255,255,255,0.04)',borderRadius:4 }} onMouseEnter={e=>(e.currentTarget as HTMLElement).style.background='rgba(59,130,246,0.15)'} onMouseLeave={e=>(e.currentTarget as HTMLElement).style.background='transparent'}><span style={{ fontSize:11,color:'#64748b',marginRight:8 }}>[{n.type}]</span>{n.label}</div>)}</div></div></div>}
+      {treePicker.open && <div style={{ position:'fixed',inset:0,zIndex:9998,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.5)' }} onClick={()=>setTreePicker({open:false,ruleId:''})}><div style={{ background:'#19284f',borderRadius:12,padding:'20px 24px',width:440,maxHeight:520,display:'flex',flexDirection:'column',boxShadow:'0 8px 32px rgba(0,0,0,0.5)',border:'1px solid rgba(255,255,255,0.1)' }} onClick={e=>e.stopPropagation()}><h3 style={{ margin:'0 0 12px',color:'#f1f5f9',fontSize:16 }}>选择树节点</h3><input value={treeSearch} onChange={e=>setTreeSearch(e.target.value)} placeholder="搜索节点..." style={{ ...inputStyle,marginBottom:12 }} autoFocus/><div style={{ flex:1,overflow:'auto',minHeight:200 }}>{treeLoading?<div style={{ color:'#64748b',textAlign:'center',padding:30 }}>加载中...</div>:treeNodes.length===0?<div style={{ color:'#64748b',textAlign:'center',padding:30 }}>暂无树节点数据<br/><small>请先在Explorer中展开需要的节点层级</small></div>:treeNodes.filter(n=>!treeSearch||n.label.toLowerCase().includes(treeSearch.toLowerCase())).slice(0,100).map(n=><div key={n.id} onClick={()=>selectTreeNode(n.id)} style={{ padding:'8px 12px',cursor:'pointer',fontSize:13,color:treeSelected.has(n.id)?'#60a5fa':'#e2e8f0',borderBottom:'1px solid rgba(255,255,255,0.04)',borderRadius:4,display:'flex',alignItems:'center',gap:8 }} onMouseEnter={e=>(e.currentTarget as HTMLElement).style.background='rgba(59,130,246,0.15)'} onMouseLeave={e=>(e.currentTarget as HTMLElement).style.background='transparent'}><input type="checkbox" checked={treeSelected.has(n.id)} readOnly style={{accentColor:'#3b82f6'}}/><span style={{ fontSize:11,color:'#64748b',marginRight:8 }}>[{n.type}]</span>{n.label}</div>)}</div><div style={{display:'flex',gap:8,marginTop:12,justifyContent:'flex-end'}}><button onClick={()=>setTreePicker({open:false,ruleId:''})} style={{background:'#334155',color:'#cbd5e1',border:'none',borderRadius:6,padding:'6px 14px',cursor:'pointer',fontSize:12}}>取消</button><button onClick={confirmTreeSelection} style={{background:'#3b82f6',color:'#fff',border:'none',borderRadius:6,padding:'6px 18px',cursor:'pointer',fontSize:12}}>确定({treeSelected.size})</button></div></div></div>}
       {/* Toolbar */}
       <div style={{ display: 'flex', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <button onClick={() => handleAdd()} style={btnStyle}>＋ 添加行</button>

@@ -823,23 +823,7 @@
         document.addEventListener('click',function(ev){var e=document.getElementById('dodaf-ctx');if(e&&!ev.target.closest('#dodaf-ctx'))e.style.display='none'});
       })();
       // ===== Custom DoDAF Rules View injection =====
-      (function() {
-        setTimeout(function() {
-          var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
-          if (!tab) return;
-          if (tab.textContent.indexOf('OV-6a') < 0 && tab.textContent.indexOf('规则') < 0) return;
-          var btn = document.createElement('button');
-          btn.textContent = '＋ 添加行';
-          btn.setAttribute('style', 'position:fixed;bottom:20px;right:20px;z-index:99999;background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:14px 28px;cursor:pointer;font-size:16px;box-shadow:0 4px 16px rgba(0,0,0,0.4)');
-          btn.onclick = function() {
-            var m = window.location.pathname.match(/\/projects\/([^/]+)\/edit/);
-            var ctxId = m ? m[1] : 'default-rules';
-            fetch('/api/rules/default-rules/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ctxId: ctxId }) }).then(function(r) { return r.json(); }).then(function() { location.reload(); });
-          };
-          document.body.appendChild(btn);
-        }, 2000);
-      })();
-    </script>
+      </script>
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>
