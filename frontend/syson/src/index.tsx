@@ -45,6 +45,7 @@ import React from 'react';
 import DoDAFGanttTimeline from './views/DoDAFGanttTimeline';
 import DoDAFMatrixView from './views/DoDAFMatrixView';
 import DoDAFRulesView from './views/DoDAFRulesView';
+import DoDAFPredictionView from './views/DoDAFPredictionView';
 import { Ov1BlankView } from './views/Ov1BlankView';
 import { ViewFlowBlankView } from './views/ViewFlowBlankView';
 import { ViewFlowNavigator } from './extensions/ViewFlowNavigator';
@@ -62,6 +63,11 @@ import { ViewFlowNavigator } from './extensions/ViewFlowNavigator';
   const root = ReactDOM.createRoot(container);
   (container as any).__rulesRoot = root;
   root.render(React.createElement(DoDAFRulesView));
+};
+(window as any).renderDoDAFPrediction = (container: HTMLElement) => {
+  const root = ReactDOM.createRoot(container);
+  (container as any).__predictionRoot = root;
+  root.render(React.createElement(DoDAFPredictionView));
 };
 
 if (process.env.NODE_ENV !== 'production') {
@@ -103,6 +109,7 @@ sysONExtensionRegistry.putData(representationFactoryExtensionPoint, {
       if (representationMetadata?.label?.includes('ViewFlow')) return ViewFlowBlankView;
       // DoDAF Rules View (OV-6a etc.)
       if (representationMetadata?.label?.includes('OV-6a') || representationMetadata?.label?.includes('规则')) return DoDAFRulesView;
+      if (representationMetadata?.label?.includes('技术和技能预测') || representationMetadata?.label?.includes('Prediction')) return DoDAFPredictionView;
       return null;
     },
   ],

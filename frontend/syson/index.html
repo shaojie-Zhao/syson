@@ -547,7 +547,7 @@
           teardownMatrix(); w = null;
         }
         if (matrixInjected && !document.getElementById('matrix-wrapper')) matrixInjected = false;
-        if (document.getElementById('rules-wrapper')) return;
+        if (document.getElementById('rules-wrapper') || document.getElementById('prediction-wrapper')) return;
         if (matrixInjected) return;
         if (window.location.pathname.indexOf('/projects/') < 0) return;
         var reps = document.querySelectorAll('[data-testid="table-representation"]');
@@ -555,6 +555,14 @@
           var rep = reps[r];
           if (rep.offsetParent === null) continue;
           if (rep.closest('[class*="ganttContainer"], [class*="explorer"], [class*="sidebar"], [class*="tree"]')) continue;
+          // Skip Rules / Prediction tables
+          var ths = rep.querySelectorAll('th');
+          var isCustomTable = false;
+          for (var hi = 0; hi < ths.length; hi++) {
+            var t = ths[hi].textContent;
+            if (t.indexOf('规则') >= 0 || t.indexOf('应用于') >= 0 || t.indexOf('技术和技能') >= 0 || t.indexOf('短期') >= 0) { isCustomTable = true; break; }
+          }
+          if (isCustomTable) continue;
           var table = rep.querySelector('.MuiTableContainer-root table') || rep.querySelector('table');
           var trCount = table ? table.querySelectorAll('tr').length : 0;
           if (trCount >= 2) { injectMatrix(rep); return; }
@@ -822,7 +830,43 @@
         window.addEventListener('contextmenu',intercept,true);
         document.addEventListener('click',function(ev){var e=document.getElementById('dodaf-ctx');if(e&&!ev.target.closest('#dodaf-ctx'))e.style.display='none'});
       })();
-      // ===== Custom DoDAF Rules View injection =====
+      // ===== Custom DoDAF Rules & Prediction View injection =====
+      var rulesInjected = false, predInjected = false;
+      function injectCustomView(containerEl, wrapperId, renderFn) {
+        containerEl.style.display = 'none';
+        var wrapper = document.createElement('div');
+        wrapper.id = wrapperId;
+        wrapper.style.cssText = 'height:100%;overflow:hidden';
+        containerEl.parentElement.insertBefore(wrapper, containerEl.nextSibling);
+        if (renderFn) renderFn(wrapper);
+        else { var check = setInterval(function() { if (renderFn) { clearInterval(check); renderFn(wrapper); } }, 50); }
+        matrixInjected = true;
+      }
+      function scanCustomViews() {
+        if (document.getElementById('rules-wrapper') || document.getElementById('prediction-wrapper')) return;
+        var rep = document.querySelector('[data-testid="table-representation"]');
+        if (!rep || rep.offsetParent === null) return;
+        var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
+        var tabText = tab ? tab.textContent : '';
+        // Rules View
+        if (!rulesInjected && (tabText.indexOf('OV-6a') >= 0 || tabText.indexOf('规则') >= 0)) {
+          rulesInjected = true; injectCustomView(rep, 'rules-wrapper', window.renderDoDAFRules);
+          return;
+        }
+        // Prediction View
+        if (!predInjected && (tabText.indexOf('技术和技能预测') >= 0 || tabText.indexOf('Prediction') >= 0)) {
+          predInjected = true; injectCustomView(rep, 'prediction-wrapper', window.renderDoDAFPrediction);
+          return;
+        }
+        // Fallback: check table headers
+        var ths = rep.querySelectorAll('th');
+        for (var h = 0; h < ths.length; h++) {
+          var txt = ths[h].textContent;
+          if (!rulesInjected && (txt.indexOf('规则') >= 0 || txt.indexOf('应用于') >= 0)) { rulesInjected = true; injectCustomView(rep, 'rules-wrapper', window.renderDoDAFRules); return; }
+          if (!predInjected && (txt.indexOf('技术和技能领域') >= 0 || txt.indexOf('短期') >= 0)) { predInjected = true; injectCustomView(rep, 'prediction-wrapper', window.renderDoDAFPrediction); return; }
+        }
+      }
+      setInterval(scanCustomViews, 200);
       </script>
     <script type="module" src="/src/index.tsx"></script>
   </body>
