@@ -843,7 +843,10 @@
         matrixInjected = true;
       }
       function scanCustomViews() {
-        if (document.getElementById('rules-wrapper') || document.getElementById('prediction-wrapper')) return;
+        // Reset flags if wrapper was removed (tab closed)
+        if (!document.getElementById('rules-wrapper')) rulesInjected = false;
+        if (!document.getElementById('prediction-wrapper')) predInjected = false;
+        if (rulesInjected || predInjected) return;
         var rep = document.querySelector('[data-testid="table-representation"]');
         if (!rep || rep.offsetParent === null) return;
         var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
