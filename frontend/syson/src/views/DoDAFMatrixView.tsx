@@ -93,12 +93,9 @@ export default function DoDAFMatrixView() {
     // CV-3 defaults: row=Capability, col=TaskStage (only if no saved config)
     useEffect(() => {
         var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
-        if (tab && tab.textContent.includes('CV-3')) {
-            setRowT(new Set(['Capability']));
-            setColT(new Set(['TaskStage']));
-            setRowT(new Set(['Capability']));
-            setColT(new Set(['TaskStage']));
-        }
+        var txt = tab ? tab.textContent : '';
+        if (txt.includes('CV-3')) { setRowT(new Set(['Capability'])); setColT(new Set(['TaskStage'])); }
+        if (txt.includes('SV-3')) { setRowT(new Set(['SystemNode'])); setColT(new Set(['SystemNode'])); }
     }, []);
     const [rowScope, setRowScope] = useState<string>(saved?.rowScope || '');
     const [rowScopeName, setRowScopeName] = useState<string>(saved?.rowScopeName || '');
