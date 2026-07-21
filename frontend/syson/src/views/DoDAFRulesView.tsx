@@ -19,6 +19,22 @@ export default function DoDAFRulesView() {
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; count: number }>({ open: false, count: 0 });
   const [toast, setToast] = useState<string | null>(null);
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
+  // Hide right side panel on mount, restore on unmount
+  useEffect(() => {
+    var rp = document.getElementById('right');
+    var sr = document.querySelector('[data-testid="site-right"]');
+    var rr = document.querySelector('[data-testid="right-resizer"]');
+    var savedFlex = rp ? rp.style.flex : '';
+    var savedDisplay = sr ? sr.style.display : '';
+    if (rp) { rp.style.flex = '0 0 0px'; rp.style.maxWidth = '0px'; rp.style.minWidth = '0px'; rp.style.overflow = 'hidden'; }
+    if (sr) sr.style.display = 'none';
+    if (rr) rr.style.display = 'none';
+    return function() {
+      if (rp) { rp.style.flex = savedFlex; rp.style.maxWidth = ''; rp.style.minWidth = ''; rp.style.overflow = ''; }
+      if (sr) sr.style.display = savedDisplay;
+      if (rr) rr.style.display = '';
+    };
+  }, []);
 
   // Tree picker
   const [treePicker, setTreePicker] = useState<{ open: boolean; ruleId: string }>({ open: false, ruleId: '' });

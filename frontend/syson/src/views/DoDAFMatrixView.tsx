@@ -52,12 +52,12 @@ const S: Record<string, string> = {Satisfy: '✓', Allocate: '→', Trace: '↗'
 // Chinese display labels for relation types (internal keys stay English for the backend typeMap).
 const RELATION_LABELS: Record<string, string> = {Satisfy: '满足', Allocate: '分配', Trace: '追溯', Dependency: '依赖', Derive: '派生'};
 const relLabel = (t: string): string => (RELATION_LABELS[t] ? RELATION_LABELS[t] + '（' + t + '）' : t);
-const TYPES = ['Capability', 'OperationalNode', 'SystemNode', 'Organization', 'InformationExchange', 'ActionUsage', 'PartUsage', 'InterfaceUsage', 'RequirementUsage', 'Function'];
+const TYPES = ['Capability', 'OperationalNode', 'SystemNode', 'Organization', 'InformationExchange', 'ActionUsage', 'PartUsage', 'InterfaceUsage', 'RequirementUsage', 'Function', 'TaskStage', 'SystemFunction'];
 // Chinese display labels for element (meta) types (internal keys stay English for filtering/backend).
 const TYPE_LABELS: Record<string, string> = {
-    Capability: '能力', OperationalNode: '作战节点', SystemNode: '系统节点', Organization: '组织',
-    InformationExchange: '信息交换', ActionUsage: '动作', PartUsage: '部件', InterfaceUsage: '接口',
-    RequirementUsage: '需求', Function: '功能',
+    Capability: '作战能力', OperationalNode: '作战节点', SystemNode: '系统节点', Organization: '组织',
+    InformationExchange: '信息交换', ActionUsage: '作战活动', PartUsage: '部件', InterfaceUsage: '接口',
+    RequirementUsage: '需求', Function: '功能', TaskStage: '任务阶段', SystemFunction: '系统功能',
 };
 const typeLabel = (t: string): string => (TYPE_LABELS[t] ? TYPE_LABELS[t] + '（' + t + '）' : t);
 // DoDAF type icons live under /images/dodaf/{DodafType}.svg; fall back to the SysML class icon
@@ -90,6 +90,14 @@ export default function DoDAFMatrixView() {
         saved?.rowT ? new Set(saved.rowT) : new Set(['Capability', 'OperationalNode', 'SystemNode', 'Organization', 'InformationExchange']));
     const [colT, setColT] = useState<Set<string>>(() =>
         saved?.colT ? new Set(saved.colT) : new Set(['Capability', 'OperationalNode', 'SystemNode', 'Organization', 'InformationExchange']));
+    // CV-3 defaults: row=Capability, col=TaskStage (only if no saved config)
+    useEffect(() => {
+        var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
+        var txt = tab ? tab.textContent : '';
+        if (txt.includes('CV-3')) { setRowT(new Set(['Capability'])); setColT(new Set(['TaskStage'])); }
+        if (txt.includes('SV-3')) { setRowT(new Set(['SystemNode'])); setColT(new Set(['SystemNode'])); }
+        if (txt.includes('SV-5b')) { setRowT(new Set(['ActionUsage'])); setColT(new Set(['SystemNode'])); }
+    }, []);
     const [rowScope, setRowScope] = useState<string>(saved?.rowScope || '');
     const [rowScopeName, setRowScopeName] = useState<string>(saved?.rowScopeName || '');
     const [colScope, setColScope] = useState<string>(saved?.colScope || '');
