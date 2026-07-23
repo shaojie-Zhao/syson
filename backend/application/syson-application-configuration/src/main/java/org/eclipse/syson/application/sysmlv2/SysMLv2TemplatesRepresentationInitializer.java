@@ -140,13 +140,18 @@ public class SysMLv2TemplatesRepresentationInitializer {
         if (viewName.contains("OV-1")) return StandardDiagramsConstants.DODAF_OV1_QN;
 
         // === Sequence/Event Trace views ===
-        if (viewName.contains("OV-6c")) return StandardDiagramsConstants.DODAF_SEQUENCE_QN;   // Event trace
+        if (viewName.contains("时序图")) return StandardDiagramsConstants.DODAF_SEQUENCE_QN;      // Sequence diagram
+        if (viewName.contains("OV-6c")) return StandardDiagramsConstants.DODAF_SEQUENCE_QN;       // Event trace
 
         // === Plain Table views ===
         if (viewName.contains("StdV-1") || viewName.contains("StdV-2")) return StandardDiagramsConstants.DODAF_TABLE_QN; // Standards
         if (viewName.contains("AV-2")) return StandardDiagramsConstants.DODAF_TABLE_QN;       // Integrated dictionary
 
         // === Matrix/Table views ===
+        // Name contains "矩阵" → Matrix View
+        if (viewName.contains("矩阵")) return StandardDiagramsConstants.DODAF_MATRIX_QN;
+        // Name contains "追溯" → Matrix View  
+        if (viewName.contains("追溯")) return StandardDiagramsConstants.DODAF_MATRIX_QN;
         // OV matrices
         if (viewName.contains("OV-3")) return StandardDiagramsConstants.DODAF_MATRIX_QN;      // Resource flow matrix
         // SV matrices
@@ -171,8 +176,8 @@ public class SysMLv2TemplatesRepresentationInitializer {
 
         // === Activity Flow views ===
         if (viewName.contains("OV-5b")) return StandardDiagramsConstants.AFV_QN;              // Activity model
-        if (viewName.contains("SV-4")) return StandardDiagramsConstants.AFV_QN;               // System function
-        if (viewName.contains("SvcV-4")) return StandardDiagramsConstants.AFV_QN;             // Service function
+        if (viewName.contains("SV-4a")) return StandardDiagramsConstants.AFV_QN;               // System function
+        if (viewName.contains("SvcV-4a")) return StandardDiagramsConstants.AFV_QN;             // Service function
 
         // === Interconnection views ===
         if (viewName.contains("SV-1")) return StandardDiagramsConstants.IV_QN;                // System interface
@@ -193,16 +198,8 @@ public class SysMLv2TemplatesRepresentationInitializer {
                         // Set ViewDefinition type
                         String viewDefQN = this.getViewDefinitionForDoDAFView(name);
                         this.modelMutationElementService.featureTypeViewUsage(vu, viewDefQN);
-                        // Pre-create diagram for all DoDAF views using full SDV engine
-                        if (name != null && (viewDefQN.equals(StandardDiagramsConstants.GV_QN)
-                                || viewDefQN.equals(StandardDiagramsConstants.IV_QN)
-                                || viewDefQN.equals(StandardDiagramsConstants.AFV_QN)
-                                || viewDefQN.equals(StandardDiagramsConstants.STV_QN)
-                                || viewDefQN.equals(StandardDiagramsConstants.DODAF_OV1_QN)
-                                || viewDefQN.equals(StandardDiagramsConstants.DODAF_SEQUENCE_QN))) {
-                            this.diagramMutationDiagramService.createDiagram(vu, editingContext,
-                                    SysONRepresentationDescriptionIdentifiers.GENERAL_VIEW_DIAGRAM_DESCRIPTION_ID);
-                        }
+                        // Create diagram/representation based on ViewDefinition type
+                        this.createRepresentationForView(vu, name, viewDefQN, editingContext);
                     } catch (Exception e) {
                         this.logger.warn("Failed to process DoDAF view {}: {}", name, e.getMessage());
                     }
@@ -215,17 +212,22 @@ public class SysMLv2TemplatesRepresentationInitializer {
     }
 
     private void createRepresentationForView(ViewUsage vu, String viewName, String viewDefQN, IEMFEditingContext editingContext) {
+        String descId = SysONRepresentationDescriptionIdentifiers.GENERAL_VIEW_DIAGRAM_DESCRIPTION_ID;
+        // Look up specific description for Matrix/Gantt views
         if (viewDefQN.equals(StandardDiagramsConstants.DODAF_MATRIX_QN)) {
-            this.createTableRepresentation(vu, viewName, "DoDAF Matrix View", editingContext);
+            descId = findDescriptionId(editingContext, "DoDAF Matrix View");
         } else if (viewDefQN.equals(StandardDiagramsConstants.DODAF_GANTT_QN)) {
-            this.createGanttRepresentation(vu, viewName, "DoDAF Gantt View", editingContext);
-        } else if (viewDefQN.equals(StandardDiagramsConstants.DODAF_TABLE_QN)) {
-            this.createTableRepresentation(vu, viewName, "DoDAF Table View", editingContext);
-        } else {
-            // GeneralView / InterconnectionView / ActionFlowView / SequenceView → standard diagram
-            this.diagramMutationDiagramService.createDiagram(vu, editingContext,
-                    SysONRepresentationDescriptionIdentifiers.GENERAL_VIEW_DIAGRAM_DESCRIPTION_ID);
+            descId = findDescriptionId(editingContext, "DoDAF Gantt View");
         }
+        this.diagramMutationDiagramService.createDiagram(vu, editingContext, descId);
+    }
+    
+    private String findDescriptionId(IEMFEditingContext editingContext, String labelContains) {
+        return this.representationDescriptionSearchService.findAll(editingContext).values().stream()
+                .filter(d -> d.getLabel() != null && d.getLabel().contains(labelContains))
+                .findFirst()
+                .map(d -> d.getId())
+                .orElse(SysONRepresentationDescriptionIdentifiers.GENERAL_VIEW_DIAGRAM_DESCRIPTION_ID);
     }
 
     private void createTableRepresentation(ViewUsage vu, String viewName, String descName, IEMFEditingContext editingContext) {
@@ -241,7 +243,7 @@ public class SysMLv2TemplatesRepresentationInitializer {
                 var table = this.tableCreationService.create(id, vu, tableDesc, editingContext);
                 var metadata = org.eclipse.sirius.components.core.RepresentationMetadata.newRepresentationMetadata(table.getId())
                         .kind("Table")
-                        .label(viewName + " [表格]")
+                        .label(viewName)
                         .descriptionId(table.getDescriptionId())
                         .iconURLs(java.util.List.of())
                         .build();
@@ -268,7 +270,7 @@ public class SysMLv2TemplatesRepresentationInitializer {
                 var gantt = this.ganttCreationService.create(vu, ganttDesc, editingContext);
                 var metadata = org.eclipse.sirius.components.core.RepresentationMetadata.newRepresentationMetadata(gantt.getId())
                         .kind("Gantt")
-                        .label(viewName + " [甘特图]")
+                        .label(viewName)
                         .descriptionId(gantt.getDescriptionId())
                         .iconURLs(java.util.List.of())
                         .build();
