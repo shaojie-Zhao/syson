@@ -71,7 +71,8 @@ public class Dodafv2TemplateBuilder {
 
         // PV (3): suc() for timeline, dep() for others
         var pv=pkg(root,"PV_项目视角");
-        {var v=vu(pv,"PV-1_项目组合关系");var a=pu("反潜能力建设项目");add(v,a);var b=pu("UUV研发项目");add(v,b);var c=pu("声呐升级项目");add(v,c);dep(v,a,b);dep(v,a,c);}
+        {var v=vu(pv,"PV-1a_项目组合关系");var a=pu("反潜能力建设项目");add(v,a);var b=pu("UUV研发项目");add(v,b);var c=pu("声呐升级项目");add(v,c);dep(v,a,b);dep(v,a,c);}
+        {var v=vu(pv,"PV-1b_责任矩阵");}
         {var v=vu(pv,"PV-2_项目时间线");var a=pu("第一阶段:需求分析");add(v,a);var b=pu("第二阶段:系统设计");add(v,b);var c=pu("第三阶段:集成测试");add(v,c);dep(v,a,b);dep(v,b,c);}
         {var v=vu(pv,"PV-3_项目-能力映射");var a=pu("UUV研发→水下探测");add(v,a);var b=pu("声呐升级→搜索感知");add(v,b);var c=pu("指控升级→指挥控制");add(v,c);dep(v,a,b);dep(v,b,c);}
 
