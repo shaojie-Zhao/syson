@@ -82,7 +82,8 @@ public class Dodafv2TemplateBuilder {
         {var v=vu(vc,"SvcV-2_服务资源流描述");var a=pu("声学服务→数据融合");add(v,a);var b=pu("数据融合→态势显示");add(v,b);dep(v,a,b);}
         {var v=vu(vc,"SvcV-3a_服务-系统矩阵");var a=pu("声学处理→声呐系统");add(v,a);var b=pu("数据融合→指控系统");add(v,b);var c=pu("态势显示→指控系统");add(v,c);dep(v,a,b);dep(v,b,c);}
         {var v=vu(vc,"SvcV-3b_服务-服务矩阵");var a=pu("声学处理↔数据融合");add(v,a);var b=pu("数据融合↔态势显示");add(v,b);dep(v,a,b);}
-        {var v=vu(vc,"SvcV-4_服务功能描述");var a=ac("信号滤波");add(v,a);var b=ac("波束形成");add(v,b);var c=ac("目标检测");add(v,c);dep(v,a,b);dep(v,b,c);}
+        {var v=vu(vc,"SvcV-4a_服务功能描述");var a=ac("信号滤波");add(v,a);var b=ac("波束形成");add(v,b);var c=ac("目标检测");add(v,c);dep(v,a,b);dep(v,b,c);}
+        {var v=vu(vc,"SvcV-4b_服务功能流描述");}
         {var v=vu(vc,"SvcV-5_服务-活动追溯");var a=pu("信号滤波→搜索探测");add(v,a);var b=pu("目标检测→识别跟踪");add(v,b);dep(v,a,b);}
         {var v=vu(vc,"SvcV-6_服务资源流矩阵");var a=pu("输入:原始声呐数据");add(v,a);var b=pu("输出:目标航迹");add(v,b);dep(v,a,b);}
         {var v=vu(vc,"SvcV-7_服务度量");var a=pu("检测概率");add(v,a);var b=pu("虚警率");add(v,b);var c=pu("处理延迟");add(v,c);dep(v,a,b);dep(v,b,c);}
