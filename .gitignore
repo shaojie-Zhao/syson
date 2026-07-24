@@ -98,6 +98,9 @@ playwright-report/
 blob-report/
 playwright/.cache/
 
+# Auth (contains token)
+.npmrc
+
 #AI
 .gemini
 GEMINI.md
