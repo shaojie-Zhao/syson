@@ -216,9 +216,10 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             }
             new ElementInitializerSwitch().doSwitch(eObject);
             // Tag DoDAF elements with appropriate aliasId
-            // ALWAYS apply alias if childCreationDescriptionId contains "Lifeline" (independent of project type)
-            if (childCreationDescriptionId.contains("Lifeline") && eObject instanceof Element created) {
-                setAlias(created, "dodaf:Lifeline");
+            System.err.println("=== CREATE-CHILD: descId=" + childCreationDescriptionId + " isEl=" + (eObject instanceof Element));
+            if (childCreationDescriptionId.contains("Lifeline")) {
+                System.err.println("=== LIFELINE: setting alias dodaf:Lifeline");
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Lifeline");
             } else if (eObject instanceof Element created && this.isDoDAFProject(container)) {
                 this.tagDoDAFAlias(created, childCreationDescriptionId);
             }
@@ -423,6 +424,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             String aliasedId = n.isEmpty() ? childCreationDescriptionId : childCreationDescriptionId.substring(0, childCreationDescriptionId.lastIndexOf(':'));
             // Map by menu item base name (strip trailing numbers from auto-numbering)
             if (n.startsWith("Capability")) setAlias(element, "dodaf:capability");
+            else if (n.startsWith("Lifeline")) setAlias(element, "dodaf:Lifeline");
             else if (n.startsWith("OperationalNode")) setAlias(element, "dodaf:operational");
             else if (n.startsWith("SystemNode")) setAlias(element, "dodaf:system");
             else if (n.startsWith("Organization")) setAlias(element, "dodaf:organization");
