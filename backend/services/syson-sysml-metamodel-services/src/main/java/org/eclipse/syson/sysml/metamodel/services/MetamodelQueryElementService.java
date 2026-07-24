@@ -61,6 +61,10 @@ public class MetamodelQueryElementService {
         return element instanceof PartUsage && element.getOwningMembership() instanceof ActorMembership;
     }
 
+    public boolean isLifeline(Element element) {
+        return element.getAliasIds().contains("dodaf:Lifeline");
+    }
+
     /**
      * Return {@code true} if the provided {@code element} is a subject, {@code false} otherwise.
      * <p>
