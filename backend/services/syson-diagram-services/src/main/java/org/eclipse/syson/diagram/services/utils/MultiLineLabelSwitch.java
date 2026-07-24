@@ -105,6 +105,8 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "CombinedFragment";
         } else if (element.getAliasIds().contains("dodaf:StateInvariant")) {
             return "StateInvariant";
+        } else if (element.getAliasIds().contains("dodaf:Message")) {
+            return "Message";
         } else if (element.getAliasIds().contains("dodaf:operational")) {
             return "Performer";
         } else if (element.getAliasIds().contains("dodaf:system")) {
