@@ -68,6 +68,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class SysMLv2EditService implements IEditServiceDelegate {
 
+    private static final java.util.logging.Logger log = java.util.logging.Logger.getLogger(SysMLv2EditService.class.getName());
+
     public static final String ID_PREFIX = "SysMLv2EditService-";
 
     private final IDefaultEditService defaultEditService;
@@ -214,7 +216,10 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             }
             new ElementInitializerSwitch().doSwitch(eObject);
             // Tag DoDAF elements with appropriate aliasId
-            if (eObject instanceof Element created && this.isDoDAFProject(container)) {
+            // ALWAYS apply alias if childCreationDescriptionId contains "Lifeline" (independent of project type)
+            if (childCreationDescriptionId.contains("Lifeline") && eObject instanceof Element created) {
+                setAlias(created, "dodaf:Lifeline");
+            } else if (eObject instanceof Element created && this.isDoDAFProject(container)) {
                 this.tagDoDAFAlias(created, childCreationDescriptionId);
             }
             if (initName != null && !initName.isEmpty() && eObject instanceof Element newElement) {
@@ -355,11 +360,13 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 while (it.hasNext()) {
                     EObject obj = it.next();
                     if (obj instanceof Element e && e.getAliasIds().stream().anyMatch(a -> a.startsWith("dodaf:"))) {
+                        System.out.println("isDoDAFProject: TRUE");
                         return true;
                     }
                 }
             }
         } catch (Exception ignored) {}
+        log.info("isDoDAFProject: FALSE (no dodaf: alias found)");
         return false;
     }
 
@@ -409,6 +416,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
     );
 
     private void tagDoDAFAlias(Element element, String childCreationDescriptionId) {
+        log.info("tagDoDAFAlias called: descId=" + childCreationDescriptionId);
         if (childCreationDescriptionId != null && childCreationDescriptionId.startsWith("SysMLv2EditService-PartDefinition")) {
             String n = childCreationDescriptionId.contains(":") ? childCreationDescriptionId.substring(childCreationDescriptionId.lastIndexOf(':')+1) : "";
             // Remove ":Name" suffix before looking up
@@ -424,7 +432,15 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             }
             return;
         }
+        // Special case: PartUsage with "Lifeline" name → dodaf:Lifeline
+        if (childCreationDescriptionId.contains("Lifeline")) {
+            setAlias(element, "dodaf:Lifeline");
+            return;
+        }
         String alias = DODAF_TYPE_TO_ALIAS.get(childCreationDescriptionId);
+        if (alias == null && childCreationDescriptionId.contains(":")) {
+            alias = DODAF_TYPE_TO_ALIAS.get(childCreationDescriptionId.substring(0, childCreationDescriptionId.lastIndexOf(':')));
+        }
         if (alias != null && !element.getAliasIds().contains(alias)) {
             element.getAliasIds().add(alias);
         }
