@@ -915,31 +915,57 @@
       }
       setInterval(scanCustomViews, 200);
 
-      // Lifeline UML style: add dashed tail extending to view bottom
+      // Lifeline UML style: add dashed tail extending to view bottom + replace icon
       function styleLifelines() {
         var viewport = document.querySelector('.react-flow__viewport');
         var flowPane = document.querySelector('.react-flow__pane');
-        if (!viewport || !flowPane) return;
-        var nodes = document.querySelectorAll('[data-svg="rect"]');
-        for (var i = 0; i < nodes.length; i++) {
-          var n = nodes[i];
-          var label = n.querySelector('[data-testid*="Label content"]');
-          if (!label || label.textContent.indexOf('Lifeline') < 0 && label.textContent.indexOf('Lifeline') < 0) continue;
-          var tail = n.querySelector('[data-lifeline-tail]');
-          if (!tail) {
-            tail = document.createElement('div');
-            tail.setAttribute('data-lifeline-tail', '1');
-            tail.style.cssText = 'position:absolute;top:100%;left:50%;width:0;border-left:2px dashed #666;transform:translateX(-50%);pointer-events:none';
-            n.style.position = 'relative';
-            n.appendChild(tail);
+        if (viewport && flowPane) {
+          var nodes = document.querySelectorAll('[data-svg="rect"]');
+          for (var i = 0; i < nodes.length; i++) {
+            var n = nodes[i];
+            var label = n.querySelector('[data-testid*="Label content"]');
+            if (!label || (label.textContent.indexOf('Lifeline') < 0 && label.textContent.indexOf('Lifeline') < 0)) continue;
+            // Replace icon
+            var img = n.querySelector('img');
+            if (img && img.src.indexOf('lifeline') < 0) {
+              img.src = 'http://localhost:8080/images/lifeline.svg';
+              img.alt = '«Lifeline»';
+            }
+            // Dashed tail
+            var tail = n.querySelector('[data-lifeline-tail]');
+            if (!tail) {
+              tail = document.createElement('div');
+              tail.setAttribute('data-lifeline-tail', '1');
+              tail.style.cssText = 'position:absolute;top:100%;left:50%;width:0;border-left:2px dashed #666;transform:translateX(-50%);pointer-events:none';
+              n.style.position = 'relative';
+              n.appendChild(tail);
+            }
+            var rect = n.getBoundingClientRect();
+            var paneRect = flowPane.getBoundingClientRect();
+            var h = paneRect.bottom - rect.bottom;
+            if (h > 0) tail.style.height = h + 'px';
           }
-          var rect = n.getBoundingClientRect();
-          var paneRect = flowPane.getBoundingClientRect();
-          var h = paneRect.bottom - rect.bottom;
-          if (h > 0) tail.style.height = h + 'px';
         }
       }
       setInterval(styleLifelines, 300);
+
+      // Replace Lifeline icon in Explorer tree
+      function fixLifelineTreeIcons() {
+        var items = document.querySelectorAll('[data-treeitemid]');
+        for (var i = 0; i < items.length; i++) {
+          var it = items[i];
+          if (it.getAttribute('data-lifeline-icon') === '1') continue;
+          var label = it.querySelector('[class*="MuiTreeItem-label"]') || it;
+          if (label.textContent.indexOf('Lifeline') >= 0 || label.textContent.indexOf('Lifeline') >= 0) {
+            var img = it.querySelector('img');
+            if (img && img.src.indexOf('lifeline') < 0 && img.src.indexOf('PartDefinition') >= 0) {
+              img.src = 'http://localhost:8080/images/lifeline.svg';
+              it.setAttribute('data-lifeline-icon', '1');
+            }
+          }
+        }
+      }
+      setInterval(fixLifelineTreeIcons, 500);
 
       </script>
     <script type="module" src="/src/index.tsx"></script>
