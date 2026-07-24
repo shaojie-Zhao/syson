@@ -217,9 +217,10 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             new ElementInitializerSwitch().doSwitch(eObject);
             // Tag DoDAF elements with appropriate aliasId
             System.err.println("=== CREATE-CHILD: descId=" + childCreationDescriptionId + " isEl=" + (eObject instanceof Element));
-            if (childCreationDescriptionId.contains("Lifeline")) {
-                System.err.println("=== LIFELINE: setting alias dodaf:Lifeline");
-                if (eObject instanceof Element created) setAlias(created, "dodaf:Lifeline");
+            if (childCreationDescriptionId.contains("Lifeline") || childCreationDescriptionId.contains("CombinedFragment") || childCreationDescriptionId.contains("StateInvariant")) {
+                String alias = childCreationDescriptionId.contains("Lifeline") ? "dodaf:Lifeline" : (childCreationDescriptionId.contains("CombinedFragment") ? "dodaf:CombinedFragment" : "dodaf:StateInvariant");
+                System.err.println("=== SEQUENCE-ELEMENT: setting alias " + alias);
+                if (eObject instanceof Element created) setAlias(created, alias);
             } else if (eObject instanceof Element created && this.isDoDAFProject(container)) {
                 this.tagDoDAFAlias(created, childCreationDescriptionId);
             }

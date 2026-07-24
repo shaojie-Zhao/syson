@@ -99,6 +99,12 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
     private String getDodafStereotype(Element element) {
         if (element.getAliasIds().contains("dodaf:capability")) {
             return "Capability";
+        } else if (element.getAliasIds().contains("dodaf:Lifeline")) {
+            return "Lifeline";
+        } else if (element.getAliasIds().contains("dodaf:CombinedFragment")) {
+            return "CombinedFragment";
+        } else if (element.getAliasIds().contains("dodaf:StateInvariant")) {
+            return "StateInvariant";
         } else if (element.getAliasIds().contains("dodaf:operational")) {
             return "Performer";
         } else if (element.getAliasIds().contains("dodaf:system")) {
