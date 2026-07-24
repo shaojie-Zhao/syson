@@ -55,7 +55,6 @@ public class DoDAFSequenceViewDiagramDescriptionProvider implements IViewDescrip
                         .domainType(SysMLMetamodelHelper.buildQualifiedName(SysmlPackage.eINSTANCE.getNamespace()))
                         .layoutOption(DiagramLayoutOption.NONE)
                         .minimapVisible(true)
-                        .preconditionExpression(ServiceMethod.of0(DoDAFSequenceViewCreateService::canCreateDiagram).aqlSelf())
                         .name(DESCRIPTION_NAME)
                         .style(new DiagramBuilders().newDiagramStyleDescription()
                                 .background(bg)

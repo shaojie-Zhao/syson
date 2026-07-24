@@ -1,104 +1,95 @@
-import React, { useCallback, useEffect, useState } from 'react';
+/// <reference types="react" />
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import ReactDOM from 'react-dom/client';
+
+interface PredictionRow { id: string; domain: string; skill: string; shortTerm: string; midTerm: string; longTerm: string; }
 
 const API = '/api/prediction/default-prediction';
+const DB_KEY = 'dodaf_prediction_data';
 
-interface Row { id: string; domain: string; skill: string; shortTerm: string; midTerm: string; longTerm: string; }
+function loadData(): PredictionRow[] { try { return JSON.parse(localStorage.getItem(DB_KEY) || '[]'); } catch(e) { return []; } }
+function saveData(data: PredictionRow[]) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
 
-export default function DoDAFPredictionView() {
-  const [rows, setRows] = useState<Row[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [editing, setEditing] = useState<{ id: string; field: string } | null>(null);
-  const [editVal, setEditVal] = useState('');
-  const [toast, setToast] = useState<string | null>(null);
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; count: number }>({ open: false, count: 0 });
-  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
+const thStyle: React.CSSProperties = { padding: '8px 12px', background: '#19284f', fontWeight: 600, fontSize: 13, color: '#e2e8f0', borderBottom: '2px solid rgba(255,255,255,0.1)', textAlign: 'center', position: 'sticky', top: 0, zIndex: 1 };
+const tdStyle: React.CSSProperties = { padding: '6px 10px', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 13, color: '#e2e8f0', textAlign: 'center', minWidth: 100 };
+const inputStyle: React.CSSProperties = { background: '#162242', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 4, color: '#e2e8f0', padding: '6px 10px', fontSize: 13, width: '100%', boxSizing: 'border-box', textAlign: 'center' };
 
-  const load = useCallback(async () => {
-    try { const r = await fetch(API + '/list').then(r => r.json()); setRows(r); } catch(e) {}
-  }, []);
-  useEffect(() => { load(); }, [load]);
-
-  const filtered = rows.filter(r => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return ['domain','skill','shortTerm','midTerm','longTerm'].some(f => (r[f as keyof Row]||'').toLowerCase().includes(q));
-  });
-
-  const handleAdd = async () => {
-    try { await fetch(API + '/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"domain":"","skill":"","shortTerm":"","midTerm":"","longTerm":""}' }); load(); } catch(e) {}
-  };
-  const handleDelete = async () => {
-    for (const id of selected) { await fetch(API + '/' + id, { method: 'DELETE' }).catch(() => {}); }
-    setSelected(new Set()); load(); setDeleteDialog({ open: false, count: 0 });
-  };
-  const handleEdit = async (id: string, field: string, value: string) => {
-    try { await fetch(API + '/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ field, value }) }); load(); setEditing(null); } catch(e) {}
-  };
+const DoDAFPredictionView: React.FC = () => {
+  const [data, setData] = useState<PredictionRow[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const toggleSelect = (id: string) => { const s = new Set(selected); if (s.has(id)) s.delete(id); else s.add(id); setSelected(s); };
 
-  const btnStyle: React.CSSProperties = { background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontSize: 13 };
-  const inputStyle: React.CSSProperties = { background: '#162242', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 4, color: '#e2e8f0', padding: '6px 10px', fontSize: 13, width: '100%', boxSizing: 'border-box' };
-  const cellStyle: React.CSSProperties = { padding: '6px 10px', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 13, borderRight: '1px solid rgba(255,255,255,0.04)' };
-  const thStyle: React.CSSProperties = { ...cellStyle, background: '#19284f', fontWeight: 600, whiteSpace: 'nowrap', color: '#fff', textAlign: 'center', verticalAlign: 'middle' };
+  useEffect(() => { setData(loadData()); }, []);
 
-  return (
-    <div id="prediction-wrapper" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#19284f', color: '#e0e0e0', fontFamily: 'system-ui, sans-serif', fontSize: 13 }}>
-      {toast && <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: '#ef4444', color: '#fff', padding: '10px 24px', borderRadius: 8, fontSize: 14, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>{toast}</div>}
-      {/* Toolbar */}
-      <div style={{ display: 'flex', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <button onClick={handleAdd} style={btnStyle}>＋ 添加行</button>
-        <button onClick={() => { if (selected.size === 0) { showToast('请先选择要删除的数据行'); return; } setDeleteDialog({ open: true, count: selected.size }); }} style={{ ...btnStyle, background: '#ef4444' }}>🗑 删除行</button>
-        <span style={{ flex: 1 }} />
-        <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="全局搜索..." style={{ ...inputStyle, width: 200 }} />
-      </div>
-      {/* Delete Dialog */}
-      {deleteDialog.open && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)' }} onClick={() => setDeleteDialog({ open: false, count: 0 })}>
-          <div style={{ background: '#19284f', borderRadius: 12, padding: '24px 32px', minWidth: 360, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 12px', color: '#f1f5f9', fontSize: 16 }}>确认删除</h3>
-            <p style={{ margin: '0 0 20px', color: '#94a3b8', fontSize: 14 }}>确定删除选中的 {deleteDialog.count} 行数据？</p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-              <button onClick={() => setDeleteDialog({ open: false, count: 0 })} style={{ background: '#334155', color: '#cbd5e1', border: 'none', borderRadius: 6, padding: '8px 20px', cursor: 'pointer', fontSize: 13 }}>取消</button>
-              <button onClick={handleDelete} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', cursor: 'pointer', fontSize: 13 }}>确认删除</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Table */}
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th rowSpan={2} style={{ ...thStyle, width: 40 }}></th>
-              <th rowSpan={2} style={{ ...thStyle, width: 50 }}>序号</th>
-              <th rowSpan={2} style={thStyle}>技术和技能领域</th>
-              <th rowSpan={2} style={thStyle}>技术和技能</th>
-              <th colSpan={3} style={thStyle}>技术和技能预测</th>
-            </tr>
-            <tr>
-              <th style={thStyle}>短期</th>
-              <th style={thStyle}>中期</th>
-              <th style={thStyle}>长期</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((r, i) => (
-              <tr key={r.id} style={{ background: i % 2 === 0 ? '#19284f' : '#162242' }}>
-                <td style={cellStyle}><input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleSelect(r.id)} /></td>
-                <td style={{ ...cellStyle, textAlign: 'center', color: '#94a3b8' }}>{i + 1}</td>
-                {(['domain','skill','shortTerm','midTerm','longTerm'] as const).map(f => (
-                  <td key={f} style={cellStyle} onDoubleClick={() => { setEditing({ id: r.id, field: f }); setEditVal(r[f] || ''); }}>
-                    {editing?.id === r.id && editing?.field === f ?
-                      <input autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} onBlur={() => handleEdit(r.id, f, editVal)} onKeyDown={e => { if (e.key === 'Enter') handleEdit(r.id, f, editVal); if (e.key === 'Escape') setEditing(null); }} style={inputStyle} />
-                      : <span style={{ color: r[f] ? '#e2e8f0' : '#64748b' }}>{r[f] || '双击编辑...'}</span>}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+  const handleAdd = () => { var d = [...data, { id: crypto.randomUUID(), domain: '', skill: '', shortTerm: '', midTerm: '', longTerm: '' }]; setData(d); saveData(d); };
+  const handleDelete = () => {
+    if (selected.size === 0) return;
+    var d = data.filter(r => !selected.has(r.id)); setData(d); saveData(d); setSelected(new Set());
+    if (!window.confirm('确定删除 ' + selected.size + ' 行？')) return;
+    d = data.filter(r => !selected.has(r.id)); setData(d); saveData(d); setSelected(new Set());
+  };
+  const handleChange = (id: string, field: keyof PredictionRow, value: string) => {
+    var d = data.map(r => r.id === id ? { ...r, [field]: value } : r); setData(d); saveData(d);
+  };
+  const toggleRow = (id: string) => { var s = new Set(selected); if (s.has(id)) s.delete(id); else s.add(id); setSelected(s); };
+  const toggleAll = () => { if (selected.size === data.length) setSelected(new Set()); else setSelected(new Set(data.map(r => r.id))); };
+
+  const toolbar: React.CSSProperties = { display: 'flex', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' };
+  const btn: React.CSSProperties = { background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontSize: 12 };
+  const btnDanger: React.CSSProperties = { ...btn, background: '#ef4444' };
+
+  return React.createElement('div', { style: { height: '100%', display: 'flex', flexDirection: 'column', background: '#19284f', color: '#e0e0e0', fontFamily: 'system-ui, sans-serif', fontSize: 13 } },
+    // Toolbar
+    React.createElement('div', { style: toolbar },
+      React.createElement('button', { onClick: handleAdd, style: btn }, '＋ 新增行'),
+      React.createElement('button', { onClick: handleDelete, style: btnDanger }, '🗑 删除行'),
+      React.createElement('span', { style: { marginLeft: 'auto', color: '#64748b', fontSize: 12 } }, '共 ' + data.length + ' 行')
+    ),
+    // Table
+    React.createElement('div', { style: { flex: 1, overflow: 'auto' } },
+      React.createElement('table', { style: { width: '100%', borderCollapse: 'collapse' } },
+        React.createElement('thead', null,
+          React.createElement('tr', null,
+            React.createElement('th', { style: { ...thStyle, width: 40 } },
+              React.createElement('input', { type: 'checkbox', checked: selected.size === data.length && data.length > 0, onChange: toggleAll, style: { accentColor: '#3b82f6', cursor: 'pointer' } })
+            ),
+            React.createElement('th', { rowSpan: 2, style: { ...thStyle, verticalAlign: 'middle' } }, '技术和技能领域'),
+            React.createElement('th', { rowSpan: 2, style: { ...thStyle, verticalAlign: 'middle' } }, '技术和技能'),
+            React.createElement('th', { colSpan: 3, style: { ...thStyle, width: 300 } }, '技术和技能预测')
+          ),
+          React.createElement('tr', null,
+            React.createElement('th', { style: { ...thStyle, width: 100 } }, '短期'),
+            React.createElement('th', { style: { ...thStyle, width: 100 } }, '中期'),
+            React.createElement('th', { style: { ...thStyle, width: 100 } }, '长期')
+          )
+        ),
+        React.createElement('tbody', null,
+          data.map(function(row) {
+            var sel = selected.has(row.id);
+            return React.createElement('tr', { key: row.id, style: { background: sel ? 'rgba(59,130,246,0.12)' : 'transparent' } },
+              React.createElement('td', { style: { ...tdStyle, minWidth: 40, cursor: 'pointer' }, onClick: function() { toggleRow(row.id); } },
+                React.createElement('input', { type: 'checkbox', checked: sel, readOnly: true, style: { accentColor: '#3b82f6', pointerEvents: 'none' } })
+              ),
+              React.createElement('td', { style: tdStyle },
+                React.createElement('input', { value: row.domain, onChange: function(e: any) { handleChange(row.id, 'domain', e.target.value); }, style: inputStyle, placeholder: '领域' })
+              ),
+              React.createElement('td', { style: tdStyle },
+                React.createElement('input', { value: row.skill, onChange: function(e: any) { handleChange(row.id, 'skill', e.target.value); }, style: inputStyle, placeholder: '技能' })
+              ),
+              React.createElement('td', { style: tdStyle },
+                React.createElement('input', { value: row.shortTerm, onChange: function(e: any) { handleChange(row.id, 'shortTerm', e.target.value); }, style: inputStyle, placeholder: '短期' })
+              ),
+              React.createElement('td', { style: tdStyle },
+                React.createElement('input', { value: row.midTerm, onChange: function(e: any) { handleChange(row.id, 'midTerm', e.target.value); }, style: inputStyle, placeholder: '中期' })
+              ),
+              React.createElement('td', { style: tdStyle },
+                React.createElement('input', { value: row.longTerm, onChange: function(e: any) { handleChange(row.id, 'longTerm', e.target.value); }, style: inputStyle, placeholder: '长期' })
+              )
+            );
+          })
+        )
+      )
+    )
   );
-}
+};
+
+export default DoDAFPredictionView;

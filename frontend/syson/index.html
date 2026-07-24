@@ -615,7 +615,10 @@
         var _viewName = null;
         function getViewName() { return _viewName; }
         function show(x,y){_lastMenuX=x;_lastMenuY=y;var old=document.getElementById('dodaf-ctx');if(old) old.remove();
-          var vn = getViewName();console.log('[DoDAF] show viewName=',vn);
+          var vn = getViewName();
+          var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
+          if (tab && tab.textContent) vn = vn || tab.textContent;
+          console.log('[DoDAF] show viewName=',vn,'tab=',tab?tab.textContent:'none');
           var e = document.getElementById('dodaf-ctx'); if(e) e.remove();
           var h = '';
           // CV-1_能力构想 specific menu
@@ -720,7 +723,7 @@
             i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
             h += '</div>';
           } else if (vn && vn.indexOf('OV-6c') >= 0) {
-            var i1 = [{l:'生命线(Lifeline)',a:'node',n:'Lifeline',d:'SysMLv2EditService-PartDefinition'},{l:'组合片段(CombinedFragment)',a:'node',n:'CombinedFragment',d:'SysMLv2EditService-PartDefinition'},{l:'状态不变量(StateInvariant)',a:'node',n:'StateInvariant',d:'SysMLv2EditService-PartDefinition'},{l:'时间约束(TimeConstraint)',a:'node',n:'TimeConstraint',d:'SysMLv2EditService-PartDefinition'},{l:'持续约束(DurationConstraint)',a:'node',n:'DurationConstraint',d:'SysMLv2EditService-PartDefinition'}];
+            var i1 = [{l:'生命线(Lifeline)',a:'node',n:'Lifeline',d:'SysMLv2EditService-PartDefinition'},{l:'组合片段(CombinedFragment)',a:'node',n:'CombinedFragment',d:'SysMLv2EditService-PartDefinition'},{l:'状态不变量(StateInvariant)',a:'node',n:'StateInvariant',d:'SysMLv2EditService-PartDefinition'}];
             var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
             var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
             h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
@@ -804,6 +807,16 @@
             var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
             var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
             h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('Sequence') >= 0) {
+            var i1 = [{l:'生命线(Lifeline)',a:'node',n:'Lifeline',d:'SysMLv2EditService-PartUsage'},{l:'消息(Message)',a:'',n:'Message',d:'SysMLv2EditService-PartUsage'},{l:'组合片段(CombinedFragment)',a:'',n:'CombinedFragment',d:'SysMLv2EditService-PartUsage'},{l:'交互(Interaction)',a:'',n:'Interaction',d:'SysMLv2EditService-PartUsage'},{l:'状态不变量(StateInvariant)',a:'',n:'StateInvariant',d:'SysMLv2EditService-ConstraintUsage'},{l:'时间约束(TimeConstraint)',a:'',n:'TimeConstraint',d:'SysMLv2EditService-ConstraintUsage'},{l:'持续约束(DurationConstraint)',a:'',n:'DurationConstraint',d:'SysMLv2EditService-ConstraintUsage'},{l:'执行规约(ExecutionSpecification)',a:'',n:'ExecutionSpecification',d:'SysMLv2EditService-PartUsage'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">时序图元素</div>';
             i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
             h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
             h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
