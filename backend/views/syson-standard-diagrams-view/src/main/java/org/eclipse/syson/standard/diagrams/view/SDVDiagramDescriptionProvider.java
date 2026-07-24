@@ -132,6 +132,7 @@ import org.eclipse.syson.standard.diagrams.view.nodes.RequirementUsageActorsComp
 import org.eclipse.syson.standard.diagrams.view.nodes.RequirementUsageStakeholdersCompartmentNodeDescriptionProvider;
 import org.eclipse.syson.standard.diagrams.view.nodes.RequirementUsageSubjectCompartmentNodeDescriptionProvider;
 import org.eclipse.syson.standard.diagrams.view.nodes.SDVNodeDescriptionProviderSwitch;
+import org.eclipse.syson.standard.diagrams.view.nodes.LifelineNodeDescriptionProvider;
 import org.eclipse.syson.standard.diagrams.view.nodes.StakeholderNodeDescriptionProvider;
 import org.eclipse.syson.standard.diagrams.view.nodes.SubjectNodeDescriptionProvider;
 import org.eclipse.syson.sysml.FeatureDirectionKind;
@@ -877,6 +878,7 @@ public class SDVDiagramDescriptionProvider implements IRepresentationDescription
         customNodeDescriptionProviders.add(new DecisionActionNodeDescriptionProvider(colorProvider, this.getDescriptionNameGenerator()));
         customNodeDescriptionProviders.add(new ActorNodeDescriptionProvider(colorProvider));
         customNodeDescriptionProviders.add(new StakeholderNodeDescriptionProvider(colorProvider));
+        customNodeDescriptionProviders.add(new LifelineNodeDescriptionProvider(colorProvider));
         customNodeDescriptionProviders.add(new SubjectNodeDescriptionProvider(colorProvider));
         customNodeDescriptionProviders.add(new ImportedPackageNodeDescriptionProvider(colorProvider, this.getDescriptionNameGenerator()));
         customNodeDescriptionProviders.add(new StartStateNodeDescriptionProvider(colorProvider, this.getDescriptionNameGenerator()));

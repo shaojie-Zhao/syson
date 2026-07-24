@@ -267,7 +267,8 @@ body:has(#matrix-wrapper) [data-panel-id]:has([data-testid="site-right"]) {
 /* DoDAF Rules View - auto-hide detail side panel */
 body:has(#rules-wrapper) [data-testid="sidebar-right"],
 body:has(#rules-wrapper) [data-testid="site-right"],
-body:has(#rules-wrapper) [data-testid="right-resizer"] {
+body:has(#rules-wrapper) [data-testid="right-resizer"],
+body:has(#rules-wrapper) #right {
   display: none !important;
 }
 body:has(#prediction-wrapper) [data-testid="sidebar-right"],

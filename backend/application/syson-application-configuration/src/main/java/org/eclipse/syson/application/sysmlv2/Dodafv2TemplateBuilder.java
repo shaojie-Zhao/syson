@@ -71,7 +71,8 @@ public class Dodafv2TemplateBuilder {
 
         // PV (3): suc() for timeline, dep() for others
         var pv=pkg(root,"PV_项目视角");
-        {var v=vu(pv,"PV-1_项目组合关系");var a=pu("反潜能力建设项目");add(v,a);var b=pu("UUV研发项目");add(v,b);var c=pu("声呐升级项目");add(v,c);dep(v,a,b);dep(v,a,c);}
+        {var v=vu(pv,"PV-1a_项目组合关系");var a=pu("反潜能力建设项目");add(v,a);var b=pu("UUV研发项目");add(v,b);var c=pu("声呐升级项目");add(v,c);dep(v,a,b);dep(v,a,c);}
+        {var v=vu(pv,"PV-1b_责任矩阵");}
         {var v=vu(pv,"PV-2_项目时间线");var a=pu("第一阶段:需求分析");add(v,a);var b=pu("第二阶段:系统设计");add(v,b);var c=pu("第三阶段:集成测试");add(v,c);dep(v,a,b);dep(v,b,c);}
         {var v=vu(pv,"PV-3_项目-能力映射");var a=pu("UUV研发→水下探测");add(v,a);var b=pu("声呐升级→搜索感知");add(v,b);var c=pu("指控升级→指挥控制");add(v,c);dep(v,a,b);dep(v,b,c);}
 
@@ -81,7 +82,8 @@ public class Dodafv2TemplateBuilder {
         {var v=vu(vc,"SvcV-2_服务资源流描述");var a=pu("声学服务→数据融合");add(v,a);var b=pu("数据融合→态势显示");add(v,b);dep(v,a,b);}
         {var v=vu(vc,"SvcV-3a_服务-系统矩阵");var a=pu("声学处理→声呐系统");add(v,a);var b=pu("数据融合→指控系统");add(v,b);var c=pu("态势显示→指控系统");add(v,c);dep(v,a,b);dep(v,b,c);}
         {var v=vu(vc,"SvcV-3b_服务-服务矩阵");var a=pu("声学处理↔数据融合");add(v,a);var b=pu("数据融合↔态势显示");add(v,b);dep(v,a,b);}
-        {var v=vu(vc,"SvcV-4_服务功能描述");var a=ac("信号滤波");add(v,a);var b=ac("波束形成");add(v,b);var c=ac("目标检测");add(v,c);dep(v,a,b);dep(v,b,c);}
+        {var v=vu(vc,"SvcV-4a_服务功能描述");var a=ac("信号滤波");add(v,a);var b=ac("波束形成");add(v,b);var c=ac("目标检测");add(v,c);dep(v,a,b);dep(v,b,c);}
+        {var v=vu(vc,"SvcV-4b_服务功能流描述");}
         {var v=vu(vc,"SvcV-5_服务-活动追溯");var a=pu("信号滤波→搜索探测");add(v,a);var b=pu("目标检测→识别跟踪");add(v,b);dep(v,a,b);}
         {var v=vu(vc,"SvcV-6_服务资源流矩阵");var a=pu("输入:原始声呐数据");add(v,a);var b=pu("输出:目标航迹");add(v,b);dep(v,a,b);}
         {var v=vu(vc,"SvcV-7_服务度量");var a=pu("检测概率");add(v,a);var b=pu("虚警率");add(v,b);var c=pu("处理延迟");add(v,c);dep(v,a,b);dep(v,b,c);}
@@ -98,7 +100,8 @@ public class Dodafv2TemplateBuilder {
         {var v=vu(sv,"SV-1_系统接口描述");var c2=pd("舰载指控系统","dodaf:system");add(v,c2);var so=pd("声呐系统","dodaf:system");add(v,so);var wp=pd("武器系统","dodaf:system");add(v,wp);var cm=pd("通信系统","dodaf:system");add(v,cm);var nv=pd("导航系统","dodaf:system");add(v,nv);var um=pd("无人系统","dodaf:system");add(v,um);dep(v,so,c2);dep(v,c2,wp);dep(v,cm,c2);dep(v,nv,c2);dep(v,um,c2);}
         {var v=vu(sv,"SV-2_系统资源流描述");var a=pu("声呐→指控数据流","dodaf:system");add(v,a);var b=pu("指控→武器指令流","dodaf:system");add(v,b);var c=pu("通信→指控消息流","dodaf:system");add(v,c);dep(v,a,b);dep(v,b,c);}
         {var v=vu(sv,"SV-3_系统-系统矩阵");var a=pu("声呐↔指控","dodaf:system");add(v,a);var b=pu("指控↔武器","dodaf:system");add(v,b);var c=pu("通信↔指控","dodaf:system");add(v,c);var d=pu("导航↔指控","dodaf:system");add(v,d);dep(v,a,b);dep(v,b,c);dep(v,c,d);}
-        {var v=vu(sv,"SV-4_系统功能描述");var a=ac("声学信号处理");add(v,a);var b=ac("目标运动分析");add(v,b);var c=ac("火控解算");add(v,c);var d=ac("数据融合");add(v,d);dep(v,a,b);dep(v,b,c);dep(v,c,d);}
+        {var v=vu(sv,"SV-4a_系统功能描述");var a=ac("声学信号处理");add(v,a);var b=ac("目标运动分析");add(v,b);var c=ac("火控解算");add(v,c);var d=ac("数据融合");add(v,d);dep(v,a,b);dep(v,b,c);dep(v,c,d);}
+        {var v=vu(sv,"SV-4b_系统功能流描述");}
         {var v=vu(sv,"SV-5a_作战活动-系统功能追溯");var a=pu("搜索探测→声学信号处理","dodaf:system");add(v,a);var b=pu("识别跟踪→目标运动分析","dodaf:system");add(v,b);var c=pu("攻击决策→火控解算","dodaf:system");add(v,c);dep(v,a,b);dep(v,b,c);}
         {var v=vu(sv,"SV-5b_作战活动-系统追溯");var a=pu("搜索探测→声呐系统","dodaf:system");add(v,a);var b=pu("攻击决策→武器系统","dodaf:system");add(v,b);var c=pu("战场保障→通信系统","dodaf:system");add(v,c);dep(v,a,b);dep(v,b,c);}
         {var v=vu(sv,"SV-6_系统资源流矩阵");var a=pu("声呐→指控:目标数据","dodaf:system");add(v,a);var b=pu("指控→武器:攻击指令","dodaf:system");add(v,b);var c=pu("通信→指控:态势更新","dodaf:system");add(v,c);dep(v,a,b);dep(v,b,c);}

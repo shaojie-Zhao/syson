@@ -43,6 +43,10 @@ public class ModelQueryAQLService {
         return this.metamodelQueryElementService.isActor(element);
     }
 
+    public boolean isLifeline(Element element) {
+        return this.metamodelQueryElementService.isLifeline(element);
+    }
+
     /**
      * {@link MetamodelQueryElementService#isStakeholder(Element)}.
      */

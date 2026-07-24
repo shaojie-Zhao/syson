@@ -57,6 +57,15 @@ public class DefinitionNodeDescriptionProvider extends AbstractDefinitionNodeDes
     }
 
     @Override
+    public NodeDescription create() {
+        // Get the standard node from the parent
+        NodeDescription nd = super.create();
+        // Exclude Lifeline elements (handled by LifelineNodeDescriptionProvider)
+        nd.setPreconditionExpression("aql:not self.getAliasIds()->includes('dodaf:Lifeline')");
+        return nd;
+    }
+
+    @Override
     protected String getSemanticCandidatesExpression(String domainType) {
         return ServiceMethod.of4(DiagramQueryAQLService.class, DiagramQueryAQLService::getExposedElements, Element.class, EClass.class, List.class, IEditingContext.class, DiagramContext.class)
                 .aqlSelf(domainType, ANCESTORS, IEditingContext.EDITING_CONTEXT, DiagramContext.DIAGRAM_CONTEXT);

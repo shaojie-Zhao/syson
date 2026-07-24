@@ -644,6 +644,16 @@ public class UtilService {
     }
 
     /**
+     * Retrieve Lifeline elements (PartUsage with dodaf:Lifeline alias).
+     */
+    public Element retrieveLifelineElements(Element eObject) {
+        if (eObject instanceof Element e && e.getAliasIds().contains("dodaf:Lifeline")) {
+            return e;
+        }
+        return null;
+    }
+
+    /**
      * Retrieve the done state defined inside the standard library <code>States</code>.
      *
      * @param eObject
