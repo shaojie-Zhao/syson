@@ -140,8 +140,8 @@ public class SysMLv2TemplatesRepresentationInitializer {
         if (viewName.contains("OV-1")) return StandardDiagramsConstants.DODAF_OV1_QN;
 
         // === Sequence/Event Trace views ===
-        if (viewName.contains("时序图")) return StandardDiagramsConstants.DODAF_SEQUENCE_QN;      // Sequence diagram
-        if (viewName.contains("OV-6c")) return StandardDiagramsConstants.DODAF_SEQUENCE_QN;       // Event trace
+        if (viewName.contains("时序图")) return StandardDiagramsConstants.GV_QN;      // Sequence → General View
+        if (viewName.contains("OV-6c")) return StandardDiagramsConstants.GV_QN;       // Event trace → General View
 
         // === Plain Table views ===
         if (viewName.contains("StdV-1") || viewName.contains("StdV-2")) return StandardDiagramsConstants.DODAF_TABLE_QN; // Standards
