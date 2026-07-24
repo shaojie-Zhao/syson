@@ -617,7 +617,7 @@
         function show(x,y){_lastMenuX=x;_lastMenuY=y;var old=document.getElementById('dodaf-ctx');if(old) old.remove();
           var vn = getViewName();
           var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
-          if (tab && tab.textContent) vn = vn || tab.textContent;
+          if (tab && tab.textContent) vn = (vn && vn.indexOf('Package') < 0) ? vn : tab.textContent;
           console.log('[DoDAF] show viewName=',vn,'tab=',tab?tab.textContent:'none');
           var e = document.getElementById('dodaf-ctx'); if(e) e.remove();
           var h = '';

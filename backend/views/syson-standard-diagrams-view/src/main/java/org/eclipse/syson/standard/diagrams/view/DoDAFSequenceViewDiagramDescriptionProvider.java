@@ -19,6 +19,7 @@ import org.eclipse.sirius.components.view.builder.providers.IColorProvider;
 import org.eclipse.sirius.components.view.builder.providers.IRepresentationDescriptionProvider;
 import org.eclipse.sirius.components.view.diagram.ArrangeLayoutDirection;
 import org.eclipse.sirius.components.view.diagram.DiagramLayoutOption;
+import org.eclipse.sirius.components.view.diagram.DropTool;
 import org.eclipse.syson.common.view.api.IViewDescriptionProvider;
 import org.eclipse.syson.standard.diagrams.view.services.DoDAFSequenceViewCreateService;
 import org.eclipse.syson.sysml.SysmlPackage;
@@ -45,23 +46,13 @@ public class DoDAFSequenceViewDiagramDescriptionProvider implements IViewDescrip
 
     @Override
     public IRepresentationDescriptionProvider getRepresentationDescriptionProvider() {
-        return new IRepresentationDescriptionProvider() {
-            @Override
-            public RepresentationDescription create(IColorProvider colorProvider) {
-                var bg = ViewFactory.eINSTANCE.createFixedColor();
-                bg.setValue("#FAFBFC");
-                return new DiagramBuilders().newDiagramDescription()
-                        .arrangeLayoutDirection(ArrangeLayoutDirection.DOWN)
-                        .domainType(SysMLMetamodelHelper.buildQualifiedName(SysmlPackage.eINSTANCE.getNamespace()))
-                        .layoutOption(DiagramLayoutOption.NONE)
-                        .minimapVisible(true)
-                        .name(DESCRIPTION_NAME)
-                        .style(new DiagramBuilders().newDiagramStyleDescription()
-                                .background(bg)
-                                .build())
-                        .titleExpression("aql:'Sequence '+ Sequence{self.existingViewUsagesCountForRepresentationCreation(), 1}->sum()")
-                        .toolbar(new DiagramBuilders().newDiagramToolbar().build())
-                        .build();
+        return colorProvider -> {
+            String originalName = this.sdvProvider.descriptionName;
+            this.sdvProvider.descriptionName = DESCRIPTION_NAME;
+            try {
+                return this.sdvProvider.create(colorProvider);
+            } finally {
+                this.sdvProvider.descriptionName = originalName;
             }
         };
     }
