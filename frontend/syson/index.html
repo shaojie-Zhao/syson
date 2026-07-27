@@ -982,13 +982,18 @@
           var gw = document.getElementById('custom-gantt-wrapper'); if (gw) gw.remove();
           hideRightPanel(); return;
         }
-        if (pw && (tabText.indexOf('技术和技能预测') >= 0 || tabText.indexOf('Prediction') >= 0)) {
+        if (pw && (tabText.indexOf('技术和技能预测') >= 0 || tabText.indexOf('Prediction') >= 0 || tabText.indexOf('SvcV-9') >= 0)) {
           // Prediction View active — remove Rules + Gantt wrappers
           if (rw) { if (rw.__rulesRoot) rw.__rulesRoot.unmount(); rw.remove(); rulesInjected = false; }
           var gw2 = document.getElementById('custom-gantt-wrapper'); if (gw2) gw2.remove();
           hideRightPanel(); return;
         }
-        if (rw || pw) { hideRightPanel(); return; }
+        if (rw || pw) {
+          // Wrapper exists but tab doesn't match — we switched away, cleanup
+          if (pw) { if (pw.__predictionRoot) pw.__predictionRoot.unmount(); pw.remove(); predInjected = false; }
+          if (rw) { if (rw.__rulesRoot) rw.__rulesRoot.unmount(); rw.remove(); rulesInjected = false; }
+          hideRightPanel(); return;
+        }
         if (rulesInjected || predInjected) return;
         var rep = document.querySelector('[data-testid="table-representation"]');
         if (!rep || rep.offsetParent === null) return;
@@ -1002,7 +1007,7 @@
           return;
         }
         // Prediction View
-        if (!predInjected && (tabText.indexOf('技术和技能预测') >= 0 || tabText.indexOf('Prediction') >= 0)) {
+        if (!predInjected && (tabText.indexOf('技术和技能预测') >= 0 || tabText.indexOf('Prediction') >= 0 || tabText.indexOf('SvcV-9') >= 0)) {
           // Clean up other wrapper first
           var rw = document.getElementById('rules-wrapper'); if (rw) { rw.remove(); rulesInjected = false; }
           predInjected = true; injectCustomView(rep, 'prediction-wrapper', window.renderDoDAFPrediction);
