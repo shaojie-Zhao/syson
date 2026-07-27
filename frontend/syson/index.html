@@ -548,7 +548,19 @@
         }
         if (matrixInjected && !document.getElementById('matrix-wrapper')) matrixInjected = false;
         if (document.getElementById('rules-wrapper') || document.getElementById('prediction-wrapper')) return;
-        if (matrixInjected) return;
+        // Always scan to skip standard tables, but don't double-inject
+        if (matrixInjected) {
+          // Check if the current table is a standard one — if so, teardown
+          var rep = document.querySelector('[data-testid="table-representation"]');
+          if (rep && rep.offsetParent !== null) {
+            var ths2 = rep.querySelectorAll('th');
+            for (var si2 = 0; si2 < ths2.length; si2++) {
+              var sst = ths2[si2].textContent;
+              if (sst === '名称' || sst === '类型' || sst === '描述') { teardownMatrix(); matrixInjected = false; return; }
+            }
+          }
+          return;
+        }
         if (window.location.pathname.indexOf('/projects/') < 0) return;
         var reps = document.querySelectorAll('[data-testid="table-representation"]');
         for (var r = 0; r < reps.length; r++) {
@@ -563,6 +575,13 @@
             if (t.indexOf('规则') >= 0 || t.indexOf('应用于') >= 0 || t.indexOf('技术和技能') >= 0 || t.indexOf('短期') >= 0) { isCustomTable = true; break; }
           }
           if (isCustomTable) continue;
+          // Skip standard Sirius Web tables (name/type/description headers, not our Matrix)
+          var isStdTable = false;
+          for (var si = 0; si < ths.length; si++) {
+            var st = ths[si].textContent;
+            if (st === '名称' || st === '类型' || st === '描述') { isStdTable = true; break; }
+          }
+          if (isStdTable) continue;
           var table = rep.querySelector('.MuiTableContainer-root table') || rep.querySelector('table');
           var trCount = table ? table.querySelectorAll('tr').length : 0;
           if (trCount >= 2) { injectMatrix(rep); return; }
@@ -868,7 +887,6 @@
             var src = dlg.querySelector('#rel-src').value;
             var tgt = dlg.querySelector('#rel-tgt').value;
             if (src === tgt) { alert('Source and target must be different'); return; }
-            // Find source/target lifeline nodes and their IDs
             var srcId, tgtId, srcNode, tgtNode;
             document.querySelectorAll('[data-svg="rect"]').forEach(function(nd) {
               var lb = nd.querySelector('[data-testid*="Label content"]');
@@ -884,16 +902,13 @@
               _lastMenuY = (sr.bottom + tr.top) / 2;
             }
             var repId = getRepId();
-            console.log('[RelDialog] srcId='+srcId,'tgtId='+tgtId,'pid='+editingCtxId,'repId='+repId);
+            console.log('[RelDialog] src='+src+' tgt='+tgt+' srcId='+srcId+' tgtId='+tgtId);
             if (srcId && tgtId) {
-            if (srcId && tgtId) {
-              // Create Dependency element with client/supplier set to src/tgt
-              var u='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);});
-              fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:editingCtxId,childCreationDescriptionId:'SysMLv2EditService-Dependency:'+name}}})}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] edge create:',JSON.stringify(d));var s=d&&d.data&&d.data.createChild&&d.data.createChild.object;if(s&&s.id){
-                // Set client=srcId, supplier=tgtId to form the edge
-                return fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'mutation set($i:DropOnDiagramInput!){dropOnDiagram(input:$i){__typename ... on DropOnDiagramSuccessPayload{id}... on ErrorPayload{message}}}',variables:{i:{id:crypto.randomUUID(),editingContextId:editingCtxId,representationId:repId,objectIds:[s.id],startingPositionX:0,startingPositionY:0,diagramTargetElementId:srcId}}})}).then(function(r2){return r2.json()}).then(function(d2){console.log('[DoDAF] edge drop:',JSON.stringify(d2))});
-              }});
-            }
+              var fullName = nextName(name);
+              var desc = (descId||'SysMLv2EditService-PartUsage')+':'+fullName;
+              var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);});
+              var body = JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:editingCtxId,childCreationDescriptionId:desc}}});
+              fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] edge create:',JSON.stringify(d));var s=d&&d.data&&d.data.createChild&&d.data.createChild.object;if(s&&s.id){var body2=JSON.stringify({query:'mutation d($i:DropOnDiagramInput!){dropOnDiagram(input:$i){__typename ... on DropOnDiagramSuccessPayload{id}... on ErrorPayload{message}}}',variables:{i:{id:crypto.randomUUID(),editingContextId:editingCtxId,representationId:repId,objectIds:[s.id],startingPositionX:0,startingPositionY:0,diagramTargetElementId:srcId}}});return fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body2}).then(function(r2){return r2.json()}).then(function(d2){console.log('[DoDAF] edge drop:',JSON.stringify(d2))})}});
             }
           };
           dlg.onclick = function(e) { if (e.target === dlg) dlg.remove(); };
