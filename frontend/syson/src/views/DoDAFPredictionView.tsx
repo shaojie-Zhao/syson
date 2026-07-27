@@ -49,7 +49,7 @@ const DoDAFPredictionView: React.FC = () => {
       React.createElement('table', { style: { width: '100%', borderCollapse: 'collapse' } },
         React.createElement('thead', null,
           React.createElement('tr', null,
-            React.createElement('th', { style: { ...thStyle, width: 40 } },
+            React.createElement('th', { rowSpan: 2, style: { ...thStyle, width: 40, verticalAlign: 'middle' } },
               React.createElement('input', { type: 'checkbox', checked: selected.size === data.length && data.length > 0, onChange: toggleAll, style: { accentColor: '#3b82f6', cursor: 'pointer' } })
             ),
             React.createElement('th', { rowSpan: 2, style: { ...thStyle, verticalAlign: 'middle' } }, '技术和技能领域'),

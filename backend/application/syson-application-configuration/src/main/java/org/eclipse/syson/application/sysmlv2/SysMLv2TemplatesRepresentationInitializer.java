@@ -146,6 +146,7 @@ public class SysMLv2TemplatesRepresentationInitializer {
         // === Plain Table views ===
         if (viewName.contains("StdV-1") || viewName.contains("StdV-2")) return StandardDiagramsConstants.DODAF_TABLE_QN; // Standards
         if (viewName.contains("AV-2")) return StandardDiagramsConstants.DODAF_TABLE_QN;       // Integrated dictionary
+        if (viewName.contains("SvcV-9")) return StandardDiagramsConstants.DODAF_PREDICTION_QN; // Technology prediction
 
         // === Matrix/Table views ===
         // Name contains "矩阵" → Matrix View
@@ -212,24 +213,22 @@ public class SysMLv2TemplatesRepresentationInitializer {
     }
 
     private void createRepresentationForView(ViewUsage vu, String viewName, String viewDefQN, IEMFEditingContext editingContext) {
-        String descId = SysONRepresentationDescriptionIdentifiers.GENERAL_VIEW_DIAGRAM_DESCRIPTION_ID;
-        // Look up specific description for Matrix/Gantt views
         if (viewDefQN.equals(StandardDiagramsConstants.DODAF_MATRIX_QN)) {
-            descId = findDescriptionId(editingContext, "DoDAF Matrix View");
-        } else if (viewDefQN.equals(StandardDiagramsConstants.DODAF_GANTT_QN)) {
-            descId = findDescriptionId(editingContext, "DoDAF Gantt View");
+            this.createTableRepresentation(vu, viewName, "DoDAF Matrix View", editingContext);
+            return;
         }
-        this.diagramMutationDiagramService.createDiagram(vu, editingContext, descId);
+        if (viewDefQN.equals(StandardDiagramsConstants.DODAF_GANTT_QN)) {
+            this.createGanttRepresentation(vu, viewName, "DoDAF Gantt View", editingContext);
+            return;
+        }
+        if (viewDefQN.equals(StandardDiagramsConstants.DODAF_PREDICTION_QN)) {
+            this.createTableRepresentation(vu, viewName, "DoDAF Prediction View", editingContext);
+            return;
+        }
+        // Default: General View diagram
+        this.diagramMutationDiagramService.createDiagram(vu, editingContext, SysONRepresentationDescriptionIdentifiers.GENERAL_VIEW_DIAGRAM_DESCRIPTION_ID);
     }
     
-    private String findDescriptionId(IEMFEditingContext editingContext, String labelContains) {
-        return this.representationDescriptionSearchService.findAll(editingContext).values().stream()
-                .filter(d -> d.getLabel() != null && d.getLabel().contains(labelContains))
-                .findFirst()
-                .map(d -> d.getId())
-                .orElse(SysONRepresentationDescriptionIdentifiers.GENERAL_VIEW_DIAGRAM_DESCRIPTION_ID);
-    }
-
     private void createTableRepresentation(ViewUsage vu, String viewName, String descName, IEMFEditingContext editingContext) {
         try {
             var desc = this.representationDescriptionSearchService.findAll(editingContext).values().stream()
@@ -242,10 +241,10 @@ public class SysMLv2TemplatesRepresentationInitializer {
                 String id = java.util.UUID.randomUUID().toString();
                 var table = this.tableCreationService.create(id, vu, tableDesc, editingContext);
                 var metadata = org.eclipse.sirius.components.core.RepresentationMetadata.newRepresentationMetadata(table.getId())
-                        .kind("Table")
+                        .kind("siriusComponents://representation?type=Table")
                         .label(viewName)
                         .descriptionId(table.getDescriptionId())
-                        .iconURLs(java.util.List.of())
+                        .iconURLs(java.util.List.of("/table-images/table.svg"))
                         .build();
                 this.representationMetadataPersistenceService.save(null, editingContext, metadata, table.getTargetObjectId());
                 this.representationPersistenceService.save(null, editingContext, table);
@@ -269,10 +268,10 @@ public class SysMLv2TemplatesRepresentationInitializer {
                 var ganttDesc = desc.get();
                 var gantt = this.ganttCreationService.create(vu, ganttDesc, editingContext);
                 var metadata = org.eclipse.sirius.components.core.RepresentationMetadata.newRepresentationMetadata(gantt.getId())
-                        .kind("Gantt")
+                        .kind("siriusComponents://representation?type=Gantt")
                         .label(viewName)
                         .descriptionId(gantt.getDescriptionId())
-                        .iconURLs(java.util.List.of())
+                        .iconURLs(java.util.List.of("/gantt-images/gantt.svg"))
                         .build();
                 this.representationMetadataPersistenceService.save(null, editingContext, metadata, gantt.getTargetObjectId());
                 this.representationPersistenceService.save(null, editingContext, gantt);

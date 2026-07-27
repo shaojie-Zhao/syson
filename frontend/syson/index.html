@@ -492,6 +492,9 @@
         for (var i = 0; i < allDivs.length; i++) {
           var cn = allDivs[i].className;
           if (cn && typeof cn === 'string' && cn.indexOf('ganttContainer') >= 0) {
+            // Found Gantt — remove Prediction/Rules wrappers
+            var pw = document.getElementById('prediction-wrapper'); if (pw) { pw.remove(); predInjected = false; }
+            var rw = document.getElementById('rules-wrapper'); if (rw) { rw.remove(); rulesInjected = false; }
             injectGanttApp(allDivs[i]);
             return true;
           }
@@ -538,6 +541,8 @@
       function scanForMatrix() {
         var w = document.getElementById('matrix-wrapper');
         // If the active representation changed (switched/reopened), tear down the stale matrix immediately
+        // so its previous content cannot flash before the new one is injected (also properly unmounts the root).
+        // Guard: only when BOTH ids are known and differ, so a transient empty id can't tear down a fresh view.
         var repNow = currentMatrixRepId();
         var repWas = w ? w.getAttribute('data-repid') : '';
         if (w && repWas && repNow && repWas !== repNow) { teardownMatrix(); w = null; }
@@ -554,11 +559,11 @@
           var rep = reps[r];
           if (rep.offsetParent === null) continue;
           if (rep.closest('[class*="ganttContainer"], [class*="explorer"], [class*="sidebar"], [class*="tree"]')) continue;
-          // Skip Rules / Prediction tables by column header content
+          // Skip Rules / Prediction tables
           var ths = rep.querySelectorAll('th');
           var isCustomTable = false;
           for (var hi = 0; hi < ths.length; hi++) {
-            var t = ths[hi].textContent || '';
+            var t = ths[hi].textContent;
             if (t.indexOf('规则') >= 0 || t.indexOf('应用于') >= 0 || t.indexOf('技术和技能') >= 0 || t.indexOf('短期') >= 0) { isCustomTable = true; break; }
           }
           if (isCustomTable) continue;
@@ -568,8 +573,7 @@
           if (tabName.indexOf('矩阵') < 0 && tabName.indexOf('追溯') < 0 && tabName.indexOf('映射') < 0) continue;
           var table = rep.querySelector('.MuiTableContainer-root table') || rep.querySelector('table');
           var trCount = table ? table.querySelectorAll('tr').length : 0;
-          // Inject if: (a) non-custom table with >= 2 rows, OR (b) matrix data detected
-          if (trCount >= 2 || isMatrixTable) { injectMatrix(rep); return; }
+          if (trCount >= 2) { injectMatrix(rep); return; }
         }
       }
       setInterval(function() { scanForMatrix(); }, 200);
@@ -973,13 +977,15 @@
         var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
         var tabText = tab ? tab.textContent : '';
         if (rw && (tabText.indexOf('OV-6a') >= 0 || tabText.indexOf('规则') >= 0)) {
-          // Rules View is active, remove Prediction wrapper if present
+          // Rules View active — remove Prediction + Gantt wrappers
           if (pw) { if (pw.__predictionRoot) pw.__predictionRoot.unmount(); pw.remove(); predInjected = false; }
+          var gw = document.getElementById('custom-gantt-wrapper'); if (gw) gw.remove();
           hideRightPanel(); return;
         }
         if (pw && (tabText.indexOf('技术和技能预测') >= 0 || tabText.indexOf('Prediction') >= 0)) {
-          // Prediction View is active, remove Rules wrapper if present
+          // Prediction View active — remove Rules + Gantt wrappers
           if (rw) { if (rw.__rulesRoot) rw.__rulesRoot.unmount(); rw.remove(); rulesInjected = false; }
+          var gw2 = document.getElementById('custom-gantt-wrapper'); if (gw2) gw2.remove();
           hideRightPanel(); return;
         }
         if (rw || pw) { hideRightPanel(); return; }
