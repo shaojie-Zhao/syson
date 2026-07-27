@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper" id="wrapper">
+    <!--        箭头-->
+    <svg width="934" height="785" style="position:absolute;top:0;left:0;z-index:1;pointer-events:none;">
+
+        <defs>
+            <!-- 定义黑色箭头模板 -->
+            <marker id="blackArrow" markerWidth="8" markerHeight="8" refX="0" refY="4" orient="auto">
+                <polygon points="0 0,8 4,0 8" fill="#000000"/>
+            </marker>
+            <!-- 定义蓝色箭头模板 -->
+            <marker id="blueArrow" markerWidth="6" markerHeight="6" refX="0" refY="3" orient="auto">
+                <polygon points="0 0,6 3,0 6" fill="#0044ff"/>
+            </marker>
+        </defs>
+        <!--            蓝色箭头部分-->
+        <!-- AV-2 ==> AV-1  -->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)" d="M790,40 L345,40"/>
+        <!--            AV-1 ==> CV-1 -->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)"
+              d="M290,40 L74,40 Q58,40 58,56 L58,108"/>
+        <!--            CV-1 ==> CV-2-->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)" d="M58,180 L58,198"/>
+        <!--            CV-2 ==> CV-4-->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)" d="M85,240 L103,240"/>
+        <!--            CV-4 ==> OV-1-->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)" d="M160,240 L198,240"/>
+        <!--            OV-1 ==> OV-5b-->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)" d="M255,240 L278,240"/>
+        <!--            OV-5b ==> OV-2-->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)" d="M340,240 L448,240"/>
+        <!--            OV-2 ==> SvcV-1-->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)" d="M500,240 L682,240"/>
+        <!--            SvcV-1 ==> SvcV-3b-->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)" d="M710,300 L710,458"/>
+        <!--            SvcV-3b ==> SV-1-->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)" d="M700,490 L479,490"/>
+        <!--            SV-1 ==> SV-2-->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)"
+              d="M420,510 L420,551 Q420,567 404,567 L272,567"/>
+        <!--            SV-2 ==> SV-4FM-->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)"
+              d="M260,620 L260,645 Q260,661 276,661 L320,661"/>
+        <!--            SV-4FM ==> SV-5a-->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)" d="M383,661 L463,661"/>
+        <!--            SV-5a ==> AV-2-->
+        <path stroke="#0044ff" stroke-width="2" fill="none" marker-end="url(#blueArrow)"
+              d="M520,668 L914,668 Q920,668 920,652 L920,56 Q920,40 914,40 L845,40"/>
+
+        <!--            黑色箭头部分-->
+        <!--            CV-3 ==> CV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M38,310 L38,275"/>
+        <!--            CV-5 ==> CV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M85,325 L85,308 Q85,300 77,300 L56,300 Q48,300 48,292 L48,275"/>
+        <!--            CV-6 ==> CV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M97,290 L76,290 Q68,290 68,282 L68,275"/>
+        <!--            CV-7 ==> CV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M698,150 L688,150 Q680,150 680,142 L680,23 Q680,15 672,15 L14,15 Q6,15 6,23 L6,217 Q6,225 14,225 L30,225"/>
+        <!--            PV-3==>CV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M128,403 L127,288 Q127,280 121,280 L78,280 L78,275"/>
+        <!--            CV-3 ==> PV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M38,363 L38,505"/>
+        <!--            PV-3 ==> PV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M122,443 L122,465"/>
+        <!--            PV-2 ==> PV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M75,535 L117,535 Q125,535 125,527 L125,518"/>
+        <!--            PV-2 ==> SV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M75,540 L317,540 Q325,540 325,532 L325,528 Q325,515 333,515 L405,515"/>
+        <!--            PV-1 ==> OV-4-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M140,490 L220,490"/>
+        <!--            CV-7 ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M710,185 L710,223"/>
+        <!--            SvcV-7 ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M835,188 L835,192 Q835,200 827,200 L728,200 Q720,200 720,208 L720,223"/>
+        <!--            SvcV-6 ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M830,220 L730,220 L730,223"/>
+        <!--            SvcV-8 ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M773,250 L750,250"/>
+        <!--            SvcV-10a ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M830,273 L750,273"/>
+        <!--            SvcV-10b ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M845,360 L798,360 Q790,360 790,352 L790,288 Q790,280 782,280 L750,280"/>
+        <!--            SvcV-10c ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M845,400 L788,400 Q780,400 780,392 L780,298 Q780,290 772,290 L750,290"/>
+        <!--            SvcV-4 ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M765,465 L765,308 Q765,300 757,300 L750,300"/>
+        <!--            SvcV-9 ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M740,329 L740,310"/>
+        <!--            SvcV-2 ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M675,375 L697,375 Q705,375 705,367 L705,305"/>
+        <!--            SvcV-5 ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M665,325 L692,325 Q700,325 700,317 L700,305"/>
+        <!--            SvcV-3a ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M580,440 L580,308 Q580,300 588,300 L685,300"/>
+        <!--            SV-1 ==> SvcV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M465,450 L465,440 Q465,432 473,432 L537,432 Q545,432 545 424 L545,278 Q545,270 553,270 L680,270"/>
+        <!--            StdV-2 ==> StdV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M810,710 L715,710"/>
+        <!--            SV-2 ==> StdV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M218,590 L206,590 Q198,590 198,598 L198,747 Q198,755 216,755 L680,755 Q688,755 688,747 L688,743"/>
+        <!--            OV-1 ==> AV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M230,205 L230,58 Q230,50 238,50 L280,50"/>
+        <!--            OV-1 ==> OV-4-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M230,255 L230,465"/>
+        <!--            OV-1 ==> OV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M240,205 L240,188 Q240,180 248,180 L378,180 A4 4 0 0 1 386 180 L457,180 Q465,180 465,188 L465,205"/>
+        <!--            OV-6a ==> OV-5a-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M382,160 L382,195"/>
+        <!--            OV-6a ==> OV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M400,140 L462,140 Q470,140 470,148 L470,205"/>
+        <!--            OV-6b ==> OV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M496,140 L490,140 Q482,140 482,148 L482,205"/>
+        <!--            OV-6c ==> OV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M550,165 L550,182 Q550,190 542,190 L498,190 Q490,190 490,198 L490,205"/>
+        <!--            OV-3 ==> OV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M555,215 L505,215"/>
+        <!--            SV-1 ==> OV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M455,450 L455,423 Q455,415 463,415 L527,415 Q535,415 535,407 L535,258 Q535,250 527,250 L510,250"/>
+        <!--            OV-2 ==> DIV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M465,270 L465,327 Q465,335 457,335 L445,335"/>
+        <!--            OV-5b ==> OV-5a-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M340,215 L360,215"/>
+        <!--            OV-5b ==> SV-5b-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M312,270 L312,450"/>
+        <!--            OV-5b ==> OV-4-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M305,270 L305,312 Q305,320 297,320 L253,320 Q245,320 245,328 L245,465"/>
+        <!--            SV-5a ==> OV-5b-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M480,645 L480,638 Q480,630 472,630 L403,630 Q395,630 395,622 L395,423 Q395,415 387,415 L330,415 Q322,415 322,407 L322,275"/>
+        <!--            OV-5b ==> DIV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M330,270 L330,282 Q330,290 338,290 L402,290 Q410,290 410,298 L410,315"/>
+        <!--            DIV-3 ==> DIV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M478,345 L445,345"/>
+        <!--            DIV-2 ==> DIV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M400,340 L382,340"/>
+        <!--            DIV-3 ==> SV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M490,365 L490,372 Q490,380 482,380 L448,380 Q440,380 440,388 L440,445"/>
+        <!--            SV-5b ==> SV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M330,465 L414,465"/>
+        <!--            SV-7 ==> SV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M222,645 L222,628"/>
+        <!--            SV-10a ==> SV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M245,710 L245,628"/>
+        <!--            SV-10a ==> SV-4-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M265,728 L340,728"/>
+        <!--            SV-4FM ==> SV-4-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M360,692 L360,705"/>
+        <!--            SV-8 ==> SV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)"
+              d="M414,578 L414,578 Q414,570 422,570 L422,570 Q430,570 430,562 L430,520"/>
+        <!--            SV-9 ==> SV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M445,578 L445,520"/>
+        <!--            SV-10b ==> SV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M487,578 L487,550 L455,550 L455,520"/>
+        <!--            SV-10c ==> SV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M520,578 L520,540 L465,540 L465,520"/>
+        <!--            SV-6 ==> SV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M570,565 L570,530 L475,530 L475,520"/>
+        <!--            SV-3 ==> SV-1-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M378,548 L391,548 A4 4 0 0 1 399 548 L404,548 Q412,548 412,540 L412,530"/>
+        <!--            SV-3 ==> SV-2-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M355,544 L349,544 A4 4 0 0 0 341 544 L238,544 Q230,544 230,552 L230,555"/>
+        <!--            SV-1 ==> OV-4-->
+                <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M423,494 L399,494 A4 4 0 0 0 391 494 L378,494 Q370,494 370 502 L370,502 Q370,510 362,510 L270,510"/>
+        <!--            OV-4 ==> SV-4FM-->
+        <path stroke="#000000" stroke-width="1" fill="none" marker-end="url(#blackArrow)" d="M241,512 L241,517, Q241,525 249,525 L321 525 A4 4 0 0 1 329 525 L337,525 Q345,525 345,533 L345,620"/>
+
+
+    </svg>
+    <div class="bg_title">架构建模</div>
+    <div class="icon AV1">
+        <img src="./icon/AV-1Report.png" class="img42x42" alt="">
+        <div>AV-1 Report</div>
+    </div>
+    <div class="icon AV2">
+        <img src="./icon/AV-2Report.png" class="img42x42" alt="">
+        <div>AV-2 Report</div>
+    </div>
+    <!--        背景和图标部分-->
+    <div class="zone-1 zone">
+        <div class="zone-title">能力视图定义</div>
+        <div class="icon CV1">
+            <img src="./icon/CV-1.png" class="img45x45" alt="">
+            <div>CV-1</div>
+        </div>
+        <div class="icon CV2">
+            <img src="./icon/CV-2.png" class="img45x45" alt="">
+            <div>CV-2</div>
+        </div>
+        <div class="icon CV3">
+            <img src="./icon/CV-3.png" class="img42x42" alt="">
+            <div>CV-3</div>
+        </div>
+        <div class="icon CV4">
+            <img src="./icon/CV-4.png" class="img45x45" alt="">
+            <div>CV-4</div>
+        </div>
+        <div class="icon CV5">
+            <img src="./icon/CV-5.png" class="img25x25" alt="">
+            <div>CV-5</div>
+        </div>
+        <div class="icon CV6">
+            <img src="./icon/CV-6.png" class="img25x25" alt="">
+            <div>CV-6</div>
+        </div>
+    </div>
+
+    <div class="zone-2 zone">
+        <div class="zone-title">作战场景视图定义</div>
+        <div class="icon OV1">
+            <img src="./icon/OV-1.png" class="img45x45" alt="">
+            <div>OV-1</div>
+        </div>
+        <div class="icon OV2">
+            <img src="./icon/OV-2.png" class="img45x45" alt="">
+            <div>OV-2</div>
+        </div>
+        <div class="icon OV3">
+            <img src="./icon/OV-3.png" class="img35x35" alt="">
+            <div>OV-3</div>
+        </div>
+        <div class="zone ziz ov_bg ziz_dbr">
+            <div class="zone-title">业务规则定义</div>
+            <div class="icon OV6a">
+                <img src="./icon/OV-6a.png" class="img25x25" alt="">
+                <div>OV-6a</div>
+            </div>
+        </div>
+        <div class="zone ziz ov_bg ziz_abe">
+            <div class="zone-title">业务事件分析</div>
+            <div class="icon OV6b">
+                <img src="./icon/OV-6b.png" class="img25x25" alt="">
+                <div>OV-6b</div>
+            </div>
+            <div class="icon OV6c">
+                <img src="./icon/OV-6c.png" class="img25x25" alt="">
+                <div>OV-6c</div>
+            </div>
+        </div>
+        <div class="zone ziz ov_bg ziz_dbpawf">
+            <div class="zone-title">描述业务流程与工作流</div>
+            <div class="icon OV5b">
+                <img src="./icon/OV-5b.png" class="img50x50" alt="">
+                <div>OV-5b</div>
+            </div>
+            <div class="icon OV5a">
+                <img src="./icon/OV-5a.png" class="img25x25" alt="">
+                <div>OV-5a</div>
+            </div>
+        </div>
+        <div class="zone div_bg ziz_md">
+            <div class="zone-title">数据模型</div>
+            <div class="icon DIV1">
+                <img src="./icon/DIV-1.png" class="img25x25" alt="">
+                <div>DIV-1</div>
+            </div>
+            <div class="icon DIV2">
+                <img src="./icon/DIV-2.png" class="img35x35" alt="">
+                <div>DIV-2</div>
+            </div>
+            <div class="icon DIV3">
+                <img src="./icon/DIV-3.png" class="img30x30" alt="">
+                <div>DIV-3</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="zone-3 zone">
+        <div class="zone-title">面向服务架构视图定义</div>
+        <div class="icon SvcV1">
+            <img src="./icon/SvcV-1.png" class="img50x50" alt="">
+            <div>SvcV-1</div>
+        </div>
+        <div class="icon SvcV2">
+            <img src="./icon/SvcV-2.png" class="img35x35" alt="">
+            <div>SvcV-2</div>
+        </div>
+        <div class="icon SvcV5">
+            <img src="./icon/SvcV-5.png" class="img25x25" alt="">
+            <div>SvcV-5</div>
+        </div>
+        <div class="icon SvcV6">
+            <img src="./icon/SvcV-6.png" class="img25x25" alt="">
+            <div>SvcV-6</div>
+        </div>
+        <div class="icon SvcV7">
+            <img src="./icon/SvcV-7.png" class="img25x25" alt="">
+            <div>SvcV-7</div>
+        </div>
+        <div class="icon SvcV8">
+            <img src="./icon/SvcV-8.png" class="img25x25" alt="">
+            <div>SvcV-8</div>
+        </div>
+        <div class="icon SvcV9">
+            <img src="./icon/SvcV-9.png" class="img25x25" alt="">
+            <div>SvcV-9</div>
+        </div>
+        <div class="icon SvcV10a">
+            <img src="./icon/SvcV-10a.png" class="img25x25" alt="">
+            <div>SvcV-10a</div>
+        </div>
+        <div class="zone ziz cv_bg ziz_tcrts">
+            <div class="zone-title">将能力需求追溯至服务</div>
+            <div class="icon CV7">
+                <img src="./icon/CV-7.png" class="img25x25" alt="">
+                <div>CV-7</div>
+            </div>
+        </div>
+        <div class="zone ziz svcv_bg ziz_ssaeos">
+            <div class="zone-title">定义服务状态与服务事件</div>
+            <div class="icon SvcV10b">
+                <img src="./icon/SvcV-10b.png" class="img25x25" alt="">
+                <div>SvcV-10b</div>
+            </div>
+            <div class="icon SvcV10c">
+                <img src="./icon/SvcV-10c.png" class="img25x25" alt="">
+                <div>SvcV-10c</div>
+            </div>
+        </div>
+        <div class="zone ziz svcv_bg ziz_dfr">
+            <div class="zone-title">定义功能需求</div>
+            <div class="icon SvcV3b">
+                <img src="./icon/SvcV-3b.png" class="img35x35" alt="">
+                <div>SvcV-3b</div>
+            </div>
+            <div class="icon SvcV4">
+                <img src="./icon/SvcV-4.png" class="img25x25" alt="">
+                <div>SvcV-4</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="zone-4 zone">
+        <div class="zone-title">项目视图定义</div>
+        <div class="icon PV1">
+            <img src="./icon/PV-1.png" class="img25x25" alt="">
+            <div>PV-1</div>
+        </div>
+        <div class="icon PV2">
+            <img src="./icon/PV-2.png" class="img42x42" alt="">
+            <div>PV-2</div>
+        </div>
+        <div class="icon PV3">
+            <img src="./icon/PV-3.png" class="img25x25" alt="">
+            <div>PV-3</div>
+        </div>
+    </div>
+    <div class="zone-5 zone">
+        <div class="zone-title">作战场景解决方案视图定义</div>
+        <div class="icon SV1">
+            <img src="./icon/SV-1.png" class="img45x45" alt="">
+            <div>SV-1</div>
+        </div>
+        <div class="icon SV2">
+            <img src="./icon/SV-2.png" class="img48x48" alt="">
+            <div>SV-2</div>
+        </div>
+        <div class="icon SV3">
+            <img src="./icon/SV-3.png" class="img25x25" alt="">
+            <div>SV-3</div>
+        </div>
+        <div class="icon SV5a">
+            <img src="./icon/SV-5a.png" class="img45x45" alt="">
+            <div>SV-5a</div>
+        </div>
+        <div class="icon SV5b">
+            <img src="./icon/SV-5b.png" class="img25x25" alt="">
+            <div>SV-5b</div>
+        </div>
+        <div class="icon SV6">
+            <img src="./icon/SV-6.png" class="img35x35" alt="">
+            <div>SV-6</div>
+        </div>
+        <div class="icon SV7">
+            <img src="./icon/SV-7.png" class="img25x25" alt="">
+            <div>SV-7</div>
+        </div>
+        <div class="icon SV8">
+            <img src="./icon/SV-8.png" class="img25x25" alt="">
+            <div>SV-8</div>
+        </div>
+        <div class="icon SV9">
+            <img src="./icon/SV-9.png" class="img25x25" alt="">
+            <div>SV-9</div>
+        </div>
+        <div class="icon SV10a">
+            <img src="./icon/SV-10a.png" class="img25x25" alt="">
+            <div>SV-10a</div>
+        </div>
+        <div class="icon SV10b">
+            <img src="./icon/SV-10b.png" class="img25x25" alt="">
+            <div>SV-10b</div>
+        </div>
+        <div class="icon SV10c">
+            <img src="./icon/SV-10c.png" class="img25x25" alt="">
+            <div>SV-10c</div>
+        </div>
+        <div class="zone ziz ov_bg ziz_dhr">
+            <div class="zone-title">定义用户角色</div>
+            <div class="icon OV4">
+                <img src="./icon/OV-4.png" class="img30x30" alt="">
+                <div>OV-4</div>
+            </div>
+        </div>
+        <div class="zone ziz svcv_bg ziz_none">
+            <div class="icon SvcV3a">
+                <img src="./icon/SvcV-3a.png" class="img30x30" alt="">
+                <div>SvcV-3a</div>
+            </div>
+        </div>
+        <div class="zone ziz sv_bg ziz_ifsr">
+            <div class="zone-title">系统功能需求识别</div>
+            <div class="icon SV4FM">
+                <img src="./icon/SV-4FlowModel.png" class="img48x48" alt="">
+                <div>SV-4 Flow Model</div>
+            </div>
+            <div class="icon SV4">
+                <img src="./icon/SV-4.png" class="img25x25" alt="">
+                <div>SV-4</div>
+            </div>
+        </div>
+    </div>
+    <div class="zone-6 zone">
+        <div class="zone-title">标准视图定义</div>
+        <div class="icon StdV1">
+            <img src="./icon/StdV-1.png" class="img38x38" alt="">
+            <div>StdV-1</div>
+        </div>
+        <div class="icon StdV2">
+            <img src="./icon/StdV-2.png" class="img25x25" alt="">
+            <div>StdV-2</div>
+        </div>
+    </div>
+
+
+</div>
+</body>
+<script>
+    // ── Theme detection from URL query param ──────────────────────────
+    var root = document.getElementById('wrapper');
+    function setViewFlowTheme(theme) {
+      root.classList.remove('theme-light', 'theme-dark');
+      root.classList.add('theme-' + (theme === 'light' ? 'light' : 'dark'));
+    }
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var theme = params.get('theme') || 'dark';
+      setViewFlowTheme(theme);
+    })();
+
+    // Listen for theme-change messages from parent
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'themeChange') {
+        setViewFlowTheme(e.data.theme);
+      }
+    });
+
+    const WRAPPER_W = 934;
+    const WRAPPER_H = 785;
+
+    // ── Ctrl + MouseWheel zoom (persisted, with scroll) ───────────────
+    const ZOOM_MIN = 0.3;
+    const ZOOM_MAX = 3.0;
+    const ZOOM_STEP = 0.1;
+    const ZOOM_KEY = 'viewFlow_zoom';
+    const SCROLL_KEY = 'viewFlow_scroll';
+
+    let zoomLevel = parseFloat(sessionStorage.getItem(ZOOM_KEY)) || 1;
+
+    function applyZoom(newZoom) {
+        zoomLevel = newZoom;
+        sessionStorage.setItem(ZOOM_KEY, zoomLevel);
+
+        root.style.transformOrigin = '0 0';
+        root.style.transform = 'scale(' + zoomLevel + ')';
+
+        // CSS transform doesn't affect layout → add margins so scrollbars
+        // match the visual (scaled) size of the wrapper.
+        root.style.marginRight  = Math.max(0, WRAPPER_W * (zoomLevel - 1)) + 'px';
+        root.style.marginBottom = Math.max(0, WRAPPER_H * (zoomLevel - 1)) + 'px';
+    }
+
+    function saveScroll() {
+        sessionStorage.setItem(SCROLL_KEY,
+            document.documentElement.scrollLeft + ',' + document.documentElement.scrollTop);
+    }
+
+    function restoreScroll() {
+        var saved = sessionStorage.getItem(SCROLL_KEY);
+        if (saved) {
+            var parts = saved.split(',');
+            document.documentElement.scrollLeft = parseFloat(parts[0]) || 0;
+            document.documentElement.scrollTop  = parseFloat(parts[1]) || 0;
+        }
+    }
+
+    // Restore zoom + scroll on load
+    if (zoomLevel !== 1) {
+        applyZoom(zoomLevel);
+        restoreScroll();
+    }
+
+    document.addEventListener('wheel', function(e) {
+        if (!e.ctrlKey) return;
+        e.preventDefault();
+
+        var delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+        var newZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoomLevel + delta));
+        if (newZoom === zoomLevel) return;
+
+        applyZoom(newZoom);
+    }, { passive: false });
+
+    // Reset zoom on Ctrl+double-click
+    document.addEventListener('dblclick', function(e) {
+        if (!e.ctrlKey) return;
+        e.preventDefault();
+        sessionStorage.removeItem(ZOOM_KEY);
+        sessionStorage.removeItem(SCROLL_KEY);
+        zoomLevel = 1;
+        root.style.transform = '';
+        root.style.transformOrigin = '';
+        root.style.marginRight = '';
+        root.style.marginBottom = '';
+        document.documentElement.scrollLeft = 0;
+        document.documentElement.scrollTop = 0;
+    });
+
+    // Save scroll position on scroll
+    var scrollTimer;
+    document.addEventListener('scroll', function() {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(saveScroll, 150);
+    }, { passive: true });
+
+    // ── View navigation on icon click ────────────────────────────────
+    root.addEventListener('click', function(e) {
+        var currentEl = e.target.closest('.icon');
+        if (!currentEl) return;
+        var childDiv = currentEl.querySelector('div');
+        if (childDiv) {
+            window.parent.postMessage({ type: 'viewFlowNavigate', viewLabel: childDiv.textContent.trim() }, '*');
+        }
+    });
+</script>
+</html>

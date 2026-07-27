@@ -314,30 +314,57 @@ html body.theme-light #custom-gantt-wrapper,
 html body.theme-light #custom-gantt-wrapper > div {
   background: #f0f2f5 !important;
 }
-html body.theme-light [class*="_wrapper_"] {
+html body.theme-light #custom-gantt-wrapper [class*="_wrapper_"] {
   background: #f0f2f5 !important;
 }
-html body.theme-light [class*="_ganttTaskContent"] > div {
+html body.theme-light #custom-gantt-wrapper [class*="_ganttTableRoot"] {
+  background: #f0f2f5 !important;
+}
+html body.theme-light #custom-gantt-wrapper [class*="_ganttTableRoot"] tr {
+  background: #f0f2f5 !important;
+  border-color: rgba(0,0,0,0.06) !important;
+}
+html body.theme-light #custom-gantt-wrapper [class*="_ganttTableRoot"] td {
+  background: #f5f5f5 !important;
+  border-color: rgba(0,0,0,0.06) !important;
+  color: #333 !important;
+}
+html body.theme-light #custom-gantt-wrapper [class*="_ganttTaskContent"] > div {
   background-image: linear-gradient(transparent 50px, #f5f5f5 50px) !important;
 }
-html body.theme-light [class*="_ganttTaskContent"] > div > div {
+html body.theme-light #custom-gantt-wrapper [class*="_ganttTaskContent"] > div > div {
   background-image: linear-gradient(to right, #e0e0e0 1px, transparent 1px), linear-gradient(transparent 50px, #f5f5f5 50px) !important;
 }
-html body.theme-light [class*="_taskListContent"] > div {
+html body.theme-light #custom-gantt-wrapper [class*="_taskListContent"] > div {
   background-image: linear-gradient(transparent 50px, #f5f5f5 50px) !important;
 }
-html body.theme-light [class*="_ganttTable_Header"] {
+html body.theme-light #custom-gantt-wrapper [class*="_ganttTable_Header"] {
   background: #e4e6eb !important;
 }
-html body.theme-light [class*="_ganttTable_Header"] * {
+html body.theme-light #custom-gantt-wrapper [class*="_ganttTable_Header"] * {
   color: #444 !important;
 }
-html body.theme-light [class*="ganttContainer"] svg text,
-html body.theme-light [class*="ganttContainer"] svg tspan {
+html body.theme-light #custom-gantt-wrapper svg text,
+html body.theme-light #custom-gantt-wrapper svg tspan {
   fill: #444 !important;
 }
-html body.theme-light [class*="_calendar__header"] text {
+html body.theme-light #custom-gantt-wrapper [class*="_calendarHeader"] {
+  fill: #e4e6eb !important;
+  background: #e4e6eb !important;
+}
+html body.theme-light #custom-gantt-wrapper [class*="_calendarHeader"] text,
+html body.theme-light #custom-gantt-wrapper [class*="_calendarTopText"] text,
+html body.theme-light #custom-gantt-wrapper [class*="_calendarBottomText"] text {
   fill: #444 !important;
+}
+html body.theme-light #custom-gantt-wrapper [class*="_calendarTopTick"] {
+  stroke: rgba(0,0,0,0.1) !important;
+}
+html body.theme-light #custom-gantt-wrapper [class*="_projectBackground"] {
+  fill: #93c5fd !important;
+}
+html body.theme-light #custom-gantt-wrapper [class*="_projectTop"] {
+  fill: #93c5fd !important;
 }
 /* Override CSS variables set by custom-gantt-wrapper's <style> tag */
 html body.theme-light #custom-gantt-wrapper {

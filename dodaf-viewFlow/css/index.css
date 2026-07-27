@@ -1,0 +1,203 @@
+@import "imgSize.css";
+@import "iconStyle.css";
+
+/* ── Theme CSS Variables ─────────────────────────────── */
+:root {
+  --vf-wrapper-bg-1: #ffffcd;
+  --vf-wrapper-bg-2: #fff;
+  --vf-wrapper-border: #333;
+  --vf-wrapper-shadow: #999;
+  --vf-text-color: #000;
+  --vf-zone-border: #666;
+  --vf-zone-shadow: #999;
+
+  --vf-zone1-from: #e8fce3;
+  --vf-zone2-from: #E8DEF7;
+  --vf-zone3-from: #FEB8B8;
+  --vf-zone4-from: #FFE2FE;
+  --vf-zone5-from: #FEE0BE;
+  --vf-zone6-from: #F2E0A8;
+  --vf-zone-to: #fff;
+
+  --vf-ov-from: #D8D7FF;
+  --vf-cv-from: #DFFDD9;
+  --vf-svcv-from: #FF9D9C;
+  --vf-div-from: #D3D0C9;
+  --vf-sv-from: #FFCC9A;
+
+  --vf-arrow-blue: #0044ff;
+  --vf-arrow-black: #000000;
+}
+
+/* Dark theme overrides */
+.wrapper.theme-dark {
+  --vf-wrapper-bg-1: #1e2540;
+  --vf-wrapper-bg-2: #19284f;
+  --vf-wrapper-border: rgba(255,255,255,0.2);
+  --vf-wrapper-shadow: rgba(0,0,0,0.5);
+  --vf-text-color: #e2e8f0;
+  --vf-zone-border: transparent;
+  --vf-zone-shadow: rgba(0,0,0,0.3);
+
+  --vf-zone1-from: #1a2e1a;
+  --vf-zone2-from: #1f1c2e;
+  --vf-zone3-from: #2e1c1c;
+  --vf-zone4-from: #2e1a2c;
+  --vf-zone5-from: #2e2418;
+  --vf-zone6-from: #2e2616;
+  --vf-zone-to: #19284f;
+
+  --vf-ov-from: #1e1e2e;
+  --vf-cv-from: #1a2e1a;
+  --vf-svcv-from: #2e1a1a;
+  --vf-div-from: #242320;
+  --vf-sv-from: #2e241a;
+
+  --vf-arrow-blue: #60a5fa;
+  --vf-arrow-black: rgb(0,212,255);
+}
+
+/* Light theme explicit */
+.wrapper.theme-light {
+  --vf-wrapper-bg-1: #ffffcd;
+  --vf-wrapper-bg-2: #fff;
+  --vf-wrapper-border: #333;
+  --vf-wrapper-shadow: #999;
+  --vf-text-color: #000;
+  --vf-zone-border: #666;
+  --vf-zone-shadow: #999;
+
+  --vf-zone1-from: #e8fce3;
+  --vf-zone2-from: #E8DEF7;
+  --vf-zone3-from: #FEB8B8;
+  --vf-zone4-from: #FFE2FE;
+  --vf-zone5-from: #FEE0BE;
+  --vf-zone6-from: #F2E0A8;
+  --vf-zone-to: #fff;
+
+  --vf-ov-from: #D8D7FF;
+  --vf-cv-from: #DFFDD9;
+  --vf-svcv-from: #FF9D9C;
+  --vf-div-from: #D3D0C9;
+  --vf-sv-from: #FFCC9A;
+
+  --vf-arrow-blue: #0044ff;
+  --vf-arrow-black: #000000;
+}
+
+/* ── Base Styles ──────────────────────────────────────── */
+body {
+  font-size: 12px;
+  color: var(--vf-text-color);
+  line-height: 1;
+}
+
+.wrapper {
+  width: 934px;
+  height: 785px;
+  border-radius: 16px;
+  border: 2px solid var(--vf-wrapper-border);
+  position: relative;
+  background-image: linear-gradient(135deg, var(--vf-wrapper-bg-1), var(--vf-wrapper-bg-2));
+  margin: 30px 0 0 10px;
+  box-shadow: 3px 3px 3px 1px var(--vf-wrapper-shadow);
+  padding: 0 12px;
+  box-sizing: border-box;
+  color: var(--vf-text-color);
+}
+.bg_title {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+}
+
+/* 分区通用样式 */
+.zone {
+  border: 1px solid var(--vf-zone-border);
+  padding: 6px;
+  position: absolute;
+  box-shadow: 2px 2px 3px 1px var(--vf-zone-shadow);
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+
+.zone-title {
+  position: absolute;
+  top: 2px;
+  left: 6px;
+}
+
+/* Zone backgrounds */
+.zone-1 { background-image: linear-gradient(135deg, var(--vf-zone1-from), var(--vf-zone-to)); }
+.zone-2 { background-image: linear-gradient(135deg, var(--vf-zone2-from), var(--vf-zone-to)); }
+.zone-3 { background-image: linear-gradient(135deg, var(--vf-zone3-from), var(--vf-zone-to)); }
+.zone-4 { background-image: linear-gradient(135deg, var(--vf-zone4-from), var(--vf-zone-to)); }
+.zone-5 { background-image: linear-gradient(135deg, var(--vf-zone5-from), var(--vf-zone-to)); }
+.zone-6 { background-image: linear-gradient(135deg, var(--vf-zone6-from), var(--vf-zone-to)); }
+
+/* Sub-zone backgrounds */
+.ov_bg   { background-image: linear-gradient(135deg, var(--vf-ov-from), var(--vf-zone-to)); }
+.cv_bg   { background-image: linear-gradient(135deg, var(--vf-cv-from), var(--vf-zone-to)); }
+.svcv_bg { background-image: linear-gradient(135deg, var(--vf-svcv-from), var(--vf-zone-to)); }
+.div_bg  { background-image: linear-gradient(135deg, var(--vf-div-from), var(--vf-zone-to)); }
+.sv_bg   { background-image: linear-gradient(135deg, var(--vf-sv-from), var(--vf-zone-to)); }
+
+/* ── SVG arrow overrides ───────────────────────────────── */
+/* Override inline stroke colors via CSS for theme support */
+.wrapper.theme-dark svg path[stroke="#000000"] { stroke: rgb(0,212,255); }
+.wrapper.theme-dark svg marker[id="blackArrow"] polygon { fill: rgb(0,212,255); }
+
+/* ── Dark theme: solid colors (no gradient) ────────────── */
+.wrapper.theme-dark.zone-1,
+.wrapper.theme-dark .zone-1,
+.wrapper.theme-dark.zone-2,
+.wrapper.theme-dark .zone-2,
+.wrapper.theme-dark.zone-3,
+.wrapper.theme-dark .zone-3,
+.wrapper.theme-dark.zone-4,
+.wrapper.theme-dark .zone-4,
+.wrapper.theme-dark.zone-5,
+.wrapper.theme-dark .zone-5,
+.wrapper.theme-dark.zone-6,
+.wrapper.theme-dark .zone-6,
+.wrapper.theme-dark .ov_bg,
+.wrapper.theme-dark .cv_bg,
+.wrapper.theme-dark .svcv_bg,
+.wrapper.theme-dark .div_bg,
+.wrapper.theme-dark .sv_bg,
+.wrapper.theme-dark .wrapper {
+  background-image: none !important;
+}
+.wrapper.theme-dark .wrapper { background-color: #18304f !important; }
+.wrapper.theme-dark .zone-1  { background-color: #2d4866 !important; }
+.wrapper.theme-dark .zone-2  { background-color: #33445a !important; }
+.wrapper.theme-dark .zone-3  { background-color: #304158 !important; }
+.wrapper.theme-dark .zone-4  { background-color: #323a52 !important; }
+.wrapper.theme-dark .zone-5  { background-color: #2f3f54 !important; }
+.wrapper.theme-dark .zone-6  { background-color: #313e5a !important; }
+.wrapper.theme-dark .ov_bg   { background-color: #363e58 !important; }
+.wrapper.theme-dark .cv_bg   { background-color: #2d425a !important; }
+.wrapper.theme-dark .svcv_bg { background-color: #2f3952 !important; }
+.wrapper.theme-dark .div_bg  { background-color: #343845 !important; }
+.wrapper.theme-dark .sv_bg   { background-color: #2e3c5a !important; }
+
+/* Zone positioning */
+.zone-1{ width: 160px; height: 280px; top: 90px; left: 12px; }
+.zone-2{ width: 430px; height: 315px; top: 90px; left: 180px; }
+.zone-3{ width: 285px; height: 450px; top: 88px; right: 20px; }
+.zone-4{ width: 160px; height: 280px; top: 385px; left: 12px; }
+.zone-5{ width: 425px; height: 345px; top: 423px; left: 187px; }
+.zone-6{ width: 280px; height: 200px; top: 560px; right: 20px; }
+
+.ziz { border-style: dashed; }
+
+.ziz_dbr{ width: 91px; height: 79px; top: 6px; left: 155px; }
+.ziz_abe{ width: 117px; height: 86px; top: 6px; right: 19px; }
+.ziz_dbpawf{ width: 173px; height: 103px; top: 90px; left: 85px; }
+.ziz_md{ width: 190px; height: 100px; top: 202px; right: 88px; }
+.ziz_tcrts{ width: 127px; height: 91px; top: 32px; left: 29px; }
+.ziz_ssaeos{ width: 92px; height: 149px; top: 210px; right: 4px; }
+.ziz_dfr{ width: 178px; height: 87px; top: 349px; left: 11px; }
+.ziz_dhr{ width: 92px; height: 79px; top: 29px; left: 7px; }
+.ziz_none{ width: 91px; height: 68px; top: 2px; right: 17px; }
+.ziz_ifsr{ width: 121px; height: 148px; top: 187px; left: 103px; }

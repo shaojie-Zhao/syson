@@ -11,6 +11,38 @@ const DARK2 = '#1e3366';
 const ACCENT = '#3b82f6';
 const BORDER = 'rgba(148,163,184,0.15)';
 
+// Dark theme colors for gantt-task-react (light theme overrides handled by transparency.css)
+const GANTT_COLORS = {
+  barBackgroundColor: '#475569',
+  barBackgroundCriticalColor: '#dc2626',
+  barBackgroundSelectedColor: '#64748b',
+  barBackgroundSelectedCriticalColor: '#ef4444',
+  barProgressColor: '#3b82f6',
+  barProgressCriticalColor: '#ef4444',
+  barProgressSelectedColor: '#60a5fa',
+  barProgressSelectedCriticalColor: '#f87171',
+  groupBackgroundColor: '#1e40af',
+  groupBackgroundCriticalColor: '#1e40af',
+  groupBackgroundSelectedColor: '#2563eb',
+  groupBackgroundSelectedCriticalColor: '#2563eb',
+  projectBackgroundColor: '#1e40af',
+  projectBackgroundCriticalColor: '#1e40af',
+  projectBackgroundSelectedColor: '#2563eb',
+  projectBackgroundSelectedCriticalColor: '#2563eb',
+  milestoneBackgroundColor: '#1e40af',
+  milestoneBackgroundCriticalColor: '#dc2626',
+  milestoneBackgroundSelectedColor: '#2563eb',
+  milestoneBackgroundSelectedCriticalColor: '#ef4444',
+  evenTaskBackgroundColor: 'rgba(255,255,255,0.03)',
+  holidayBackgroundColor: 'rgba(255,255,255,0.02)',
+  selectedTaskBackgroundColor: 'rgba(59,130,246,0.2)',
+  taskDragColor: '#6366f1',
+  todayColor: 'rgba(245,158,11,0.35)',
+  contextMenuBgColor: '#1e3366',
+  contextMenuTextColor: '#e2e8f0',
+  contextMenuBoxShadow: 'rgb(0 0 0 / 40%) 2px 2px 8px 2px',
+} as any;
+
 interface GT { id: string; parentId: string | null; name: string; description: string; startDate: string; endDate: string; progress: number; }
 
 const DoDAFGanttTimeline: React.FC = () => {
@@ -157,14 +189,21 @@ const DoDAFGanttTimeline: React.FC = () => {
     const d = task.end ? (typeof task.end === 'string' ? task.end : task.end.toISOString().slice(0, 10)) : '';
     return <div style={{ padding: '6px 8px', fontSize: 12, color: '#e2e8f0' }}>{d}</div>;
   };
+  const progressColor = (p: number) => {
+    const r = Math.round(239 - (p / 100) * 205);  // 239→34 (red→green)
+    const g = Math.round(68 + (p / 100) * 129);   // 68→197
+    const b = Math.round(68 - (p / 100) * 28);    // 68→40
+    return `rgb(${r},${g},${b})`;
+  };
+
   const ProgressCell: React.FC<any> = ({ data: { task } }) => {
     const t = tasks.find(x => x.id === task.id);
     const p = t ? t.progress : (task.progress || 0);
-    const c = colorFor(p);
+    const c = progressColor(p);
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 8px', height: '100%' }}>
         <div style={{ flex: 1, height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: p + '%', background: c, borderRadius: 3 }} />
+          <div style={{ height: '100%', width: p + '%', background: c, borderRadius: 3, transition: 'width 0.3s, background 0.3s' }} />
         </div>
         <span style={{ fontSize: 11, color: '#cbd5e1', minWidth: 28, textAlign: 'right' }}>{p}%</span>
       </div>
@@ -175,45 +214,46 @@ const DoDAFGanttTimeline: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: DARK, fontFamily: 'system-ui, sans-serif' }}>
       <style>{`
         :root { --gantt-bg: #19284F; --gantt-surface: #1e3366; --gantt-text: #e2e8f0; --gantt-muted: #94a3b8; --gantt-border: rgba(148,163,184,0.15); }
-        .gantt-task-react-wrapper, .gantt-task-react-wrapper * { font-family: system-ui, sans-serif !important; }
-        .gantt-task-react-wrapper { background: var(--gantt-bg) !important; }
-        .gantt-task-react-header { background: var(--gantt-surface) !important; }
-        .gantt-task-react-task-list { background: var(--gantt-bg) !important; }
-        .gantt-task-react-task-list__table { background: var(--gantt-bg) !important; }
-        .gantt-task-react-task-list__table-row { border-color: var(--gantt-border) !important; background: var(--gantt-bg) !important; }
-        .gantt-task-react-task-list__table-row:hover { background: rgba(255,255,255,0.04) !important; }
-        .gantt-task-react-task-list__cell { border-color: var(--gantt-border) !important; }
-        .gantt-task-react-task-list__header-cell { background: var(--gantt-surface) !important; color: #cbd5e1 !important; border-color: var(--gantt-border) !important; font-weight: 600 !important; font-size: 12px !important; text-transform: uppercase !important; letter-spacing: 0.3px !important; }
-        .gantt-task-react-task-list__header-cell * { color: #cbd5e1 !important; fill: #cbd5e1 !important; }
-        .gantt-task-react-weekend { fill: rgba(255,255,255,0.015) !important; }
-        .gantt-task-react-calendar__header-cell { fill: var(--gantt-surface) !important; color: #cbd5e1 !important; stroke: var(--gantt-border) !important; }
-        .gantt-task-react-calendar__grid-row-cell { stroke: rgba(148,163,184,0.06) !important; }
-        .gantt-task-react-calendar__grid-cell { stroke: rgba(148,163,184,0.06) !important; }
-        .gantt-task-react-calendar__grid-row-cell__weekend { fill: rgba(255,255,255,0.015) !important; }
-        .gantt-task-react-calendar__ticks { stroke: rgba(148,163,184,0.1) !important; }
-        .gantt-task-react-calendar__table-body { background: var(--gantt-bg) !important; }
-        .gantt-task-react-task-list__empty { background: var(--gantt-bg) !important; color: var(--gantt-muted) !important; }
-        .gantt-task-react-task-list__table-row__selected { background: #1e3366 !important; }
-        svg text, svg tspan, .gantt-task-react-calendar text { fill: #cbd5e1 !important; color: #cbd5e1 !important; }
-        .gantt-task-react-task-list__cell, .gantt-task-react-task-list__cell * { color: #e2e8f0 !important; }
-        .gantt-task-react-calendar__table-body text, .gantt-task-react-calendar__header-cell text { fill: #cbd5e1 !important; }
-        input, textarea, select { background: var(--gantt-surface) !important; color: #e2e8f0 !important; border-color: var(--gantt-border) !important; }
-        .gantt-task-react-task-list__table-row:nth-child(even) { background: var(--gantt-bg) !important; }
-        ._ganttTaskContent_1sr1d_41 > div,
-        [class*="_ganttTaskContent"] > div {
-          background-image: linear-gradient(transparent 50px, #19284F 50px) !important;
-        }
-        [class*="_ganttTaskContent"] > div > div {
-          background-image: linear-gradient(to right, rgba(148,163,184,0.06) 1px, transparent 1px), linear-gradient(transparent 50px, #19284F 50px) !important;
-        }
-        ._projectBackground_19i2s_6, [class*="_projectBackground"] { fill: #1e40af !important; }
-        ._projectTop_19i2s_11, [class*="_projectTop"] { fill: #1e40af !important; }
-        ._wrapper_1sr1d_54, [class*="_wrapper_"], [data-testid="gantt-main"] { height: 100% !important; }
-        ._ganttTaskContent_1sr1d_41, [class*="_ganttTaskContent"] { height: 100% !important; }
-        ._taskListContent_v4xjz_64, [class*="_taskListContent"] { height: 100% !important; }
-        ._taskListContent_v4xjz_64 > div, [class*="_taskListContent"] > div {
-          background-image: linear-gradient(transparent 50px, #19284F 50px) !important;
-        }
+        /* ── Reset library's default light styles ── */
+        #custom-gantt-wrapper [class*="_wrapper_"] { height: 100% !important; background: var(--gantt-bg) !important; }
+        #custom-gantt-wrapper [class*="_ganttTableRoot"] { background: var(--gantt-bg) !important; }
+        #custom-gantt-wrapper [class*="_ganttTableRoot"] tr { background: var(--gantt-bg) !important; border-color: var(--gantt-border) !important; }
+        #custom-gantt-wrapper [class*="_ganttTableRoot"] td { background: var(--gantt-bg) !important; border-color: var(--gantt-border) !important; color: var(--gantt-text) !important; }
+        #custom-gantt-wrapper [class*="_ganttTableRoot"] tr:hover { background: rgba(255,255,255,0.05) !important; }
+        #custom-gantt-wrapper [class*="_ganttTableRoot"] [class*="selected"] { background: var(--gantt-surface) !important; }
+        #custom-gantt-wrapper [class*="_ganttTable_Header"] { background: var(--gantt-surface) !important; }
+        #custom-gantt-wrapper [class*="_ganttTable_Header"] * { color: #cbd5e1 !important; fill: #cbd5e1 !important; }
+        #custom-gantt-wrapper [class*="_ganttTable_HeaderItem"] { color: #cbd5e1 !important; font-weight: 600 !important; font-size: 12px !important; text-transform: uppercase !important; letter-spacing: 0.3px !important; }
+        #custom-gantt-wrapper [class*="_ganttTable_HeaderSeparator"] { background: var(--gantt-border) !important; }
+        #custom-gantt-wrapper [class*="_taskListContent"] { height: 100% !important; }
+        #custom-gantt-wrapper [class*="_taskListContent"] > div { background-image: linear-gradient(transparent 50px, #19284F 50px) !important; }
+        #custom-gantt-wrapper [class*="_calendarHeader"] { fill: var(--gantt-surface) !important; background: var(--gantt-surface) !important; }
+        #custom-gantt-wrapper [class*="_calendarHeader"] text { fill: #cbd5e1 !important; }
+        #custom-gantt-wrapper [class*="_calendarMain"] { background: var(--gantt-bg) !important; }
+        #custom-gantt-wrapper [class*="_calendarTopText"] text, #custom-gantt-wrapper [class*="_calendarBottomText"] text { fill: #cbd5e1 !important; }
+        #custom-gantt-wrapper [class*="_calendarTopTick"] { stroke: var(--gantt-border) !important; }
+        #custom-gantt-wrapper [class*="_ganttTaskContent"] { height: 100% !important; }
+        #custom-gantt-wrapper [class*="_ganttTaskContent"] > div { background-image: linear-gradient(transparent 50px, #19284F 50px) !important; }
+        #custom-gantt-wrapper [class*="_ganttTaskContent"] > div > div { background-image: linear-gradient(to right, rgba(148,163,184,0.06) 1px, transparent 1px), linear-gradient(transparent 50px, #19284F 50px) !important; }
+        #custom-gantt-wrapper [class*="_projectBackground"] { fill: #1e40af !important; }
+        #custom-gantt-wrapper [class*="_projectTop"] { fill: #1e40af !important; }
+        #custom-gantt-wrapper [class*="_projectWrapper"] { background: transparent !important; }
+        /* SVG text in calendar/grid */
+        #custom-gantt-wrapper svg text, #custom-gantt-wrapper svg tspan { fill: #cbd5e1 !important; color: #cbd5e1 !important; }
+        /* Grid lines — ensure they are dark/subtle */
+        #custom-gantt-wrapper rect[class*="calendar"], #custom-gantt-wrapper line[class*="calendar"] { stroke: var(--gantt-border) !important; }
+        #custom-gantt-wrapper path[class*="weekend"], #custom-gantt-wrapper rect[class*="weekend"] { fill: rgba(255,255,255,0.02) !important; }
+        /* Styled input children */
+        #custom-gantt-wrapper input, #custom-gantt-wrapper textarea, #custom-gantt-wrapper select { background: var(--gantt-surface) !important; color: #e2e8f0 !important; border-color: var(--gantt-border) !important; }
+        #custom-gantt-wrapper [class*="empty"] { background: var(--gantt-bg) !important; color: var(--gantt-muted) !important; }
+        /* Even row striping */
+        #custom-gantt-wrapper [class*="_ganttTableRoot"] tr:nth-child(even) { background: var(--gantt-bg) !important; }
+        /* Tooltip */
+        #custom-gantt-wrapper [class*="TooltipContent"] { background: var(--gantt-surface) !important; color: var(--gantt-text) !important; border-color: var(--gantt-border) !important; }
+        /* Handle / drag */
+        #custom-gantt-wrapper [class*="barRelationHandle"] { background: transparent !important; }
+        /* Scroll corner & bottom text */
+        #custom-gantt-wrapper [class*="_calendarBottomText"] { fill: #cbd5e1 !important; }
       `}</style>
       {/* Toolbar */}
       <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: DARK2, borderBottom: '1px solid ' + BORDER, alignItems: 'center', flexShrink: 0 }}>
@@ -235,6 +275,7 @@ const DoDAFGanttTimeline: React.FC = () => {
       <div style={{ flex: 1, overflow: 'hidden' }}>
         {ganttTasks.length > 0 ? (
           <Gantt tasks={ganttTasks as any} viewMode={viewMode}
+            colors={GANTT_COLORS}
             columnWidth={viewMode === ViewMode.Year ? 350 : viewMode === ViewMode.Month ? 260 : viewMode === ViewMode.Week ? 200 : 120}
             columns={[
               { id: 'seq', Cell: SeqCell as any, width: 80, title: '序号' },

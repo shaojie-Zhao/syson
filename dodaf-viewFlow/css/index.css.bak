@@ -1,0 +1,162 @@
+@import "imgSize.css";
+@import "iconStyle.css";
+
+body{
+    font-size: 12px;
+    color: #000;
+    line-height: 1;
+}
+
+.wrapper {
+    width: 934px;
+    height: 785px;
+    border-radius: 16px;
+    border: 2px solid #333;
+    position: relative;
+    background-image: linear-gradient(135deg, #ffffcd, #fff);
+    margin: 30px auto;
+    box-shadow: 3px 3px 3px 1px #999;
+    padding: 0 12px;
+    box-sizing: border-box;
+}
+.bg_title{
+    position: absolute;
+    top: 2px;
+    left: 4px;
+}
+
+/* 分区通用样式 */
+.zone {
+    border: 1px solid #666;
+    padding: 6px;
+    position: absolute;
+    box-shadow: 2px 2px 3px 1px #999;
+    border-radius: 16px;
+    box-sizing: border-box;
+}
+
+.zone-title {
+    position: absolute;
+    top: 2px;
+    left: 6px;
+}
+.zone-1{
+    width: 160px;
+    height: 280px;
+    top: 90px;
+    left: 12px;
+    background-image: linear-gradient(135deg, #e8fce3, #fff);
+}
+.zone-2{
+    width: 430px;
+    height: 315px;
+    top: 90px;
+    left: 180px;
+    background-image: linear-gradient(135deg, #E8DEF7, #fff);
+}
+.zone-3{
+    width: 285px;
+    height: 450px;
+    top: 88px;
+    right: 20px;
+    background-image: linear-gradient(135deg, #FEB8B8, #fff);
+}
+.zone-4{
+    width: 160px;
+    height: 280px;
+    top: 385px;
+    left: 12px;
+    background-image: linear-gradient(135deg, #FFE2FE, #fff);
+}
+.zone-5{
+    width: 425px;
+    height: 345px;
+    top: 423px;
+    left: 187px;
+    background-image: linear-gradient(135deg, #FEE0BE, #fff);
+}
+.zone-6{
+    width: 280px;
+    height: 200px;
+    top: 560px;
+    right: 20px;
+    background-image: linear-gradient(135deg, #F2E0A8, #fff);
+}
+.ziz {
+    border-style: dashed;
+}
+.ov_bg{
+    background-image: linear-gradient(135deg, #D8D7FF, #fff);
+}
+.cv_bg{
+    background-image: linear-gradient(135deg, #DFFDD9, #fff);
+}
+.svcv_bg{
+    background-image: linear-gradient(135deg, #FF9D9C, #fff);
+}
+.div_bg{
+    background-image: linear-gradient(135deg, #D3D0C9, #fff);
+}
+.sv_bg{
+    background-image: linear-gradient(135deg, #FFCC9A, #fff);
+}
+.ziz_dbr{
+    width: 91px;
+    height: 79px;
+    top: 6px;
+    left: 155px;
+}
+.ziz_abe{
+    width: 117px;
+    height: 86px;
+    top: 6px;
+    right: 19px;
+}
+.ziz_dbpawf{
+    width: 173px;
+    height: 103px;
+    top: 90px;
+    left: 85px;
+}
+.ziz_md{
+    width: 190px;
+    height: 100px;
+    top: 202px;
+    right: 88px;
+}
+.ziz_tcrts{
+    width: 127px;
+    height: 91px;
+    top: 32px;
+    left: 29px;
+}
+.ziz_ssaeos{
+    width: 92px;
+    height: 149px;
+    top: 210px;
+    right: 4px;
+}
+.ziz_dfr{
+    width: 178px;
+    height: 87px;
+    top: 349px;
+    left: 11px;
+}
+.ziz_dhr{
+    width: 92px;
+    height: 79px;
+    top: 29px;
+    left: 7px;
+}
+.ziz_none{
+    width: 91px;
+    height: 68px;
+    top: 2px;
+    right: 17px;
+}
+.ziz_ifsr{
+    width: 121px;
+    height: 148px;
+    top: 187px;
+    left: 103px;
+}
