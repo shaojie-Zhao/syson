@@ -512,7 +512,7 @@
         if (w) {
           try { if (w.__matrixRoot) w.__matrixRoot.unmount(); } catch (e) {}
           // Restore the Sirius table we hid so the view can be re-injected / re-shown (avoids a blank pane).
-          try { if (w.__hiddenTable && w.__hiddenTable.isConnected) w.__hiddenTable.style.display = ''; } catch (e) {}
+          try { if (w.__hiddenTable && w.__hiddenTable.isConnected) { w.__hiddenTable.style.display = ''; w.__hiddenTable.classList.remove('matrix-hidden'); } } catch (e) {}
           w.remove();
         }
         matrixInjected = false;
@@ -549,18 +549,7 @@
         if (matrixInjected && !document.getElementById('matrix-wrapper')) matrixInjected = false;
         if (document.getElementById('rules-wrapper') || document.getElementById('prediction-wrapper')) return;
         // Always scan to skip standard tables, but don't double-inject
-        if (matrixInjected) {
-          // Check if the current table is a standard one — if so, teardown
-          var rep = document.querySelector('[data-testid="table-representation"]');
-          if (rep && rep.offsetParent !== null) {
-            var ths2 = rep.querySelectorAll('th');
-            for (var si2 = 0; si2 < ths2.length; si2++) {
-              var sst = ths2[si2].textContent;
-              if (sst === '名称' || sst === '类型' || sst === '描述') { teardownMatrix(); matrixInjected = false; return; }
-            }
-          }
-          return;
-        }
+        if (matrixInjected) return;
         if (window.location.pathname.indexOf('/projects/') < 0) return;
         var reps = document.querySelectorAll('[data-testid="table-representation"]');
         for (var r = 0; r < reps.length; r++) {
@@ -575,13 +564,7 @@
             if (t.indexOf('规则') >= 0 || t.indexOf('应用于') >= 0 || t.indexOf('技术和技能') >= 0 || t.indexOf('短期') >= 0) { isCustomTable = true; break; }
           }
           if (isCustomTable) continue;
-          // Skip standard Sirius Web tables (name/type/description headers, not our Matrix)
-          var isStdTable = false;
-          for (var si = 0; si < ths.length; si++) {
-            var st = ths[si].textContent;
-            if (st === '名称' || st === '类型' || st === '描述') { isStdTable = true; break; }
-          }
-          if (isStdTable) continue;
+          if (isCustomTable) continue;
           var table = rep.querySelector('.MuiTableContainer-root table') || rep.querySelector('table');
           var trCount = table ? table.querySelectorAll('tr').length : 0;
           if (trCount >= 2) { injectMatrix(rep); return; }
@@ -921,6 +904,7 @@
       var rulesInjected = false, predInjected = false;
       function injectCustomView(containerEl, wrapperId, renderFn) {
         containerEl.style.display = 'none';
+        var hc = document.getElementById('matrix-hide-css'); if (hc) hc.remove();
         var wrapper = document.createElement('div');
         wrapper.id = wrapperId;
         wrapper.style.cssText = 'height:100%;overflow:hidden';
@@ -938,8 +922,9 @@
         // Reset flags if wrapper was removed (tab closed)
         if (!document.getElementById('rules-wrapper')) rulesInjected = false;
         if (!document.getElementById('prediction-wrapper')) predInjected = false;
-        // Restore table visibility if wrapper is gone but table is hidden
-        if (!rulesInjected && !predInjected) {
+        // Restore table visibility if wrapper is gone but table is hidden (skip when matrix-wrapper present)
+        var mw2 = document.getElementById('matrix-wrapper');
+        if (!rulesInjected && !predInjected && !mw2) {
           var hiddenTable = document.querySelector('[data-testid="table-representation"]');
           if (hiddenTable && hiddenTable.style.display === 'none') hiddenTable.style.display = '';
         }
