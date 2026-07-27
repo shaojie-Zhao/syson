@@ -1,0 +1,278 @@
+.icon {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.icon img {
+    cursor: pointer;
+}
+.icon:hover img {
+    scale: 1.2;
+}
+.AV1 {
+    top: 15px;
+    left: 280px;
+}
+
+.AV2 {
+    top: 15px;
+    right: 85px;
+}
+
+.CV1 {
+    top: 28px;
+    left: 25px;
+}
+
+.CV2 {
+    top: 118px;
+    left: 25px;
+}
+
+.CV3 {
+    top: 218px;
+    left: 12px;
+}
+
+.CV4 {
+    top: 125px;
+    right: 12px;
+}
+
+.CV5 {
+    top: 233px;
+    left: 61px;
+}
+
+.CV6 {
+    top: 192px;
+    right: 49px;
+}
+
+.OV1 {
+    top: 118px;
+    left: 29px;
+}
+
+.OV2 {
+    top: 121px;
+    right: 108px;
+}
+
+.OV3 {
+    top: 95px;
+    right: 20px;
+}
+
+.OV6a {
+    top: 24px;
+    right: 23px;
+}
+
+.OV6b {
+    top: 30px;
+    left: 20px;
+}
+
+.OV6c {
+    right: 22px;
+    top: 30px;
+}
+
+.OV5a {
+    right: 39px;
+    top: 20px;
+}
+
+.OV5b {
+    left: 24px;
+    top: 25px;
+}
+
+.DIV1 {
+    left: 16px;
+    top: 30px;
+}
+
+.DIV2 {
+    left: 68px;
+    top: 28px;
+}
+
+.DIV3 {
+    right: 14px;
+    top: 30px;
+}
+
+.CV7 {
+    left: 46px;
+    top: 24px;
+}
+
+.SvcV1 {
+    left: 67px;
+    top: 144px;
+}
+
+.SvcV2 {
+    left: 11px;
+    top: 263px;
+}
+
+.SvcV3b {
+    left: 56px;
+    top: 32px;
+}
+
+.SvcV4 {
+    right: 26px;
+    top: 27px;
+}
+
+.SvcV5 {
+    left: 10px;
+    top: 218px;
+}
+
+.SvcV6 {
+    right: 47px;
+    top: 118px;
+}
+
+.SvcV7 {
+    right: 51px;
+    top: 59px;
+}
+
+.SvcV8 {
+    right: 106px;
+    top: 145px;
+}
+
+.SvcV9 {
+    left: 97px;
+    top: 241px;
+}
+
+.SvcV10a {
+    right: 41px;
+    top: 167px;
+}
+
+.SvcV10b {
+    left: 20px;
+    top: 48px;
+}
+
+.SvcV10c {
+    left: 20px;
+    top: 98px;
+}
+
+.PV1 {
+    right: 33px;
+    top: 88px;
+}
+
+.PV2 {
+    left: 23px;
+    top: 129px;
+}
+
+.PV3 {
+    right: 35px;
+    top: 18px;
+}
+
+.OV4 {
+    left: 33px;
+    top: 19px;
+}
+
+.SvcV3a {
+    left: 27px;
+    top: 17px;
+}
+
+.SV1 {
+    right: 145px;
+    top: 30px;
+}
+
+.SV2 {
+    left: 29px;
+    top: 139px;
+}
+
+.SV3 {
+    left: 166px;
+    top: 104px;
+}
+
+.SV4 {
+    left: 56px;
+    top: 100px;
+}
+
+.SV4FM {
+    left: 20px;
+    top: 20px;
+}
+
+.SV5a {
+    right: 92px;
+    top: 221px;
+}
+
+.SV5b {
+    left: 115px;
+    top: 34px;
+}
+
+.SV6 {
+    right: 17px;
+    top: 143px;
+}
+
+.SV7 {
+    left: 17px;
+    top: 221px;
+}
+
+.SV8 {
+    right: 178px;
+    top: 154px;
+}
+
+.SV9 {
+    right: 148px;
+    top: 154px;
+}
+
+.SV10a {
+    left: 48px;
+    top: 286px;
+}
+
+.SV10b {
+    right: 107px;
+    top: 154px;
+}
+
+.SV10c {
+    right: 67px;
+    top: 154px;
+}
+
+.StdV1 {
+    left: 40px;
+    top: 124px;
+}
+
+.StdV2 {
+    right: 66px;
+    top: 129px;
+}
+
+
