@@ -731,7 +731,7 @@
             i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
             h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
             h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">关系</div>';
-            i3.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            i3.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" data-rel="1" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
             h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
             h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
             i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
@@ -842,7 +842,62 @@
           document.body.appendChild(e);
           var inner = e.querySelector('div');
           if (inner) inner.style.background = '#111827';
-          e.querySelectorAll('.di').forEach(function(it){it.onmouseenter=function(){this.style.background='#102334'};it.onmouseleave=function(){this.style.background='transparent'};it.onclick=function(){var a=it.getAttribute('data-a'),n=it.getAttribute('data-n'),d=it.getAttribute('data-d');getCtxAndTarget(function(){createElement(a,n,d)});e.style.display='none'}}); }
+          e.querySelectorAll('.di').forEach(function(it){it.onmouseenter=function(){this.style.background='#102334'};it.onmouseleave=function(){this.style.background='transparent'};it.onclick=function(){var a=it.getAttribute('data-a'),n=it.getAttribute('data-n'),d=it.getAttribute('data-d'),rel=it.getAttribute('data-rel');if(rel==='1'){showRelDialog(n,d);e.style.display='none'}else{getCtxAndTarget(function(){createElement(a,n,d)});e.style.display='none'}}}); }
+        function showRelDialog(name, descId) {
+          var old = document.getElementById('rel-dialog');
+          if (old) old.remove();
+          var lifelines = [];
+          document.querySelectorAll('[data-testid*="Label content"]').forEach(function(l) {
+            if (l.textContent.indexOf('Lifeline') >= 0) lifelines.push(l.textContent.trim().split('\\n').pop().trim());
+          });
+          if (lifelines.length < 2) { alert('Need at least 2 Lifeline elements'); return; }
+          var dlg = document.createElement('div');
+          dlg.id = 'rel-dialog';
+          dlg.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6)';
+          var srcOpts = lifelines.map(function(l) { return '<option value="' + l + '">' + l + '</option>'; }).join('');
+          var tgtOpts = lifelines.map(function(l) { return '<option value="' + l + '">' + l + '</option>'; }).join('');
+          dlg.innerHTML = '<div style="background:#1e293b;border-radius:12px;padding:24px;min-width:360px;box-shadow:0 8px 30px rgba(0,0,0,0.5);color:#e2e8f0;font:13px system-ui,sans-serif">' +
+            '<h3 style="margin:0 0 16px;font-size:16px">' + name + '</h3>' +
+            '<div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:#94a3b8">Source</label><select id="rel-src" style="width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:#e2e8f0;padding:8px;font-size:13px">' + srcOpts + '</select></div>' +
+            '<div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:#94a3b8">Target</label><select id="rel-tgt" style="width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:#e2e8f0;padding:8px;font-size:13px">' + tgtOpts + '</select></div>' +
+            '<div style="display:flex;gap:8px;justify-content:flex-end"><button id="rel-cancel" style="background:#334155;color:#cbd5e1;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:12px">Cancel</button><button id="rel-ok" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 18px;cursor:pointer;font-size:12px">OK</button></div></div>';
+          document.body.appendChild(dlg);
+          if (lifelines.length > 1) dlg.querySelector('#rel-tgt').value = lifelines[1];
+          dlg.querySelector('#rel-cancel').onclick = function() { dlg.remove(); };
+          dlg.querySelector('#rel-ok').onclick = function() {
+            var src = dlg.querySelector('#rel-src').value;
+            var tgt = dlg.querySelector('#rel-tgt').value;
+            if (src === tgt) { alert('Source and target must be different'); return; }
+            // Find source/target lifeline nodes and their IDs
+            var srcId, tgtId, srcNode, tgtNode;
+            document.querySelectorAll('[data-svg="rect"]').forEach(function(nd) {
+              var lb = nd.querySelector('[data-testid*="Label content"]');
+              var rfNode = nd.closest('.react-flow__node');
+              if (lb && lb.textContent.indexOf(src) >= 0) { srcNode = nd; srcId = rfNode ? rfNode.getAttribute('data-id') : null; }
+              if (lb && lb.textContent.indexOf(tgt) >= 0) { tgtNode = nd; tgtId = rfNode ? rfNode.getAttribute('data-id') : null; }
+            });
+            dlg.remove();
+            if (srcNode && tgtNode) {
+              var sr = srcNode.getBoundingClientRect();
+              var tr = tgtNode.getBoundingClientRect();
+              _lastMenuX = (sr.left + sr.right + tr.left + tr.right) / 4;
+              _lastMenuY = (sr.bottom + tr.top) / 2;
+            }
+            var repId = getRepId();
+            console.log('[RelDialog] srcId='+srcId,'tgtId='+tgtId,'pid='+editingCtxId,'repId='+repId);
+            if (srcId && tgtId) {
+            if (srcId && tgtId) {
+              // Create Dependency element with client/supplier set to src/tgt
+              var u='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);});
+              fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:editingCtxId,childCreationDescriptionId:'SysMLv2EditService-Dependency:'+name}}})}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] edge create:',JSON.stringify(d));var s=d&&d.data&&d.data.createChild&&d.data.createChild.object;if(s&&s.id){
+                // Set client=srcId, supplier=tgtId to form the edge
+                return fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'mutation set($i:DropOnDiagramInput!){dropOnDiagram(input:$i){__typename ... on DropOnDiagramSuccessPayload{id}... on ErrorPayload{message}}}',variables:{i:{id:crypto.randomUUID(),editingContextId:editingCtxId,representationId:repId,objectIds:[s.id],startingPositionX:0,startingPositionY:0,diagramTargetElementId:srcId}}})}).then(function(r2){return r2.json()}).then(function(d2){console.log('[DoDAF] edge drop:',JSON.stringify(d2))});
+              }});
+            }
+            }
+          };
+          dlg.onclick = function(e) { if (e.target === dlg) dlg.remove(); };
+        }
         function intercept(e){if(!isDoDAFv2())return;var t=e.target;if(t.closest('.react-flow__node')||t.closest('button')||t.closest('input')||t.closest('[class*="explorer"]')||t.closest('[class*="sidebar"]')||t.closest('[class*="tree"]'))return;if(!t.closest('#mainArea')&&!t.closest('[data-testid="representation-area"]')&&!t.closest('.react-flow__viewport')&&!t.closest('.react-flow__pane'))return;if(document.querySelector('[class*="gantt"]')||document.querySelector('[class*="Gantt"]')||document.querySelector('[data-testid*="gantt"]')||document.querySelector('[data-testid*="Gantt"]'))return;if(document.querySelector('[data-testid="table-representation"]')||document.getElementById('rules-wrapper'))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();_viewName = null; targetObjId = null; getCtxAndTarget(function(){show(e.clientX,e.clientY)})}
         window.addEventListener('contextmenu',intercept,true);
         document.addEventListener('click',function(ev){var e=document.getElementById('dodaf-ctx');if(e&&!ev.target.closest('#dodaf-ctx'))e.style.display='none'});
