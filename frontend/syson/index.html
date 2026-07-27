@@ -564,7 +564,10 @@
             if (t.indexOf('规则') >= 0 || t.indexOf('应用于') >= 0 || t.indexOf('技术和技能') >= 0 || t.indexOf('短期') >= 0) { isCustomTable = true; break; }
           }
           if (isCustomTable) continue;
-          if (isCustomTable) continue;
+          // Only inject Matrix for views with "矩阵"/"追溯"/"映射" in tab name
+          var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
+          var tabName = tab ? (tab.textContent || '') : '';
+          if (tabName.indexOf('矩阵') < 0 && tabName.indexOf('追溯') < 0 && tabName.indexOf('映射') < 0) continue;
           var table = rep.querySelector('.MuiTableContainer-root table') || rep.querySelector('table');
           var trCount = table ? table.querySelectorAll('tr').length : 0;
           if (trCount >= 2) { injectMatrix(rep); return; }
@@ -890,8 +893,36 @@
               var fullName = nextName(name);
               var desc = (descId||'SysMLv2EditService-PartUsage')+':'+fullName;
               var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);});
-              var body = JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:editingCtxId,childCreationDescriptionId:desc}}});
-              fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] edge create:',JSON.stringify(d));var s=d&&d.data&&d.data.createChild&&d.data.createChild.object;if(s&&s.id){var body2=JSON.stringify({query:'mutation d($i:DropOnDiagramInput!){dropOnDiagram(input:$i){__typename ... on DropOnDiagramSuccessPayload{id}... on ErrorPayload{message}}}',variables:{i:{id:crypto.randomUUID(),editingContextId:editingCtxId,representationId:repId,objectIds:[s.id],startingPositionX:0,startingPositionY:0,diagramTargetElementId:srcId}}});return fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body2}).then(function(r2){return r2.json()}).then(function(d2){console.log('[DoDAF] edge drop:',JSON.stringify(d2))})}});
+              var pid = targetObjId || editingCtxId;
+              var body = JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:pid,childCreationDescriptionId:desc}}});
+              fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] edge create:',JSON.stringify(d));var s=d&&d.data&&d.data.createChild&&d.data.createChild.object;if(s&&s.id){
+                var body2=JSON.stringify({query:'mutation d($i:DropOnDiagramInput!){dropOnDiagram(input:$i){__typename ... on DropOnDiagramSuccessPayload{id}... on ErrorPayload{message}}}',variables:{i:{id:crypto.randomUUID(),editingContextId:editingCtxId,representationId:repId,objectIds:[s.id],startingPositionX:0,startingPositionY:0,diagramTargetElementId:''}}});
+                fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body2}).then(function(r2){return r2.json()}).then(function(d2){console.log('[DoDAF] edge drop:',JSON.stringify(d2))});
+                // Draw DOM overlay dashed line between source and target
+                setTimeout(function() {
+                  if (srcNode && tgtNode) {
+                    var oldOverlay = document.querySelector('[data-rel-msg="'+name+'"]');
+                    if (oldOverlay) oldOverlay.remove();
+                    var overlay = document.createElement('div');
+                    overlay.setAttribute('data-rel-msg', name);
+                    overlay.style.cssText = 'position:fixed;pointer-events:none;z-index:9000;border-left:2px dashed #3b82f6;transform-origin:top left';
+                    var sr2 = srcNode.getBoundingClientRect();
+                    var tr2 = tgtNode.getBoundingClientRect();
+                    var x1 = sr2.left + sr2.width / 2;
+                    var y1 = sr2.bottom;
+                    var x2 = tr2.left + tr2.width / 2;
+                    var y2 = tr2.top;
+                    var dx = x2 - x1, dy = y2 - y1;
+                    var len = Math.sqrt(dx*dx + dy*dy);
+                    var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    overlay.style.left = x1 + 'px';
+                    overlay.style.top = y1 + 'px';
+                    overlay.style.height = len + 'px';
+                    overlay.style.transform = 'rotate(' + (angle - 90) + 'deg)';
+                    document.body.appendChild(overlay);
+                  }
+                }, 200);
+              }});
             }
           };
           dlg.onclick = function(e) { if (e.target === dlg) dlg.remove(); };
@@ -902,6 +933,14 @@
       })();
       // ===== Custom DoDAF Rules & Prediction View injection =====
       var rulesInjected = false, predInjected = false;
+      function hideRightPanel() {
+        var rp = document.getElementById('right');
+        if (rp) { rp.style.flex = '0 0 0px'; rp.style.maxWidth = '0px'; rp.style.minWidth = '0px'; rp.style.overflow = 'hidden'; }
+        var sr = document.querySelector('[data-testid="site-right"]');
+        if (sr) sr.style.display = 'none';
+        var rr = document.querySelector('[data-testid="right-resizer"]');
+        if (rr) rr.style.display = 'none';
+      }
       function injectCustomView(containerEl, wrapperId, renderFn) {
         containerEl.style.display = 'none';
         var hc = document.getElementById('matrix-hide-css'); if (hc) hc.remove();
