@@ -538,8 +538,6 @@
       function scanForMatrix() {
         var w = document.getElementById('matrix-wrapper');
         // If the active representation changed (switched/reopened), tear down the stale matrix immediately
-        // so its previous content cannot flash before the new one is injected (also properly unmounts the root).
-        // Guard: only when BOTH ids are known and differ, so a transient empty id can't tear down a fresh view.
         var repNow = currentMatrixRepId();
         var repWas = w ? w.getAttribute('data-repid') : '';
         if (w && repWas && repNow && repWas !== repNow) { teardownMatrix(); w = null; }
@@ -555,17 +553,26 @@
           var rep = reps[r];
           if (rep.offsetParent === null) continue;
           if (rep.closest('[class*="ganttContainer"], [class*="explorer"], [class*="sidebar"], [class*="tree"]')) continue;
-          // Skip Rules / Prediction tables
+          // Skip Rules / Prediction tables by column header content
           var ths = rep.querySelectorAll('th');
           var isCustomTable = false;
           for (var hi = 0; hi < ths.length; hi++) {
-            var t = ths[hi].textContent;
+            var t = ths[hi].textContent || '';
             if (t.indexOf('规则') >= 0 || t.indexOf('应用于') >= 0 || t.indexOf('技术和技能') >= 0 || t.indexOf('短期') >= 0) { isCustomTable = true; break; }
           }
           if (isCustomTable) continue;
+          // Check if this table contains "PartUsage" type cells (DoDAF matrix backing relations)
+          // which should always be rendered as the custom matrix view instead of the Sirius Web default table
+          var isMatrixTable = false;
+          var tds = rep.querySelectorAll('td, .MuiBox-root');
+          for (var ti = 0; ti < tds.length; ti++) {
+            var ct = tds[ti].textContent || '';
+            if (ct === 'PartUsage' || ct.indexOf('PartUsage') === 0) { isMatrixTable = true; break; }
+          }
           var table = rep.querySelector('.MuiTableContainer-root table') || rep.querySelector('table');
           var trCount = table ? table.querySelectorAll('tr').length : 0;
-          if (trCount >= 2) { injectMatrix(rep); return; }
+          // Inject if: (a) non-custom table with >= 2 rows, OR (b) matrix data detected
+          if (trCount >= 2 || isMatrixTable) { injectMatrix(rep); return; }
         }
       }
       setInterval(function() { scanForMatrix(); }, 200);
