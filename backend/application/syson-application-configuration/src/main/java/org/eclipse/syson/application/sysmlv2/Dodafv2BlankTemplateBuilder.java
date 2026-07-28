@@ -16,6 +16,12 @@ public class Dodafv2BlankTemplateBuilder {
         r.getContents().add(ns);
         var root = pkg(null, "DoDAFv2-Blank");
         add(ns, root);
+        // Add a DoDAF marker element so isDoDAFProject detects the blank template
+        var marker = SysmlFactory.eINSTANCE.createPartUsage();
+        marker.setDeclaredName("DoDAFv2_Marker");
+        marker.setElementId(uuid(marker));
+        marker.getAliasIds().add("dodaf:blank");
+        add(root, marker);
 
         // AV (2)
         var navPkg = pkg(root, "全视图导航");
