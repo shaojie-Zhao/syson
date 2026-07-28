@@ -1137,6 +1137,14 @@
               imgA.alt = 'Target';
             }
           }
+          // --- Performer ---
+          else if (txt.indexOf('Performer') >= 0) {
+            var imgB = n.querySelector('img');
+            if (imgB && imgB.src.indexOf('Performer') < 0) {
+              imgB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><circle cx="8" cy="5" r="2.5" fill="#3b82f6"/><path d="M3 13c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5" fill="none" stroke="#3b82f6" stroke-width="1.2"/></svg>');
+              imgB.alt = 'Performer';
+            }
+          }
           // --- Vision ---
           else if (txt.indexOf('Vision') >= 0) {
             var img8 = n.querySelector('img');
@@ -1217,6 +1225,14 @@
             if (imgA && imgA.src.indexOf('Target') < 0) {
               imgA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f97316" stroke-width="1"/><circle cx="8" cy="8" r="1.5" fill="#f97316"/><line x1="8" y1="1" x2="8" y2="4" stroke="#f97316" stroke-width="1"/><line x1="8" y1="12" x2="8" y2="15" stroke="#f97316" stroke-width="1"/><line x1="1" y1="8" x2="4" y2="8" stroke="#f97316" stroke-width="1"/><line x1="12" y1="8" x2="15" y2="8" stroke="#f97316" stroke-width="1"/></svg>');
               it.setAttribute('data-tg-icon', '1');
+            }
+          }
+          // Performer tree icon
+          if (it.getAttribute('data-pf-icon') !== '1' && label.textContent.indexOf('Performer') >= 0) {
+            var imgB = it.querySelector('img');
+            if (imgB && imgB.src.indexOf('Performer') < 0) {
+              imgB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><circle cx="8" cy="5" r="2.5" fill="#3b82f6"/><path d="M3 13c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5" fill="none" stroke="#3b82f6" stroke-width="1.2"/></svg>');
+              it.setAttribute('data-pf-icon', '1');
             }
           }
           // Vision tree icon
