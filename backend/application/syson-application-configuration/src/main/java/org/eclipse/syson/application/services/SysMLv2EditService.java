@@ -225,7 +225,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 else alias = "dodaf:Message";
                 System.err.println("=== SEQUENCE-ELEMENT: setting alias " + alias);
                 if (eObject instanceof Element created) setAlias(created, alias);
-            } else if (childCreationDescriptionId.contains("OperationCapability") || childCreationDescriptionId.contains("OperationalCapability")) {
+            } else if (childCreationDescriptionId.contains("OperationalCapability")) {
                 System.err.println("=== OP-CAP: setting alias dodaf:OperationalCapability");
                 if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalCapability");
             } else if (eObject instanceof Element created && this.isDoDAFProject(container)) {
@@ -432,7 +432,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             String aliasedId = n.isEmpty() ? childCreationDescriptionId : childCreationDescriptionId.substring(0, childCreationDescriptionId.lastIndexOf(':'));
             // Map by menu item base name (strip trailing numbers from auto-numbering)
             if (n.startsWith("Capability")) setAlias(element, "dodaf:capability");
-            else if (n.startsWith("OperationCapability") || n.startsWith("OperationalCapability")) setAlias(element, "dodaf:OperationalCapability");
+            else if (n.startsWith("OperationalCapability")) setAlias(element, "dodaf:OperationalCapability");
             else if (n.startsWith("EquipCapability")) setAlias(element, "dodaf:EquipCapability");
             else if (n.startsWith("Lifeline")) setAlias(element, "dodaf:Lifeline");
             else if (n.startsWith("OperationalNode")) setAlias(element, "dodaf:operational");
