@@ -1078,8 +1078,8 @@
               img2.src = 'http://localhost:8080/icons/full/obj16/OperationalCapability.svg';
               img2.alt = 'OperationalCapability';
             }
-            var r = n.querySelector('[data-svg="rect"]') || n.querySelector('rect');
-            if (r) { r.setAttribute('stroke', '#f59e0b'); r.setAttribute('stroke-width', '2'); }
+            var r = n.querySelector('rect') || n;
+            if (r) { r.setAttribute('stroke', '#f59e0b'); r.setAttribute('stroke-width', '2.5'); }
           }
         }
       }
@@ -1087,7 +1087,7 @@
 
       // Replace Lifeline icon in Explorer tree
       function fixLifelineTreeIcons() {
-        var items = document.querySelectorAll('[data-treeitemid]');
+        var items = document.querySelectorAll('[data-treeitemid], [class*="MuiTreeItem-root"], li[role="treeitem"]');
         for (var i = 0; i < items.length; i++) {
           var it = items[i];
           if (it.getAttribute('data-lifeline-icon') === '1') continue;
