@@ -215,3 +215,76 @@
 > - `node` → 显示《Node》
 > - `organization` → 显示《Organization》
 > - `requirement` → 显示《Constraint》
+
+---
+
+## 新增 DoDAF 元素类型完整指南（参考 OperationalCapability）
+
+### 涉及文件（5个）
+
+| # | 文件 | 修改内容 |
+|---|------|---------|
+| 1 | `SysMLv2EditService.java` | createChild() 和 tagDoDAFAlias() 添加别名映射 |
+| 2 | `MultiLineLabelSwitch.java` | getDodafStereotype() 添加别名→标签映射 |
+| 3 | `icons/full/obj16/Xxx.svg` | 画布图标 SVG |
+| 4 | `images/Xxx.svg` | 备用图标 SVG |
+| 5 | `frontend/syson/index.html` | 右键菜单项 + JS 图标替换 |
+
+### 步骤详解
+
+#### 1. 后端别名 (`SysMLv2EditService.java`)
+```java
+// A) createChild() 约第228行，Lifeline/Message 分支后加
+} else if (childCreationDescriptionId.contains("NewTypeName")) {
+    if (eObject instanceof Element created) setAlias(created, "dodaf:NewTypeName");
+
+// B) tagDoDAFAlias() PartDefinition 分支
+else if (n.startsWith("NewTypeName")) setAlias(element, "dodaf:NewTypeName");
+```
+
+#### 2. 标签显示 (`MultiLineLabelSwitch.java`)
+```java
+// getDodafStereotype() 方法中
+} else if (element.getAliasIds().contains("dodaf:NewTypeName")) {
+    return "NewTypeName";
+```
+
+#### 3. SVG 图标
+- 路径：`icons/full/obj16/NewTypeName.svg` + `images/NewTypeName.svg`
+- 画布尺寸 16x16，设计独特颜色和图形
+- 已用颜色：`#f59e0b`(OperationalCapability)、默认(无)
+
+#### 4. 前端菜单 (`index.html`)
+```javascript
+// 各视图 i1 数组中
+{l:'中文名(NewTypeName)', a:'capability', n:'NewTypeName', d:'SysMLv2EditService-PartDefinition'}
+//                                     ↑alias分类        ↑后端匹配名
+// l: 菜单显示    a: capability→标签前缀   n: 后端startsWith匹配
+// d: SysMLv2EditService-PartDefinition = PartDefinition
+// d: SysMLv2EditService-PartUsage = PartUsage
+```
+
+#### 5. 前端 JS 图标替换 (`index.html`)
+```javascript
+// A) styleLifelines() — 画布图标
+else if (txt.indexOf('NewTypeName') >= 0) {
+    img.src = 'http://localhost:8080/icons/full/obj16/NewTypeName.svg';
+}
+
+// B) fixLifelineTreeIcons() — 树图标
+if (label.textContent.indexOf('NewTypeName') >= 0) {
+    img2.src = 'http://localhost:8080/icons/full/obj16/NewTypeName.svg';
+}
+```
+
+### 数据流
+```
+右键菜单 data-n="NewTypeName"
+  → createChild(childCreationDescriptionId="SysMLv2EditService-PartDefinition:NewTypeName1")
+    → setAlias(element, "dodaf:NewTypeName")     [SysMLv2EditService]
+    → dropOnDiagram                               [Sirius Web]
+      → MultiLineLabelSwitch.getDodafStereotype() 返回 "NewTypeName"
+        → 画布显示《NewTypeName》
+      → styleLifelines() 替换图标                  [前端JS]
+      → fixLifelineTreeIcons() 替换树图标          [前端JS]
+```
