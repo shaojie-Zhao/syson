@@ -1105,6 +1105,14 @@
               img5.alt = 'TimeScale';
             }
           }
+          // --- TaskIntent ---
+          else if (txt.indexOf('TaskIntent') >= 0) {
+            var img6 = n.querySelector('img');
+            if (img6 && img6.src.indexOf('TaskIntent') < 0) {
+              img6.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f43f5e" stroke-width="1.5"/><circle cx="8" cy="8" r="3" fill="none" stroke="#f43f5e" stroke-width="1"/><circle cx="8" cy="8" r="1.2" fill="#f43f5e"/></svg>');
+              img6.alt = 'TaskIntent';
+            }
+          }
         }
       }
       setInterval(styleLifelines, 300);
@@ -1145,6 +1153,14 @@
             if (img5 && img5.src.indexOf('TimeScale') < 0) {
               img5.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="7" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><line x1="8" y1="8" x2="8" y2="4" stroke="#06b6d4" stroke-width="1.5"/><line x1="8" y1="8" x2="11" y2="8" stroke="#06b6d4" stroke-width="1"/></svg>');
               it.setAttribute('data-tsc-icon', '1');
+            }
+          }
+          // TaskIntent tree icon
+          if (it.getAttribute('data-ti-icon') !== '1' && label.textContent.indexOf('TaskIntent') >= 0) {
+            var img6 = it.querySelector('img');
+            if (img6 && img6.src.indexOf('TaskIntent') < 0) {
+              img6.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f43f5e" stroke-width="1.5"/><circle cx="8" cy="8" r="3" fill="none" stroke="#f43f5e" stroke-width="1"/><circle cx="8" cy="8" r="1.2" fill="#f43f5e"/></svg>');
+              it.setAttribute('data-ti-icon', '1');
             }
           }
           // OperationalCapability tree icon
