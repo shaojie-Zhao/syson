@@ -228,6 +228,12 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             } else if (childCreationDescriptionId.contains("OperationalCapability")) {
                 System.err.println("=== OP-CAP: setting alias dodaf:OperationalCapability");
                 if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalCapability");
+            } else if (childCreationDescriptionId.contains("TaskStage")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:TaskStage");
+            } else if (childCreationDescriptionId.contains("EquipCapability")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:EquipCapability");
+            } else if (childCreationDescriptionId.contains("TimeScale")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:TimeScale");
             } else if (eObject instanceof Element created && this.isDoDAFProject(container)) {
                 this.tagDoDAFAlias(created, childCreationDescriptionId);
             }
@@ -433,6 +439,8 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             // Map by menu item base name (strip trailing numbers from auto-numbering)
             if (n.startsWith("Capability")) setAlias(element, "dodaf:capability");
             else if (n.startsWith("OperationalCapability")) setAlias(element, "dodaf:OperationalCapability");
+            else if (n.startsWith("TaskStage")) setAlias(element, "dodaf:TaskStage");
+            else if (n.startsWith("TimeScale")) setAlias(element, "dodaf:TimeScale");
             else if (n.startsWith("EquipCapability")) setAlias(element, "dodaf:EquipCapability");
             else if (n.startsWith("Lifeline")) setAlias(element, "dodaf:Lifeline");
             else if (n.startsWith("OperationalNode")) setAlias(element, "dodaf:operational");

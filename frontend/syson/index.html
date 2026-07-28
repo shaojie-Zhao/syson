@@ -1081,6 +1081,30 @@
             var r = n.querySelector('rect') || n;
             if (r) { r.setAttribute('stroke', '#f59e0b'); r.setAttribute('stroke-width', '2.5'); }
           }
+          // --- TaskStage ---
+          else if (txt.indexOf('TaskStage') >= 0) {
+            var img3 = n.querySelector('img');
+            if (img3 && img3.src.indexOf('TaskStage') < 0) {
+              img3.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="12" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="4" width="3" height="3" fill="#8b5cf6"/><rect x="7" y="4" width="3" height="3" fill="#8b5cf6"/><rect x="11" y="4" width="3" height="3" fill="#8b5cf6"/><rect x="3" y="9" width="7" height="3" rx="1" fill="#a78bfa"/></svg>');
+              img3.alt = 'TaskStage';
+            }
+          }
+          // --- EquipCapability ---
+          else if (txt.indexOf('EquipCapability') >= 0) {
+            var img4 = n.querySelector('img');
+            if (img4 && img4.src.indexOf('EquipCapability') < 0) {
+              img4.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><circle cx="8" cy="5" r="2.5" fill="#10b981"/><rect x="3" y="8" width="10" height="3" rx="1" fill="#34d399"/></svg>');
+              img4.alt = 'EquipCapability';
+            }
+          }
+          // --- TimeScale ---
+          else if (txt.indexOf('TimeScale') >= 0) {
+            var img5 = n.querySelector('img');
+            if (img5 && img5.src.indexOf('TimeScale') < 0) {
+              img5.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="7" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><line x1="8" y1="8" x2="8" y2="4" stroke="#06b6d4" stroke-width="1.5"/><line x1="8" y1="8" x2="11" y2="8" stroke="#06b6d4" stroke-width="1"/></svg>');
+              img5.alt = 'TimeScale';
+            }
+          }
         }
       }
       setInterval(styleLifelines, 300);
@@ -1097,6 +1121,30 @@
             if (img && img.src.indexOf('lifeline') < 0 && img.src.indexOf('PartDefinition') >= 0) {
               img.src = 'http://localhost:8080/images/lifeline.svg';
               it.setAttribute('data-lifeline-icon', '1');
+            }
+          }
+          // TaskStage tree icon
+          if (it.getAttribute('data-ts-icon') !== '1' && label.textContent.indexOf('TaskStage') >= 0) {
+            var img3 = it.querySelector('img');
+            if (img3 && img3.src.indexOf('TaskStage') < 0) {
+              img3.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="12" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="4" width="3" height="3" fill="#8b5cf6"/><rect x="7" y="4" width="3" height="3" fill="#8b5cf6"/><rect x="11" y="4" width="3" height="3" fill="#8b5cf6"/><rect x="3" y="9" width="7" height="3" rx="1" fill="#a78bfa"/></svg>');
+              it.setAttribute('data-ts-icon', '1');
+            }
+          }
+          // EquipCapability tree icon
+          if (it.getAttribute('data-ec-icon') !== '1' && label.textContent.indexOf('EquipCapability') >= 0) {
+            var img4 = it.querySelector('img');
+            if (img4 && img4.src.indexOf('EquipCapability') < 0) {
+              img4.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><circle cx="8" cy="5" r="2.5" fill="#10b981"/><rect x="3" y="8" width="10" height="3" rx="1" fill="#34d399"/></svg>');
+              it.setAttribute('data-ec-icon', '1');
+            }
+          }
+          // TimeScale tree icon
+          if (it.getAttribute('data-tsc-icon') !== '1' && label.textContent.indexOf('TimeScale') >= 0) {
+            var img5 = it.querySelector('img');
+            if (img5 && img5.src.indexOf('TimeScale') < 0) {
+              img5.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="7" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><line x1="8" y1="8" x2="8" y2="4" stroke="#06b6d4" stroke-width="1.5"/><line x1="8" y1="8" x2="11" y2="8" stroke="#06b6d4" stroke-width="1"/></svg>');
+              it.setAttribute('data-tsc-icon', '1');
             }
           }
           // OperationalCapability tree icon

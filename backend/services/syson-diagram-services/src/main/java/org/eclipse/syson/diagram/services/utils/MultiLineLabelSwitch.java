@@ -101,6 +101,10 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "Capability";
         } else if (element.getAliasIds().contains("dodaf:OperationalCapability")) {
             return "OperationalCapability";
+        } else if (element.getAliasIds().contains("dodaf:TaskStage")) {
+            return "TaskStage";
+        } else if (element.getAliasIds().contains("dodaf:TimeScale")) {
+            return "TimeScale";
         } else if (element.getAliasIds().contains("dodaf:EquipCapability")) {
             return "EquipCapability";
         } else if (element.getAliasIds().contains("dodaf:Lifeline")) {
