@@ -1129,6 +1129,14 @@
               img9.alt = 'VisionDescription';
             }
           }
+          // --- Target ---
+          else if (txt.indexOf('Target') >= 0) {
+            var imgA = n.querySelector('img');
+            if (imgA && imgA.src.indexOf('Target') < 0) {
+              imgA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f97316" stroke-width="1"/><circle cx="8" cy="8" r="1.5" fill="#f97316"/><line x1="8" y1="1" x2="8" y2="4" stroke="#f97316" stroke-width="1"/><line x1="8" y1="12" x2="8" y2="15" stroke="#f97316" stroke-width="1"/><line x1="1" y1="8" x2="4" y2="8" stroke="#f97316" stroke-width="1"/><line x1="12" y1="8" x2="15" y2="8" stroke="#f97316" stroke-width="1"/></svg>');
+              imgA.alt = 'Target';
+            }
+          }
           // --- Vision ---
           else if (txt.indexOf('Vision') >= 0) {
             var img8 = n.querySelector('img');
@@ -1201,6 +1209,14 @@
             if (img9 && img9.src.indexOf('VisionDescription') < 0) {
               img9.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="4" y="3" width="8" height="2" rx="0.5" fill="#14b8a6"/><line x1="4" y1="7" x2="12" y2="7" stroke="#14b8a6" stroke-width="1"/><line x1="4" y1="9" x2="10" y2="9" stroke="#14b8a6" stroke-width="0.8"/><line x1="4" y1="11" x2="11" y2="11" stroke="#14b8a6" stroke-width="0.8"/></svg>');
               it.setAttribute('data-vd-icon', '1');
+            }
+          }
+          // Target tree icon
+          if (it.getAttribute('data-tg-icon') !== '1' && label.textContent.indexOf('Target') >= 0) {
+            var imgA = it.querySelector('img');
+            if (imgA && imgA.src.indexOf('Target') < 0) {
+              imgA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f97316" stroke-width="1"/><circle cx="8" cy="8" r="1.5" fill="#f97316"/><line x1="8" y1="1" x2="8" y2="4" stroke="#f97316" stroke-width="1"/><line x1="8" y1="12" x2="8" y2="15" stroke="#f97316" stroke-width="1"/><line x1="1" y1="8" x2="4" y2="8" stroke="#f97316" stroke-width="1"/><line x1="12" y1="8" x2="15" y2="8" stroke="#f97316" stroke-width="1"/></svg>');
+              it.setAttribute('data-tg-icon', '1');
             }
           }
           // Vision tree icon
