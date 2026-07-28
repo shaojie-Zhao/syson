@@ -1121,6 +1121,14 @@
               img7.alt = 'ImplementationPhase';
             }
           }
+          // --- Vision ---
+          else if (txt.indexOf('Vision') >= 0) {
+            var img8 = n.querySelector('img');
+            if (img8 && img8.src.indexOf('Vision') < 0) {
+              img8.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 10,6 14,7 11,10 12,14 8,12 4,14 5,10 2,7 6,6" fill="#eab308"/></svg>');
+              img8.alt = 'Vision';
+            }
+          }
         }
       }
       setInterval(styleLifelines, 300);
@@ -1177,6 +1185,14 @@
             if (img7 && img7.src.indexOf('ImplementationPhase') < 0) {
               img7.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/><path d="M4 8h7M10 5l3 3-3 3" fill="none" stroke="#6366f1" stroke-width="1.5"/></svg>');
               it.setAttribute('data-ip-icon', '1');
+            }
+          }
+          // Vision tree icon
+          if (it.getAttribute('data-vi-icon') !== '1' && label.textContent.indexOf('Vision') >= 0) {
+            var img8 = it.querySelector('img');
+            if (img8 && img8.src.indexOf('Vision') < 0) {
+              img8.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 10,6 14,7 11,10 12,14 8,12 4,14 5,10 2,7 6,6" fill="#eab308"/></svg>');
+              it.setAttribute('data-vi-icon', '1');
             }
           }
           // OperationalCapability tree icon
