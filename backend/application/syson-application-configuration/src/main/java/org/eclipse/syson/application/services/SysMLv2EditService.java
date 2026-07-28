@@ -216,7 +216,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             }
             new ElementInitializerSwitch().doSwitch(eObject);
             // Tag DoDAF elements with appropriate aliasId
-            System.err.println("=== CREATE-CHILD: descId=" + childCreationDescriptionId + " isEl=" + (eObject instanceof Element));
+            System.err.println("=== CREATE-CHILD: descId=" + childCreationDescriptionId + " isEl=" + (eObject instanceof Element) + " isDoDAF=" + this.isDoDAFProject(container));
             if (childCreationDescriptionId.contains("Lifeline") || childCreationDescriptionId.contains("CombinedFragment") || childCreationDescriptionId.contains("StateInvariant") || childCreationDescriptionId.contains("Message")) {
                 String alias;
                 if (childCreationDescriptionId.contains("Lifeline")) alias = "dodaf:Lifeline";
@@ -225,6 +225,9 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 else alias = "dodaf:Message";
                 System.err.println("=== SEQUENCE-ELEMENT: setting alias " + alias);
                 if (eObject instanceof Element created) setAlias(created, alias);
+            } else if (childCreationDescriptionId.contains("OperationCapability") || childCreationDescriptionId.contains("OperationalCapability")) {
+                System.err.println("=== OP-CAP: setting alias dodaf:OperationalCapability");
+                if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalCapability");
             } else if (eObject instanceof Element created && this.isDoDAFProject(container)) {
                 this.tagDoDAFAlias(created, childCreationDescriptionId);
             }
@@ -422,13 +425,15 @@ public class SysMLv2EditService implements IEditServiceDelegate {
     );
 
     private void tagDoDAFAlias(Element element, String childCreationDescriptionId) {
-        log.info("tagDoDAFAlias called: descId=" + childCreationDescriptionId);
+        System.err.println("=== tagDoDAFAlias: descId=" + childCreationDescriptionId);
         if (childCreationDescriptionId != null && childCreationDescriptionId.startsWith("SysMLv2EditService-PartDefinition")) {
             String n = childCreationDescriptionId.contains(":") ? childCreationDescriptionId.substring(childCreationDescriptionId.lastIndexOf(':')+1) : "";
-            // Remove ":Name" suffix before looking up
+            System.err.println("=== tagDoDAFAlias PartDef: n=" + n);
             String aliasedId = n.isEmpty() ? childCreationDescriptionId : childCreationDescriptionId.substring(0, childCreationDescriptionId.lastIndexOf(':'));
             // Map by menu item base name (strip trailing numbers from auto-numbering)
             if (n.startsWith("Capability")) setAlias(element, "dodaf:capability");
+            else if (n.startsWith("OperationCapability") || n.startsWith("OperationalCapability")) setAlias(element, "dodaf:OperationalCapability");
+            else if (n.startsWith("EquipCapability")) setAlias(element, "dodaf:EquipCapability");
             else if (n.startsWith("Lifeline")) setAlias(element, "dodaf:Lifeline");
             else if (n.startsWith("OperationalNode")) setAlias(element, "dodaf:operational");
             else if (n.startsWith("SystemNode")) setAlias(element, "dodaf:system");
@@ -453,6 +458,9 @@ public class SysMLv2EditService implements IEditServiceDelegate {
         }
     }
     private void setAlias(Element element, String alias) {
-        if (!element.getAliasIds().contains(alias)) element.getAliasIds().add(alias);
+        if (!element.getAliasIds().contains(alias)) {
+            element.getAliasIds().add(alias);
+            System.err.println("=== setAlias: ADDED " + alias + " -> " + element.getAliasIds());
+        }
     }
 }

@@ -1040,14 +1040,17 @@
 
       // Lifeline UML style: add dashed tail extending to view bottom + replace icon
       function styleLifelines() {
-        var viewport = document.querySelector('.react-flow__viewport');
-        var flowPane = document.querySelector('.react-flow__pane');
-        if (viewport && flowPane) {
-          var nodes = document.querySelectorAll('[data-svg="rect"]');
-          for (var i = 0; i < nodes.length; i++) {
-            var n = nodes[i];
-            var label = n.querySelector('[data-testid*="Label content"]');
-            if (!label || (label.textContent.indexOf('Lifeline') < 0 && label.textContent.indexOf('Lifeline') < 0)) continue;
+        var vp2 = document.querySelector('.react-flow__viewport');
+        var fp2 = document.querySelector('.react-flow__pane');
+        if (!vp2 || !fp2) return;
+        var nodes = document.querySelectorAll('[data-svg="rect"]');
+        for (var i = 0; i < nodes.length; i++) {
+          var n = nodes[i];
+          var lb = n.querySelector('[data-testid*="Label content"]');
+          if (!lb) continue;
+          var txt = lb.textContent;
+          // --- Lifeline UML style ---
+          if (txt.indexOf('Lifeline') >= 0) {
             // Replace icon
             var img = n.querySelector('img');
             if (img && img.src.indexOf('lifeline') < 0) {
@@ -1064,9 +1067,19 @@
               n.appendChild(tail);
             }
             var rect = n.getBoundingClientRect();
-            var paneRect = flowPane.getBoundingClientRect();
+            var paneRect = fp2.getBoundingClientRect();
             var h = paneRect.bottom - rect.bottom;
             if (h > 0) tail.style.height = h + 'px';
+          }
+          // --- OperationalCapability style ---
+          else if (txt.indexOf('OperationalCapability') >= 0) {
+            var img2 = n.querySelector('img');
+            if (img2 && img2.src.indexOf('OperationalCapability') < 0) {
+              img2.src = 'http://localhost:8080/icons/full/obj16/OperationalCapability.svg';
+              img2.alt = 'OperationalCapability';
+            }
+            var r = n.querySelector('[data-svg="rect"]') || n.querySelector('rect');
+            if (r) { r.setAttribute('stroke', '#f59e0b'); r.setAttribute('stroke-width', '2'); }
           }
         }
       }
@@ -1084,6 +1097,14 @@
             if (img && img.src.indexOf('lifeline') < 0 && img.src.indexOf('PartDefinition') >= 0) {
               img.src = 'http://localhost:8080/images/lifeline.svg';
               it.setAttribute('data-lifeline-icon', '1');
+            }
+          }
+          // OperationalCapability tree icon
+          if (it.getAttribute('data-oc-icon') !== '1' && (label.textContent.indexOf('OperationalCapability') >= 0 || label.textContent.indexOf('OperationalCapability') >= 0)) {
+            var img2 = it.querySelector('img');
+            if (img2 && img2.src.indexOf('OperationalCapability') < 0) {
+              img2.src = 'http://localhost:8080/icons/full/obj16/OperationalCapability.svg';
+              it.setAttribute('data-oc-icon', '1');
             }
           }
         }
