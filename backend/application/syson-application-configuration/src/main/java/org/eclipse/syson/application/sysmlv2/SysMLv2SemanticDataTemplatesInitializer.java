@@ -41,6 +41,8 @@ public class SysMLv2SemanticDataTemplatesInitializer implements ISemanticDataIni
 
     private static final String DODAFV2_PROJECT_DOCUMENT_NAME = "DoDAFv2-Project.sysml";
 
+    private static final String DODAFV2_BLANK_DOCUMENT_NAME = "DoDAFv2-Blank.sysml";
+
     private final IEditingContextPersistenceService editingContextPersistenceService;
 
     private final IDefaultSysMLv2ResourceProvider defaultSysMLv2ResourceProvider;
@@ -55,7 +57,8 @@ public class SysMLv2SemanticDataTemplatesInitializer implements ISemanticDataIni
         return SysMLv2ProjectTemplatesProvider.SYSMLV2_TEMPLATE_ID.equals(templateId) || SysMLv2ProjectTemplatesProvider.SYSMLV2_LIBRARY_TEMPLATE_ID.equals(templateId)
                 || SysMLv2ProjectTemplatesProvider.BATMOBILE_TEMPLATE_ID.equals(templateId)
                 || SysMLv2ProjectTemplatesProvider.DODAFV2_LIBRARY_TEMPLATE_ID.equals(templateId)
-                || SysMLv2ProjectTemplatesProvider.DODAFV2_PROJECT_TEMPLATE_ID.equals(templateId);
+                || SysMLv2ProjectTemplatesProvider.DODAFV2_PROJECT_TEMPLATE_ID.equals(templateId)
+                || SysMLv2ProjectTemplatesProvider.DODAFV2_BLANK_TEMPLATE_ID.equals(templateId);
     }
 
     @Override
@@ -70,6 +73,8 @@ public class SysMLv2SemanticDataTemplatesInitializer implements ISemanticDataIni
             this.initializeDodafv2LibraryProject(cause, emfEditingContext);
         } else if (SysMLv2ProjectTemplatesProvider.DODAFV2_PROJECT_TEMPLATE_ID.equals(projectTemplateId) && editingContext instanceof IEMFEditingContext emfEditingContext) {
             this.initializeDodafv2Project(cause, emfEditingContext);
+        } else if (SysMLv2ProjectTemplatesProvider.DODAFV2_BLANK_TEMPLATE_ID.equals(projectTemplateId) && editingContext instanceof IEMFEditingContext emfEditingContext) {
+            this.initializeDodafv2Blank(cause, emfEditingContext);
         }
     }
 
@@ -106,6 +111,13 @@ public class SysMLv2SemanticDataTemplatesInitializer implements ISemanticDataIni
     private void initializeDodafv2Project(ICause cause, IEMFEditingContext emfEditingContext) {
         var resourceSet = emfEditingContext.getDomain().getResourceSet();
         var resource = this.defaultSysMLv2ResourceProvider.getDodafv2ProjectResource(UUID.randomUUID(), DODAFV2_PROJECT_DOCUMENT_NAME);
+        resourceSet.getResources().add(resource);
+        this.editingContextPersistenceService.persist(new SysMLv2TemplatesInitialization(UUID.randomUUID(), emfEditingContext, resource, cause), emfEditingContext);
+    }
+
+    private void initializeDodafv2Blank(ICause cause, IEMFEditingContext emfEditingContext) {
+        var resourceSet = emfEditingContext.getDomain().getResourceSet();
+        var resource = this.defaultSysMLv2ResourceProvider.getDodafv2BlankResource(UUID.randomUUID(), DODAFV2_BLANK_DOCUMENT_NAME);
         resourceSet.getResources().add(resource);
         this.editingContextPersistenceService.persist(new SysMLv2TemplatesInitialization(UUID.randomUUID(), emfEditingContext, resource, cause), emfEditingContext);
     }

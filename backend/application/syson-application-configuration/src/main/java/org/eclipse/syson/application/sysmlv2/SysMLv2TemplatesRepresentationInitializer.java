@@ -84,10 +84,10 @@ public class SysMLv2TemplatesRepresentationInitializer {
             var editingContext = templateInitialization.editingContext();
             var resource = templateInitialization.resource();
 
-            // Check if this is a DoDAF template (has 有人无人协同反潜系统 as root)
+            // Check if this is a DoDAF template
             var rootElement = this.getRootElement(resource);
-            boolean isDoDAF = rootElement.isPresent() && rootElement.get() instanceof Package
-                    && "有人无人协同反潜系统".equals(((Package) rootElement.get()).getName());
+            boolean isDoDAF = rootElement.isPresent() && rootElement.get() instanceof Package rootPkg
+                    && ("有人无人协同反潜系统".equals(rootPkg.getName()) || "DoDAFv2-Blank".equals(rootPkg.getName()));
 
             if (!isDoDAF) {
                 // Standard SysMLv2 templates: create a single "view1" ViewUsage with GeneralView diagram
