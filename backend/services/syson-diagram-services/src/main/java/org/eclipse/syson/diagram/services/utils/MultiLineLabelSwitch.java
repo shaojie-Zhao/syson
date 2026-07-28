@@ -105,6 +105,8 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "TaskStage";
         } else if (element.getAliasIds().contains("dodaf:TaskIntent")) {
             return "TaskIntent";
+        } else if (element.getAliasIds().contains("dodaf:ImplementationPhase")) {
+            return "ImplementationPhase";
         } else if (element.getAliasIds().contains("dodaf:TimeScale")) {
             return "TimeScale";
         } else if (element.getAliasIds().contains("dodaf:EquipCapability")) {
