@@ -252,6 +252,8 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Condition");
             } else if (childCreationDescriptionId.contains("OperationalTask")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalTask");
+            } else if (childCreationDescriptionId.contains("OperationalModel")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalModel");
             } else if (childCreationDescriptionId.contains("Task") && !childCreationDescriptionId.contains("TaskStage") && !childCreationDescriptionId.contains("TaskIntent")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Task");
             } else if (childCreationDescriptionId.contains("Force")) {
@@ -500,6 +502,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             else if (n.startsWith("OperationalProblem")) setAlias(element, "dodaf:OperationalProblem");
             else if (n.startsWith("OperationalActivity")) setAlias(element, "dodaf:OperationalActivity");
             else if (n.startsWith("OperationalTask")) setAlias(element, "dodaf:OperationalTask");
+            else if (n.startsWith("OperationalModel")) setAlias(element, "dodaf:OperationalModel");
             else if (n.startsWith("ActualOrganization")) setAlias(element, "dodaf:ActualOrganization");
             else if (n.startsWith("ActualPerson")) setAlias(element, "dodaf:ActualPerson");
             else if (n.startsWith("Duty")) setAlias(element, "dodaf:Duty");

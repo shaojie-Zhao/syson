@@ -1161,6 +1161,14 @@
               imgD.alt = 'Condition';
             }
           }
+          // --- OperationalModel ---
+          else if (txt.indexOf('OperationalModel') >= 0) {
+            var imgR = n.querySelector('img');
+            if (imgR && imgR.src.indexOf('OperationalModel') < 0) {
+              imgR.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#d97706" stroke-width="1.5"/><rect x="4" y="4" width="3" height="3" fill="#d97706"/><rect x="9" y="4" width="3" height="3" fill="#d97706"/><rect x="4" y="9" width="3" height="3" fill="#d97706"/><rect x="9" y="9" width="3" height="3" fill="#d97706"/></svg>');
+              imgR.alt = 'OperationalModel';
+            }
+          }
           // --- OperationalTask (before Task) ---
           else if (txt.indexOf('OperationalTask') >= 0) {
             var imgQ = n.querySelector('img');
@@ -1377,6 +1385,14 @@
             if (imgD && imgD.src.indexOf('Condition') < 0) {
               imgD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 12,6 10,6 10,12 6,12 6,6 4,6" fill="#eab308"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="5" font-weight="bold">?</text></svg>');
               it.setAttribute('data-cd-icon', '1');
+            }
+          }
+          // OperationalModel tree icon
+          if (it.getAttribute('data-om-icon') !== '1' && label.textContent.indexOf('OperationalModel') >= 0) {
+            var imgR = it.querySelector('img');
+            if (imgR && imgR.src.indexOf('OperationalModel') < 0) {
+              imgR.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#d97706" stroke-width="1.5"/><rect x="4" y="4" width="3" height="3" fill="#d97706"/><rect x="9" y="4" width="3" height="3" fill="#d97706"/><rect x="4" y="9" width="3" height="3" fill="#d97706"/><rect x="9" y="9" width="3" height="3" fill="#d97706"/></svg>');
+              it.setAttribute('data-om-icon', '1');
             }
           }
           // OperationalTask tree icon (before Task)
