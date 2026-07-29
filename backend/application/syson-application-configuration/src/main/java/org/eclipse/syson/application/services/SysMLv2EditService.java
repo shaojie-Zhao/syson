@@ -276,6 +276,8 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:DetectionActivity");
             } else if (childCreationDescriptionId.contains("StrikeActivity")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:StrikeActivity");
+            } else if (childCreationDescriptionId.contains("DefenseActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:DefenseActivity");
             } else if (childCreationDescriptionId.contains("Task") && !childCreationDescriptionId.contains("TaskStage") && !childCreationDescriptionId.contains("TaskIntent")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Task");
             } else if (childCreationDescriptionId.contains("Force")) {
@@ -536,6 +538,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             else if (n.startsWith("CommandControlActivity")) setAlias(element, "dodaf:CommandControlActivity");
             else if (n.startsWith("DetectionActivity")) setAlias(element, "dodaf:DetectionActivity");
             else if (n.startsWith("StrikeActivity")) setAlias(element, "dodaf:StrikeActivity");
+            else if (n.startsWith("DefenseActivity")) setAlias(element, "dodaf:DefenseActivity");
             else if (n.startsWith("ActualOrganization")) setAlias(element, "dodaf:ActualOrganization");
             else if (n.startsWith("ActualPerson")) setAlias(element, "dodaf:ActualPerson");
             else if (n.startsWith("Duty")) setAlias(element, "dodaf:Duty");

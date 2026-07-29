@@ -1169,6 +1169,14 @@
               imgZ.alt = 'AnalysisActivity';
             }
           }
+          // --- DefenseActivity ---
+          else if (txt.indexOf('DefenseActivity') >= 0) {
+            var imgAD = n.querySelector('img');
+            if (imgAD && imgAD.src.indexOf('DefenseActivity') < 0) {
+              imgAD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M8 2L3 5v3c0 3.5 5 6 5 6s5-2.5 5-6V5z" fill="#3b82f6"/></svg>');
+              imgAD.alt = 'DefenseActivity';
+            }
+          }
           // --- StrikeActivity ---
           else if (txt.indexOf('StrikeActivity') >= 0) {
             var imgAC = n.querySelector('img');
@@ -1481,6 +1489,14 @@
             if (imgZ && imgZ.src.indexOf('AnalysisActivity') < 0) {
               imgZ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f97316" stroke-width="1"/><line x1="8" y1="4" x2="8" y2="12" stroke="#f97316" stroke-width="0.8"/><line x1="4" y1="8" x2="12" y2="8" stroke="#f97316" stroke-width="0.8"/></svg>');
               it.setAttribute('data-aa-icon', '1');
+            }
+          }
+          // DefenseActivity tree icon
+          if (it.getAttribute('data-df-icon') !== '1' && label.textContent.indexOf('DefenseActivity') >= 0) {
+            var imgAD = it.querySelector('img');
+            if (imgAD && imgAD.src.indexOf('DefenseActivity') < 0) {
+              imgAD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M8 2L3 5v3c0 3.5 5 6 5 6s5-2.5 5-6V5z" fill="#3b82f6"/></svg>');
+              it.setAttribute('data-df-icon', '1');
             }
           }
           // StrikeActivity tree icon
