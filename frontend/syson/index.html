@@ -1161,6 +1161,14 @@
               imgD.alt = 'Condition';
             }
           }
+          // --- CommunicationActivity ---
+          else if (txt.indexOf('CommunicationActivity') >= 0) {
+            var imgS = n.querySelector('img');
+            if (imgS && imgS.src.indexOf('CommunicationActivity') < 0) {
+              imgS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><path d="M4 5h8M4 8h6M4 11h4" fill="none" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round"/></svg>');
+              imgS.alt = 'CommunicationActivity';
+            }
+          }
           // --- OperationalModel ---
           else if (txt.indexOf('OperationalModel') >= 0) {
             var imgR = n.querySelector('img');
@@ -1385,6 +1393,14 @@
             if (imgD && imgD.src.indexOf('Condition') < 0) {
               imgD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 12,6 10,6 10,12 6,12 6,6 4,6" fill="#eab308"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="5" font-weight="bold">?</text></svg>');
               it.setAttribute('data-cd-icon', '1');
+            }
+          }
+          // CommunicationActivity tree icon
+          if (it.getAttribute('data-ca-icon') !== '1' && label.textContent.indexOf('CommunicationActivity') >= 0) {
+            var imgS = it.querySelector('img');
+            if (imgS && imgS.src.indexOf('CommunicationActivity') < 0) {
+              imgS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><path d="M4 5h8M4 8h6M4 11h4" fill="none" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round"/></svg>');
+              it.setAttribute('data-ca-icon', '1');
             }
           }
           // OperationalModel tree icon
