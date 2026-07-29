@@ -1177,6 +1177,14 @@
               imgF.alt = 'Force';
             }
           }
+          // --- Role ---
+          else if (txt.indexOf('Role') >= 0) {
+            var imgG = n.querySelector('img');
+            if (imgG && imgG.src.indexOf('Role') < 0) {
+              imgG.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/><circle cx="8" cy="5.5" r="2.5" fill="#a855f7"/><path d="M3 13.5c0-2 2.2-3.5 5-3.5s5 1.5 5 3.5" fill="#a855f7"/></svg>');
+              imgG.alt = 'Role';
+            }
+          }
           // --- Vision ---
           else if (txt.indexOf('Vision') >= 0) {
             var img8 = n.querySelector('img');
@@ -1297,6 +1305,14 @@
             if (imgF && imgF.src.indexOf('Force') < 0) {
               imgF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><path d="M3 14V3l4 3 2-1 4 4-2 2-2-1-4 4z" fill="#ef4444"/></svg>');
               it.setAttribute('data-fc-icon', '1');
+            }
+          }
+          // Role tree icon
+          if (it.getAttribute('data-rl-icon') !== '1' && label.textContent.indexOf('Role') >= 0) {
+            var imgG = it.querySelector('img');
+            if (imgG && imgG.src.indexOf('Role') < 0) {
+              imgG.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/><circle cx="8" cy="5.5" r="2.5" fill="#a855f7"/><path d="M3 13.5c0-2 2.2-3.5 5-3.5s5 1.5 5 3.5" fill="#a855f7"/></svg>');
+              it.setAttribute('data-rl-icon', '1');
             }
           }
           // Vision tree icon
