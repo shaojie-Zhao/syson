@@ -1169,6 +1169,14 @@
               imgZ.alt = 'AnalysisActivity';
             }
           }
+          // --- StrikeActivity ---
+          else if (txt.indexOf('StrikeActivity') >= 0) {
+            var imgAC = n.querySelector('img');
+            if (imgAC && imgAC.src.indexOf('StrikeActivity') < 0) {
+              imgAC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><circle cx="8" cy="8" r="1" fill="#ef4444"/><line x1="8" y1="2" x2="8" y2="6" stroke="#ef4444" stroke-width="1"/><line x1="8" y1="10" x2="8" y2="14" stroke="#ef4444" stroke-width="1"/><line x1="2" y1="8" x2="6" y2="8" stroke="#ef4444" stroke-width="1"/><line x1="10" y1="8" x2="14" y2="8" stroke="#ef4444" stroke-width="1"/></svg>');
+              imgAC.alt = 'StrikeActivity';
+            }
+          }
           // --- DetectionActivity ---
           else if (txt.indexOf('DetectionActivity') >= 0) {
             var imgAB = n.querySelector('img');
@@ -1473,6 +1481,14 @@
             if (imgZ && imgZ.src.indexOf('AnalysisActivity') < 0) {
               imgZ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f97316" stroke-width="1"/><line x1="8" y1="4" x2="8" y2="12" stroke="#f97316" stroke-width="0.8"/><line x1="4" y1="8" x2="12" y2="8" stroke="#f97316" stroke-width="0.8"/></svg>');
               it.setAttribute('data-aa-icon', '1');
+            }
+          }
+          // StrikeActivity tree icon
+          if (it.getAttribute('data-sa-icon') !== '1' && label.textContent.indexOf('StrikeActivity') >= 0) {
+            var imgAC = it.querySelector('img');
+            if (imgAC && imgAC.src.indexOf('StrikeActivity') < 0) {
+              imgAC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><circle cx="8" cy="8" r="1" fill="#ef4444"/><line x1="8" y1="2" x2="8" y2="6" stroke="#ef4444" stroke-width="1"/><line x1="8" y1="10" x2="8" y2="14" stroke="#ef4444" stroke-width="1"/><line x1="2" y1="8" x2="6" y2="8" stroke="#ef4444" stroke-width="1"/><line x1="10" y1="8" x2="14" y2="8" stroke="#ef4444" stroke-width="1"/></svg>');
+              it.setAttribute('data-sa-icon', '1');
             }
           }
           // DetectionActivity tree icon
