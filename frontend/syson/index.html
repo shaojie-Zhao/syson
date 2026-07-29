@@ -1209,6 +1209,14 @@
               imgN.alt = 'MissionPhase';
             }
           }
+          // --- OperationalProblem ---
+          else if (txt.indexOf('OperationalProblem') >= 0) {
+            var imgO = n.querySelector('img');
+            if (imgO && imgO.src.indexOf('OperationalProblem') < 0) {
+              imgO.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#9ca3af" stroke-width="1.5"/><path d="M4 4h3v3H4zM9 4h3v3H9zM4 9h3v3H4zM9 9h3v3H9z" fill="#9ca3af"/></svg>');
+              imgO.alt = 'OperationalProblem';
+            }
+          }
           // --- OperationalAction ---
           else if (txt.indexOf('OperationalAction') >= 0) {
             var imgI = n.querySelector('img');
@@ -1409,6 +1417,14 @@
             if (imgN && imgN.src.indexOf('MissionPhase') < 0) {
               imgN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><rect x="3" y="3" width="10" height="3" rx="0.5" fill="#0ea5e9"/><rect x="3" y="8" width="6" height="3" rx="0.5" fill="#38bdf8"/><rect x="3" y="13" width="4" height="2" rx="0.5" fill="#7dd3fc"/></svg>');
               it.setAttribute('data-mp-icon', '1');
+            }
+          }
+          // OperationalProblem tree icon
+          if (it.getAttribute('data-opr-icon') !== '1' && label.textContent.indexOf('OperationalProblem') >= 0) {
+            var imgO = it.querySelector('img');
+            if (imgO && imgO.src.indexOf('OperationalProblem') < 0) {
+              imgO.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#9ca3af" stroke-width="1.5"/><path d="M4 4h3v3H4zM9 4h3v3H9zM4 9h3v3H4zM9 9h3v3H9z" fill="#9ca3af"/></svg>');
+              it.setAttribute('data-opr-icon', '1');
             }
           }
           // ActualOrganization tree icon
