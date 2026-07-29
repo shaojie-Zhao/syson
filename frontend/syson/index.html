@@ -1161,6 +1161,14 @@
               imgD.alt = 'Condition';
             }
           }
+          // --- OperationalTask (before Task) ---
+          else if (txt.indexOf('OperationalTask') >= 0) {
+            var imgQ = n.querySelector('img');
+            if (imgQ && imgQ.src.indexOf('OperationalTask') < 0) {
+              imgQ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><path d="M4 8l2 2 3-3M10 5l3 3-3 3" fill="none" stroke="#ef4444" stroke-width="1.2"/></svg>');
+              imgQ.alt = 'OperationalTask';
+            }
+          }
           // --- Task ---
           else if (txt.indexOf('Task') >= 0) {
             var imgE = n.querySelector('img');
@@ -1371,7 +1379,16 @@
               it.setAttribute('data-cd-icon', '1');
             }
           }
-          // Task tree icon
+          // OperationalTask tree icon (before Task)
+          if (it.getAttribute('data-otk-icon') === '1' || it.getAttribute('data-tk-icon') === '1') {
+            // already handled
+          } else if (label.textContent.indexOf('OperationalTask') >= 0) {
+            var imgQ = it.querySelector('img');
+            if (imgQ && imgQ.src.indexOf('OperationalTask') < 0) {
+              imgQ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><path d="M4 8l2 2 3-3M10 5l3 3-3 3" fill="none" stroke="#ef4444" stroke-width="1.2"/></svg>');
+              it.setAttribute('data-otk-icon', '1');
+            }
+          } else // Task tree icon
           if (it.getAttribute('data-tk-icon') !== '1' && label.textContent.indexOf('Task') >= 0) {
             var imgE = it.querySelector('img');
             if (imgE && imgE.src.indexOf('Task') < 0) {
