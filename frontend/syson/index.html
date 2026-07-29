@@ -1161,6 +1161,14 @@
               imgD.alt = 'Condition';
             }
           }
+          // --- TransmitActivity ---
+          else if (txt.indexOf('TransmitActivity') >= 0) {
+            var imgT = n.querySelector('img');
+            if (imgT && imgT.src.indexOf('TransmitActivity') < 0) {
+              imgT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><path d="M3 8l5-4v3h7v2H8v3z" fill="#14b8a6"/></svg>');
+              imgT.alt = 'TransmitActivity';
+            }
+          }
           // --- CommunicationActivity ---
           else if (txt.indexOf('CommunicationActivity') >= 0) {
             var imgS = n.querySelector('img');
@@ -1393,6 +1401,14 @@
             if (imgD && imgD.src.indexOf('Condition') < 0) {
               imgD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 12,6 10,6 10,12 6,12 6,6 4,6" fill="#eab308"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="5" font-weight="bold">?</text></svg>');
               it.setAttribute('data-cd-icon', '1');
+            }
+          }
+          // TransmitActivity tree icon
+          if (it.getAttribute('data-ta-icon') !== '1' && label.textContent.indexOf('TransmitActivity') >= 0) {
+            var imgT = it.querySelector('img');
+            if (imgT && imgT.src.indexOf('TransmitActivity') < 0) {
+              imgT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><path d="M3 8l5-4v3h7v2H8v3z" fill="#14b8a6"/></svg>');
+              it.setAttribute('data-ta-icon', '1');
             }
           }
           // CommunicationActivity tree icon
