@@ -1161,6 +1161,14 @@
               imgD.alt = 'Condition';
             }
           }
+          // --- PlanManeuver ---
+          else if (txt.indexOf('PlanManeuver') >= 0) {
+            var imgY = n.querySelector('img');
+            if (imgY && imgY.src.indexOf('PlanManeuver') < 0) {
+              imgY.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><rect x="4" y="4" width="3" height="3" fill="#10b981"/><rect x="9" y="4" width="3" height="3" fill="#10b981"/><rect x="4" y="10" width="8" height="2" rx="1" fill="#6ee7b7"/></svg>');
+              imgY.alt = 'PlanManeuver';
+            }
+          }
           // --- TransferManeuver ---
           else if (txt.indexOf('TransferManeuver') >= 0) {
             var imgX = n.querySelector('img');
@@ -1433,6 +1441,14 @@
             if (imgD && imgD.src.indexOf('Condition') < 0) {
               imgD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 12,6 10,6 10,12 6,12 6,6 4,6" fill="#eab308"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="5" font-weight="bold">?</text></svg>');
               it.setAttribute('data-cd-icon', '1');
+            }
+          }
+          // PlanManeuver tree icon
+          if (it.getAttribute('data-pm-icon') !== '1' && label.textContent.indexOf('PlanManeuver') >= 0) {
+            var imgY = it.querySelector('img');
+            if (imgY && imgY.src.indexOf('PlanManeuver') < 0) {
+              imgY.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><rect x="4" y="4" width="3" height="3" fill="#10b981"/><rect x="9" y="4" width="3" height="3" fill="#10b981"/><rect x="4" y="10" width="8" height="2" rx="1" fill="#6ee7b7"/></svg>');
+              it.setAttribute('data-pm-icon', '1');
             }
           }
           // TransferManeuver tree icon
