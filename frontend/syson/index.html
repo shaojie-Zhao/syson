@@ -1209,6 +1209,14 @@
               imgN.alt = 'MissionPhase';
             }
           }
+          // --- OperationalActivity ---
+          else if (txt.indexOf('OperationalActivity') >= 0) {
+            var imgP = n.querySelector('img');
+            if (imgP && imgP.src.indexOf('OperationalActivity') < 0) {
+              imgP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#db2777" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#db2777" stroke-width="1"/><circle cx="5.5" cy="6.5" r="1" fill="#db2777"/><circle cx="10.5" cy="6.5" r="1" fill="#db2777"/><circle cx="8" cy="9.5" r="1" fill="#db2777"/></svg>');
+              imgP.alt = 'OperationalActivity';
+            }
+          }
           // --- OperationalProblem ---
           else if (txt.indexOf('OperationalProblem') >= 0) {
             var imgO = n.querySelector('img');
@@ -1417,6 +1425,14 @@
             if (imgN && imgN.src.indexOf('MissionPhase') < 0) {
               imgN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><rect x="3" y="3" width="10" height="3" rx="0.5" fill="#0ea5e9"/><rect x="3" y="8" width="6" height="3" rx="0.5" fill="#38bdf8"/><rect x="3" y="13" width="4" height="2" rx="0.5" fill="#7dd3fc"/></svg>');
               it.setAttribute('data-mp-icon', '1');
+            }
+          }
+          // OperationalActivity tree icon
+          if (it.getAttribute('data-oa2-icon') !== '1' && label.textContent.indexOf('OperationalActivity') >= 0) {
+            var imgP = it.querySelector('img');
+            if (imgP && imgP.src.indexOf('OperationalActivity') < 0) {
+              imgP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#db2777" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#db2777" stroke-width="1"/><circle cx="5.5" cy="6.5" r="1" fill="#db2777"/><circle cx="10.5" cy="6.5" r="1" fill="#db2777"/><circle cx="8" cy="9.5" r="1" fill="#db2777"/></svg>');
+              it.setAttribute('data-oa2-icon', '1');
             }
           }
           // OperationalProblem tree icon
