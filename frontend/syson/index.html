@@ -1145,6 +1145,14 @@
               imgB.alt = 'Performer';
             }
           }
+          // --- Location ---
+          else if (txt.indexOf('Location') >= 0) {
+            var imgC = n.querySelector('img');
+            if (imgC && imgC.src.indexOf('Location') < 0) {
+              imgC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><path d="M8 2C5.8 2 4 3.8 4 6c0 3 4 8 4 8s4-5 4-8c0-2.2-1.8-4-4-4z" fill="#10b981"/><circle cx="8" cy="6" r="1.5" fill="#1e293b"/></svg>');
+              imgC.alt = 'Location';
+            }
+          }
           // --- Vision ---
           else if (txt.indexOf('Vision') >= 0) {
             var img8 = n.querySelector('img');
@@ -1233,6 +1241,14 @@
             if (imgB && imgB.src.indexOf('Performer') < 0) {
               imgB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><circle cx="8" cy="5" r="2.5" fill="#3b82f6"/><path d="M3 13c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5" fill="none" stroke="#3b82f6" stroke-width="1.2"/></svg>');
               it.setAttribute('data-pf-icon', '1');
+            }
+          }
+          // Location tree icon
+          if (it.getAttribute('data-lc-icon') !== '1' && label.textContent.indexOf('Location') >= 0) {
+            var imgC = it.querySelector('img');
+            if (imgC && imgC.src.indexOf('Location') < 0) {
+              imgC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><path d="M8 2C5.8 2 4 3.8 4 6c0 3 4 8 4 8s4-5 4-8c0-2.2-1.8-4-4-4z" fill="#10b981"/><circle cx="8" cy="6" r="1.5" fill="#1e293b"/></svg>');
+              it.setAttribute('data-lc-icon', '1');
             }
           }
           // Vision tree icon
