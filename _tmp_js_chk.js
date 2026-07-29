@@ -1,0 +1,1071 @@
+
+      // Force Chinese language - intercept ALL i18n API calls
+      (function() {
+        var _fetch = window.fetch;
+        window.fetch = function(url) {
+          if (typeof url === 'string' && url.indexOf('/api/locales/en/') >= 0) {
+            arguments[0] = url.replace('/api/locales/en/', '/api/locales/zh/');
+          }
+          return _fetch.apply(this, arguments);
+        };
+        var _open = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(m, url) {
+          if (typeof url === 'string' && url.indexOf('/api/locales/en/') >= 0) {
+            arguments[1] = url.replace('/api/locales/en/', '/api/locales/zh/');
+          }
+          return _open.apply(this, arguments);
+        };
+      })();
+      // Override date formatting to Chinese
+      var _origToLocaleDate = Date.prototype.toLocaleDateString;
+      var _origToLocaleString = Date.prototype.toLocaleString;
+      Date.prototype.toLocaleDateString = function() { return _origToLocaleDate.call(this, 'zh-CN', arguments[0]); };
+      Date.prototype.toLocaleString = function() { return _origToLocaleString.call(this, 'zh-CN', arguments[0]); };
+      // Override Intl.DateTimeFormat to default to zh-CN
+      var _origDTF = Intl.DateTimeFormat;
+      Intl.DateTimeFormat = function(locales, options) {
+        if (!locales || locales === 'en' || locales === 'en-US') { locales = 'zh-CN'; }
+        return new _origDTF(locales, options);
+      };
+      Intl.DateTimeFormat.prototype = _origDTF.prototype;
+      localStorage.setItem('i18nextLng', 'zh');
+      document.documentElement.lang = 'zh-CN';
+      // ── Theme toggle ──
+      if (localStorage.getItem('theme') === 'light') document.body.classList.add('theme-light');
+      (function() {
+        setInterval(function() {
+          var bar = document.querySelector('[class*="1qiikhi-right"]');
+          if (!bar) return;
+          var existing = document.getElementById('theme-toggle');
+          if (existing) {
+            var isL = document.body.classList.contains('theme-light');
+            existing.querySelector('span:last-child').style.background = isL ? '#3b82f6' : '#64748b';
+            existing.querySelector('span:last-child span').style.left = isL ? '18px' : '2px';
+            existing.querySelector('span:first-child').textContent = isL ? '浅色' : '深色';
+            existing.style.color = isL ? '#333' : '#e2e8f0';
+            return;
+          }
+          var isLight = document.body.classList.contains('theme-light');
+          var wrap = document.createElement('span');
+          wrap.id = 'theme-toggle';
+          wrap.title = '浅色/深色主题切换';
+          var isDark = !isLight;
+          wrap.style.cssText = 'display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:' + (isDark ? '#e2e8f0' : '#333') + ';';
+          var track = document.createElement('span');
+          track.style.cssText = 'width:36px;height:20px;border-radius:10px;display:inline-block;position:relative;transition:background 0.2s;background:' + (isLight ? '#3b82f6' : '#64748b') + ';';
+          var thumb = document.createElement('span');
+          thumb.style.cssText = 'width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;transition:left 0.2s;' + (isLight ? 'left:18px;' : 'left:2px;');
+          track.appendChild(thumb);
+          var label = document.createElement('span');
+          label.style.cssText = 'display:inline-block;width:28px;text-align:center;';
+          label.textContent = isLight ? '浅色' : '深色';
+          wrap.appendChild(label);
+          wrap.appendChild(track);
+          wrap.onclick = function(){
+            document.body.classList.toggle('theme-light');
+            var il = document.body.classList.contains('theme-light');
+            localStorage.setItem('theme', il?'light':'dark');
+            track.style.background = il ? '#3b82f6' : '#64748b';
+            thumb.style.left = il ? '18px' : '2px';
+            wrap.querySelector('span:first-child').textContent = il ? '浅色' : '深色';
+            wrap.style.color = il ? '#333' : '#e2e8f0';
+            applyGanttTheme();
+          };
+          bar.appendChild(wrap);
+        }, 1000);
+        window.applyGanttTheme = function() {
+          var isLight = document.body.classList.contains('theme-light');
+          var map = isLight ? [
+            ['#1a1f35','#f0f2f5'],['#e0e0e0','#333'],['#1e2540','#e4e6eb'],
+            ['#64748b','#666'],['#94a3b8','#888'],['#e2e8f0','#444'],
+            ['#f1f5f9','#222'],['rgba(255,255,255,0.015)','#f5f5f5'],
+            ['rgba(255,255,255,0.06)','rgba(0,0,0,0.04)'],
+            ['rgba(255,255,255,0.08)','rgba(0,0,0,0.04)'],
+            ['rgba(255,255,255,0.05)','#fff'],
+            ['rgba(255,255,255,0.1)','rgba(0,0,0,0.05)'],
+            ['rgba(255,255,255,0.04)','rgba(0,0,0,0.02)']
+          ] : [
+            ['#f0f2f5','#1a1f35'],['#333','#e0e0e0'],['#e4e6eb','#1e2540'],
+            ['#666','#64748b'],['#888','#94a3b8'],['#444','#e2e8f0'],
+            ['#222','#f1f5f9'],['#f5f5f5','rgba(255,255,255,0.015)'],
+            ['rgba(0,0,0,0.04)','rgba(255,255,255,0.06)'],
+            ['rgba(0,0,0,0.04)','rgba(255,255,255,0.08)'],
+            ['#fff','rgba(255,255,255,0.05)'],
+            ['rgba(0,0,0,0.05)','rgba(255,255,255,0.1)'],
+            ['rgba(0,0,0,0.02)','rgba(255,255,255,0.04)']
+          ];
+          document.querySelectorAll('.custom-gantt-root [style]').forEach(function(el){
+            var s = el.getAttribute('style');
+            if(!s) return;
+            map.forEach(function(m){ while(s.indexOf(m[0])>=0) s=s.replace(m[0],m[1]); });
+            el.setAttribute('style', s);
+          });
+        };
+      })();
+      // Gantt DOM-level Chinese translation observer - covers ALL text nodes
+      var allZh = {
+        // Gantt
+        'Name': '名称', 'Start Date': '开始日期', 'End Date': '结束日期', 'Progress': '进度',
+        'Day': '天', 'Week': '周', 'Month': '月', 'Year': '年',
+        'Hour': '小时', 'Quarter Day': '四分之一天', 'Half Day': '半天', 'Two Days': '两天',
+        'Zoom in': '放大', 'Zoom out': '缩小', 'Fit to screen': '适应屏幕',
+        'Zoom level': '缩放级别', 'Display task list columns': '显示列', 'Display columns': '显示列',
+        'Share': '分享', 'Jan': '1月', 'Feb': '2月', 'Mar': '3月', 'Apr': '4月',
+        'May': '五月', 'Jun': '六月', 'Jul': '七月', 'Aug': '八月',
+        'Sep': '九月', 'Oct': '十月', 'Nov': '十一月', 'Dec': '十二月',
+        'Mon': '周一', 'Tue': '周二', 'Wed': '周三', 'Thu': '周四', 'Fri': '周五', 'Sat': '周六', 'Sun': '周日',
+        'Mo': '一', 'Tu': '二', 'We': '三', 'Th': '四', 'Fr': '五', 'Sa': '六', 'Su': '日',
+        // Table - comprehensive
+        'Rows per page:': '每页行数：', 'Rows per page': '每页行数',
+        'of': '/', 'No records to display': '无记录', 'No results found': '无结果',
+        'Export': '导出', 'Filters': '筛选', 'Search': '搜索',
+        'Column Actions': '列操作', 'Row Actions': '行操作', 'Row actions': '行操作',
+        'Show all': '显示全部', 'Show all columns': '显示所有列',
+        'Hide all': '隐藏全部', 'Clear filter': '清除筛选', 'Clear search': '清除搜索',
+        'Clear sort': '清除排序', 'Toggle full screen': '全屏',
+        'Export page data as CSV': '导出CSV', 'Export data as CSV': '导出CSV', 'Tools': '工具',
+        'Reset Row Heights': '重置行高', 'No entries found': '无条目',
+        'Starts With': '开头是', 'Ends With': '结尾是', 'Contains': '包含',
+        'Not Contains': '不包含', 'Equals': '等于', 'Not Equals': '不等于',
+        'Empty': '为空', 'Not Empty': '不为空', 'Less Than': '小于',
+        'Greater Than': '大于', 'Less Than Or Equal To': '小于等于',
+        'Greater Than Or Equal To': '大于等于', 'Between': '之间',
+        'Between Inclusive': '之间(含)', 'Fuzzy': '模糊',
+        'Filter by': '按列筛选', 'Group by': '按列分组', 'Sort by': '按列排序',
+        'Toggle density': '行密度', 'Toggle select all': '全选', 'Row Numbers': '行号',
+        'No records to display.': '无记录。', 'Loading...': '加载中...',
+        'The table does not exist anymore': '该表格已不存在',
+        'Column visibility': '列可见性', 'Show/Hide columns': '显示/隐藏列',
+        'Show/Hide filters': '显示/隐藏筛选', 'Show/Hide search': '显示/隐藏搜索',
+        'Pin to left': '固定到左侧', 'Pin to right': '固定到右侧',
+        'Unpin': '取消固定', 'Unpin all': '取消全部固定',
+        'Reset column size': '重置列宽', 'Reset order': '重置排序',
+        'Ascending': '升序', 'Descending': '降序', 'Unsorted': '无排序',
+        'Expand': '展开', 'Expand all': '展开全部',
+        'Collapse': '折叠', 'Collapse all': '折叠全部',
+        'Go to first page': '首页', 'Go to last page': '末页',
+        'Go to next page': '下一页', 'Go to previous page': '上一页',
+        'Grab': '拖动', 'Move': '移动', 'Copy': '复制', 'Edit': '编辑', 'Delete': '删除',
+        'Row Numbers': '行号', 'Hide column': '隐藏列', 'Show column': '显示列',
+        'Cancel': '取消', 'Save': '保存', 'Select': '选择', 'Actions': '操作',
+        'Filter Mode': '筛选模式', 'Filter by column': '按列筛选',
+        'Clear': '清除', 'Pin': '固定', 'Drop to group by': '拖放到分组',
+        'Click to copy': '点击复制', 'Copied to clipboard': '已复制到剪贴板',
+        'Toggle visibility': '切换可见性', 'Ungroup by column': '取消分组',
+        'Explorer': '资源管理器', 'Details': '详情', 'Views': '视图',
+        'Validations': '验证', 'Validation': '验证', 'Search': '搜索',
+        'Query': '查询', 'Related Views': '关联视图', 'Related Elements': '关联元素',
+        'createModal.title': '新建对象', 'createModal.container.label': '选择容器',
+        'createModal.type.label': '对象类型', 'createModal.submit': '创建',
+        'newObjectModal.title': '创建对象',
+      };
+      // One-time patch for table representation text
+      var tablePatchDone = false;
+      function patchTableText() {
+        var root = document.querySelector('[data-testid="table-representation"]');
+        if (!root) { tablePatchDone = false; return; }
+        if (tablePatchDone) return;
+        root.querySelectorAll('*').forEach(function(el) {
+          for (var i = 0; i < el.childNodes.length; i++) {
+            var n = el.childNodes[i];
+            if (n.nodeType === 3 && n.textContent.trim()) {
+              var t = n.textContent.trim();
+              if (allZh[t]) n.textContent = n.textContent.replace(t, allZh[t]);
+            }
+          }
+          if (el.textContent && allZh[el.textContent.trim()]) el.textContent = allZh[el.textContent.trim()];
+        });
+        tablePatchDone = true;
+      }
+      setInterval(patchTableText, 2000);
+      function translateAllText(root) {
+        if (!root || !root.querySelectorAll) return;
+        root.querySelectorAll('*').forEach(function(el) {
+          for (var i = 0; i < el.childNodes.length; i++) {
+            var node = el.childNodes[i];
+            if (node.nodeType === 3) {
+              var t = node.textContent.trim();
+              if (t && allZh[t]) { node.textContent = allZh[t]; }
+            }
+          }
+          // Also translate title/tooltip/aria-label attributes
+          if (el.title && allZh[el.title]) { el.title = allZh[el.title]; }
+          var aria = el.getAttribute('aria-label');
+          if (aria && allZh[aria]) { el.setAttribute('aria-label', allZh[aria]); }
+        });
+      }
+      // MutationObserver for new nodes
+      new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) {
+          m.addedNodes.forEach(function(node) {
+            if (node.nodeType === 1) translateAllText(node);
+          });
+        });
+      }).observe(document.body, { childList: true, subtree: true });
+      // Periodic scan for dynamic content (SVG, canvas text, etc.)
+      setInterval(function() { translateAllText(document); }, 2000);
+      // ViewFlow navigation: handled by ViewFlowNavigator.tsx (React Router useNavigate)
+
+      // ===== Custom DoDAF Gantt View =====
+      var ganttAppInjected = false;
+      var ganttRepId = 'default-gantt';
+      var ganttApiBase = 'http://localhost:8080/api/gantt';
+      var ganttTasks = [];
+      function buildGanttTree(tasks) {
+        var map = {}; var roots = [];
+        tasks.forEach(function(t) { map[t.id] = Object.assign({}, t, { children: [] }); });
+        tasks.forEach(function(t) {
+          if (t.parentId && map[t.parentId]) map[t.parentId].children.push(map[t.id]);
+          else roots.push(map[t.id]);
+        });
+        return roots;
+      }
+      function flattenGanttTree(nodes, depth, expanded) {
+        var result = []; depth = depth || 0; expanded = expanded || {};
+        nodes.forEach(function(n) {
+          result.push({ id: n.id, parentId: n.parentId, name: n.name, description: n.description, startDate: n.startDate, endDate: n.endDate, progress: n.progress, depth: depth, hasChildren: (n.children||[]).length > 0 });
+          if (n.children && n.children.length && expanded[n.id]) {
+            result = result.concat(flattenGanttTree(n.children, depth + 1, expanded));
+          }
+        });
+        return result;
+      }
+      function parseGDate(s) { var d = new Date(s + 'T00:00:00'); return isNaN(d.getTime()) ? new Date() : d; }
+      function daysGBetween(a, b) { return Math.round((b.getTime() - a.getTime()) / 86400000); }
+      function loadGanttTasks(cb) {
+        if (!ganttRepId) return;
+        fetch(ganttApiBase + '/' + ganttRepId + '/tasks').then(function(r) { return r.json(); }).then(function(data) {
+          ganttTasks = data; if (cb) cb();
+        });
+      }
+      function renderGanttView(container) {
+        var expanded = {};
+        var editingTask = null;
+        var editingTaskParentDates = null;
+        var today = new Date(); today.setHours(0,0,0,0);
+        function rerender() {
+          var tree = buildGanttTree(ganttTasks);
+          var flat = flattenGanttTree(tree, 0, expanded);
+          var allTasks = ganttTasks.length > 0 ? ganttTasks : [{ startDate: '2026-01-01', endDate: '2026-12-31' }];
+          var minDate = new Date(Math.min.apply(null, allTasks.map(function(t) { return parseGDate(t.startDate).getTime(); })));
+          var maxDate = new Date(Math.max.apply(null, allTasks.map(function(t) { return parseGDate(t.endDate).getTime(); })));
+          // Extend range by 1 week on each side
+          minDate = new Date(minDate.getTime() - 7 * 86400000);
+          maxDate = new Date(maxDate.getTime() + 7 * 86400000);
+          var totalDays = Math.max(daysGBetween(minDate, maxDate), 1);
+          // Build month headers and week grid lines
+          var monthCols = [], weekLines = [];
+          var cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+          while (cursor <= maxDate) {
+            var daysFromStart = daysGBetween(minDate, cursor);
+            monthCols.push({ label: cursor.getFullYear() + '年' + (cursor.getMonth() + 1) + '月', left: (daysFromStart / totalDays) * 100, width: (new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate() / totalDays) * 100 / (new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate()) * (new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate()), daysInMonth: new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate() });
+            // Week lines
+            for (var d = 0; d <= new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate(); d += 7) {
+              var wd = new Date(cursor.getFullYear(), cursor.getMonth(), Math.min(d + 1, new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate()));
+              var wLeft = (daysGBetween(minDate, wd) / totalDays) * 100;
+              if (wLeft >= 0 && wLeft <= 100) weekLines.push(wLeft);
+            }
+            cursor.setMonth(cursor.getMonth() + 1);
+          }
+          var todayLine = daysGBetween(minDate, today);
+          var todayPct = todayLine >= 0 && todayLine <= totalDays ? (todayLine / totalDays) * 100 : -1;
+          var LEFT_PANEL = 380;
+          var COL_W = { start: 100, end: 100, prog: 100 };
+          var TIMELINE_MINW = 400;
+
+          var html = '<div class="custom-gantt-root" style="height:100%;display:flex;flex-direction:column;background:#1a1f35;color:#e0e0e0;font-family:system-ui,Segoe UI,sans-serif;font-size:13px">';
+          // ---- Toolbar ----
+          html += '<div style="display:flex;gap:8px;padding:10px 16px;background:#1e2540;border-bottom:1px solid rgba(255,255,255,0.08);align-items:center;flex-shrink:0">';
+          html += '<button onclick="window._ganttAdd(null)" style="background:#3b82f6;color:#fff;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500">+ 新建任务</button>';
+          html += '<span style="font-size:12px;color:#64748b;margin-left:8px">点击任务名编辑 | [+] 子任务 | [×] 删除</span>';
+          html += '<div style="flex:1"></div>';
+          if (todayPct >= 0) html += '<span style="font-size:11px;color:#64748b">今天: ' + today.toISOString().slice(0,10) + '</span>';
+          html += '</div>';
+
+          // ---- SINGLE scroll container (header + body together) ----
+          var totalMinWidth = LEFT_PANEL + COL_W.start + COL_W.end + COL_W.prog + TIMELINE_MINW;
+          html += '<div style="flex:1;overflow:auto">';
+          html += '<div style="min-width:' + totalMinWidth + 'px">';
+
+          // Sticky header row
+          html += '<div style="display:flex;border-bottom:2px solid rgba(255,255,255,0.1);font-weight:600;font-size:12px;background:#1e2540;position:sticky;top:0;z-index:10">';
+          html += '<div style="width:' + LEFT_PANEL + 'px;min-width:' + LEFT_PANEL + 'px;padding:10px 16px;border-right:1px solid rgba(255,255,255,0.08);color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">任务名称</div>';
+          html += '<div style="width:' + COL_W.start + 'px;min-width:' + COL_W.start + 'px;padding:10px 12px;border-right:1px solid rgba(255,255,255,0.08);color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">开始</div>';
+          html += '<div style="width:' + COL_W.end + 'px;min-width:' + COL_W.end + 'px;padding:10px 12px;border-right:1px solid rgba(255,255,255,0.08);color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">结束</div>';
+          html += '<div style="width:' + COL_W.prog + 'px;min-width:' + COL_W.prog + 'px;padding:10px 12px;border-right:1px solid rgba(255,255,255,0.08);color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">进度</div>';
+          html += '<div style="flex:1;position:relative;min-width:' + TIMELINE_MINW + 'px">';
+          monthCols.forEach(function(mc) {
+            if (mc.left < 0) return; // skip months before visible range
+            html += '<div style="position:absolute;left:' + mc.left.toFixed(3) + '%;top:0;font-size:11px;color:#64748b;padding:10px 0;text-align:center;width:' + ((mc.daysInMonth / totalDays) * 100).toFixed(3) + '%;border-left:1px solid rgba(255,255,255,0.12);overflow:hidden;white-space:nowrap">' + mc.label + '</div>';
+          });
+          html += '</div></div>';
+
+          // ---- Body rows ----
+          flat.forEach(function(t, idx) {
+            var barLeft = Math.max(0, (daysGBetween(minDate, parseGDate(t.startDate)) / totalDays) * 100);
+            var barW = Math.max(0.5, Math.min(100 - barLeft, (daysGBetween(parseGDate(t.startDate), parseGDate(t.endDate)) / totalDays) * 100));
+            var isOverdue = parseGDate(t.endDate) < today && t.progress < 100;
+            var barColor = isOverdue ? '#ef4444' : (t.progress >= 100 ? '#22c55e' : '#3b82f6');
+            var barBg = isOverdue ? 'rgba(239,68,68,0.15)' : (t.progress >= 100 ? 'rgba(34,197,94,0.12)' : 'rgba(59,130,246,0.12)');
+            var rowBg = idx % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent';
+
+            html += '<div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.04);height:44px;align-items:center;background:' + rowBg + ';transition:background 0.15s" onmouseover="this.style.background=\'rgba(255,255,255,0.06)\'" onmouseout="this.style.background=\'' + rowBg + '\'">';
+            // Name column
+            html += '<div style="width:' + LEFT_PANEL + 'px;min-width:' + LEFT_PANEL + 'px;padding:6px 16px;display:flex;align-items:center;gap:6px;border-right:1px solid rgba(255,255,255,0.05);overflow:hidden">';
+            html += '<span style="width:' + (t.depth * 16) + 'px;flex-shrink:0"></span>';
+            html += t.hasChildren
+              ? '<span onclick="window._ganttToggle(\'' + t.id + '\')" style="cursor:pointer;width:18px;text-align:center;color:#64748b;font-size:10px;flex-shrink:0">' + (expanded[t.id] ? '▼' : '▶') + '</span>'
+              : '<span style="width:18px;flex-shrink:0"></span>';
+            // Progress dot indicator
+            html += '<span style="width:8px;height:8px;border-radius:50%;background:' + barColor + ';flex-shrink:0;opacity:0.8"></span>';
+            html += '<span onclick="window._ganttEdit(\'' + t.id + '\')" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;font-weight:500;color:#e2e8f0" title="' + escAttr(t.name) + ' — 点击编辑">' + escHtml(t.name) + '</span>';
+            html += '<button onclick="window._ganttAdd(\'' + t.id + '\')" style="background:rgba(255,255,255,0.06);color:#64748b;border:none;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:12px;flex-shrink:0" title="添加子任务">+</button>';
+            html += '<button onclick="window._ganttDel(\'' + t.id + '\')" style="background:rgba(255,255,255,0.06);color:#ef4444;border:none;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:12px;flex-shrink:0" title="删除">×</button>';
+            html += '</div>';
+            // Start date
+            html += '<div style="width:' + COL_W.start + 'px;min-width:' + COL_W.start + 'px;padding:6px 12px;border-right:1px solid rgba(255,255,255,0.05);font-size:12px;color:#94a3b8">' + escHtml(t.startDate) + '</div>';
+            // End date
+            html += '<div style="width:' + COL_W.end + 'px;min-width:' + COL_W.end + 'px;padding:6px 12px;border-right:1px solid rgba(255,255,255,0.05);font-size:12px;color:#94a3b8">' + escHtml(t.endDate) + '</div>';
+            // Progress
+            html += '<div style="width:' + COL_W.prog + 'px;min-width:' + COL_W.prog + 'px;padding:6px 8px;border-right:1px solid rgba(255,255,255,0.05)">';
+            html += '<div style="display:flex;align-items:center;gap:4px"><div style="flex:1;height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + t.progress + '%;background:' + barColor + ';border-radius:3px;transition:width 0.3s"></div></div>';
+            html += '<span style="font-size:10px;color:#94a3b8;min-width:26px;text-align:right">' + t.progress + '%</span></div></div>';
+            // Timeline bar area
+            html += '<div style="flex:1;position:relative;height:100%;min-width:' + TIMELINE_MINW + 'px">';
+            // Grid lines (vertical week markers)
+            weekLines.forEach(function(wl) {
+              html += '<div style="position:absolute;left:' + wl.toFixed(3) + '%;top:0;bottom:0;width:0;border-left:1px solid rgba(255,255,255,0.03)"></div>';
+            });
+            // Today line
+            if (todayPct >= 0) {
+              html += '<div style="position:absolute;left:' + todayPct.toFixed(3) + '%;top:0;bottom:0;width:2px;background:#f59e0b;z-index:5;opacity:0.6"></div>';
+            }
+            // Task bar
+            html += '<div style="position:absolute;left:' + barLeft.toFixed(3) + '%;top:8px;width:' + barW.toFixed(3) + '%;height:28px;background:' + barBg + ';border-radius:6px;border:1px solid ' + barColor + ';overflow:hidden;cursor:pointer;z-index:3" onclick="window._ganttEdit(\'' + t.id + '\')" title="' + escAttr(t.name) + '">';
+            html += '<div style="height:100%;width:' + t.progress + '%;background:' + barColor + ';border-radius:5px;opacity:0.7;transition:width 0.3s"></div>';
+            // Bar label
+            html += '<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;padding:0 10px;font-size:11px;color:#fff;white-space:nowrap;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,0.5)">';
+            html += escHtml(t.name);
+            if (t.progress > 0 && t.progress < 100) html += ' <span style="opacity:0.7;margin-left:4px">' + t.progress + '%</span>';
+            html += '</div></div></div>';
+            html += '</div>';
+          });
+
+          if (flat.length === 0) {
+            html += '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#64748b;font-size:14px">';
+            html += '暂无任务，点击 <b style="color:#3b82f6;cursor:pointer" onclick="window._ganttAdd(null)">+ 新建任务</b> 开始';
+            html += '</div>';
+          }
+
+          html += '</div></div></div>'; // close min-width wrapper > scroll container > root
+
+          // ---- Edit modal ----
+          if (editingTask) {
+            var et = editingTask;
+            var pd = editingTaskParentDates;
+            var startMin = pd ? pd.start : '';
+            var startMax = pd ? pd.end : '';
+            var endMin = pd ? pd.start : '';
+            var endMax = pd ? pd.end : '';
+            var dateHint = pd ? ' (父任务: ' + pd.start + ' ~ ' + pd.end + ')' : '';
+            html += '<div id="gantt-edit-modal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)" onclick="window._ganttCancel()">';
+            html += '<div style="background:#1e2540;padding:28px;border-radius:12px;min-width:420px;color:#e0e0e0;box-shadow:0 20px 60px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.08)" onclick="event.stopPropagation()">';
+            html += '<h3 style="margin:0 0 20px 0;font-size:16px;font-weight:600;color:#f1f5f9">编辑任务</h3>';
+            html += '<div style="display:flex;flex-direction:column;gap:14px">';
+            html += '<div><div style="font-size:12px;color:#94a3b8;margin-bottom:4px;font-weight:500">名称</div><input id="gantt-ef-name" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#f1f5f9;font-size:14px;box-sizing:border-box;outline:none" value="' + escAttr(et.name) + '" onfocus="this.style.borderColor=\'#3b82f6\'" onblur="this.style.borderColor=\'rgba(255,255,255,0.12)\'"></div>';
+            html += '<div><div style="font-size:12px;color:#94a3b8;margin-bottom:4px;font-weight:500">描述</div><textarea id="gantt-ef-desc" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#f1f5f9;font-size:14px;box-sizing:border-box;outline:none;resize:vertical" rows="3" onfocus="this.style.borderColor=\'#3b82f6\'" onblur="this.style.borderColor=\'rgba(255,255,255,0.12)\'">' + escHtml(et.description||'') + '</textarea></div>';
+            html += '<div style="display:flex;gap:12px"><div style="flex:1"><div style="font-size:12px;color:#94a3b8;margin-bottom:4px;font-weight:500">开始日期' + dateHint + '</div><input id="gantt-ef-start" type="date" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#f1f5f9;font-size:14px;box-sizing:border-box;outline:none" value="' + escAttr(et.startDate) + '" min="' + startMin + '" max="' + startMax + '" onfocus="this.style.borderColor=\'#3b82f6\'" onblur="this.style.borderColor=\'rgba(255,255,255,0.12)\'"></div>';
+            html += '<div style="flex:1"><div style="font-size:12px;color:#94a3b8;margin-bottom:4px;font-weight:500">结束日期' + dateHint + '</div><input id="gantt-ef-end" type="date" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#f1f5f9;font-size:14px;box-sizing:border-box;outline:none" value="' + escAttr(et.endDate) + '" min="' + endMin + '" max="' + endMax + '" onfocus="this.style.borderColor=\'#3b82f6\'" onblur="this.style.borderColor=\'rgba(255,255,255,0.12)\'"></div></div>';
+            html += '<div><div style="font-size:12px;color:#94a3b8;margin-bottom:4px;font-weight:500">进度: <span id="gantt-ef-prog-val" style="color:#3b82f6">' + et.progress + '%</span></div><input id="gantt-ef-prog" type="range" min="0" max="100" style="width:100%;accent-color:#3b82f6" value="' + et.progress + '"></div>';
+            html += '</div>';
+            html += '<div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end">';
+            html += '<button onclick="window._ganttCancel()" style="background:rgba(255,255,255,0.08);color:#94a3b8;border:1px solid rgba(255,255,255,0.1);padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px">取消</button>';
+            html += '<button onclick="window._ganttSave(\'' + et.id + '\')" style="background:#3b82f6;color:#fff;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500">保存</button>';
+            html += '</div></div></div>';
+          }
+          container.innerHTML = html;
+          var progEl = document.getElementById('gantt-ef-prog');
+          if (progEl) progEl.addEventListener('input', function() { var v = document.getElementById('gantt-ef-prog-val'); if (v) v.textContent = this.value + '%'; });
+        }
+        function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        function escAttr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        // Global handlers
+        window._ganttToggle = function(id) { expanded[id] = !expanded[id]; rerender(); };
+        window._ganttAdd = function(parentId) {
+          var url = ganttApiBase + '/' + ganttRepId + '/tasks';
+          if (parentId) url += '?parentId=' + parentId;
+          fetch(url, { method: 'POST' }).then(function() { loadGanttTasks(rerender); });
+        };
+        window._ganttDel = function(id) {
+          fetch(ganttApiBase + '/' + ganttRepId + '/tasks/' + id, { method: 'DELETE' }).then(function() { loadGanttTasks(rerender); });
+        };
+        window._ganttEdit = function(id) {
+          var t = ganttTasks.find(function(x) { return x.id === id; });
+          if (t) {
+            editingTask = t;
+            // Find parent task to enforce date bounds for sub-tasks
+            editingTaskParentDates = null;
+            if (t.parentId) {
+              var parent = ganttTasks.find(function(x) { return x.id === t.parentId; });
+              if (parent) editingTaskParentDates = { start: parent.startDate, end: parent.endDate };
+            }
+            rerender();
+          }
+        };
+        window._ganttCancel = function() { editingTask = null; editingTaskParentDates = null; rerender(); };
+        window._ganttSave = function(id) {
+          var startDate = document.getElementById('gantt-ef-start').value;
+          var endDate = document.getElementById('gantt-ef-end').value;
+          // Validate sub-task date bounds
+          if (editingTaskParentDates) {
+            var pd = editingTaskParentDates;
+            if (startDate < pd.start || startDate > pd.end) { alert('开始日期必须在父任务时间范围内 (' + pd.start + ' ~ ' + pd.end + ')'); return; }
+            if (endDate < pd.start || endDate > pd.end) { alert('结束日期必须在父任务时间范围内 (' + pd.start + ' ~ ' + pd.end + ')'); return; }
+            if (startDate > endDate) { alert('开始日期不能晚于结束日期'); return; }
+          }
+          var body = JSON.stringify({
+            id: id, parentId: editingTask ? editingTask.parentId : null,
+            name: document.getElementById('gantt-ef-name').value,
+            description: document.getElementById('gantt-ef-desc').value,
+            startDate: startDate,
+            endDate: endDate,
+            progress: parseInt(document.getElementById('gantt-ef-prog').value)
+          });
+          fetch(ganttApiBase + '/' + ganttRepId + '/tasks/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: body })
+            .then(function() { editingTask = null; editingTaskParentDates = null; loadGanttTasks(rerender); });
+        };
+        rerender();
+      }
+      // Detect Gantt representation and inject custom view
+      // Inject custom Gantt - poll every second for Gantt containers
+      function injectGanttApp(ganttEl) {
+        if (ganttEl.getAttribute('data-custom-gantt') === '1') return;
+        console.log('[CustomGantt] Replacing with gantt-task-react');
+        ganttEl.setAttribute('data-custom-gantt', '1');
+        ganttEl.style.display = 'none';
+        var wrapper = document.createElement('div');
+        wrapper.id = 'custom-gantt-wrapper';
+        wrapper.style.cssText = 'height:100%;overflow:hidden';
+        ganttEl.parentElement.insertBefore(wrapper, ganttEl.nextSibling);
+        var check = setInterval(function() {
+          if (window.renderDoDAFGantt) { clearInterval(check); window.renderDoDAFGantt(wrapper); }
+        }, 50);
+      }
+      function cleanupGantt() {
+        var wrapper = document.getElementById('custom-gantt-wrapper');
+        if (wrapper) {
+          // Check if the Sirius Gantt container is still in the DOM
+          var ganttEl = document.querySelector('[class*="ganttContainer"]');
+          if (!ganttEl) ganttEl = document.querySelector('[data-testid="gantt-representation"]');
+          if (!ganttEl) {
+            // Gantt view was navigated away - remove wrapper
+            wrapper.remove();
+          }
+        }
+      }
+      function scanForGantt() {
+        cleanupGantt();
+        // Try multiple selectors to find Gantt container
+        var allDivs = document.querySelectorAll('div');
+        for (var i = 0; i < allDivs.length; i++) {
+          var cn = allDivs[i].className;
+          if (cn && typeof cn === 'string' && cn.indexOf('ganttContainer') >= 0) {
+            // Found Gantt — remove Prediction/Rules wrappers
+            var pw = document.getElementById('prediction-wrapper'); if (pw) { pw.remove(); predInjected = false; }
+            var rw = document.getElementById('rules-wrapper'); if (rw) { rw.remove(); rulesInjected = false; }
+            injectGanttApp(allDivs[i]);
+            return true;
+          }
+        }
+        var testId = document.querySelector('[data-testid="gantt-representation"]');
+        if (testId) { injectGanttApp(testId); return true; }
+        return false;
+      }
+      setInterval(function() { scanForGantt(); }, 100);
+      // ===== Custom DoDAF Matrix View injection =====
+      var matrixInjected = false;
+      function currentMatrixRepId() {
+        var m = window.location.search.match(/[?&]representation=([^&]+)/);
+        if (m) return m[1];
+        m = window.location.search.match(/[?&]selection=([^&]+)/);
+        return m ? m[1] : '';
+      }
+      function teardownMatrix() {
+        var w = document.getElementById('matrix-wrapper');
+        if (w) {
+          try { if (w.__matrixRoot) w.__matrixRoot.unmount(); } catch (e) {}
+          // Restore the Sirius table we hid so the view can be re-injected / re-shown (avoids a blank pane).
+          try { if (w.__hiddenTable && w.__hiddenTable.isConnected) { w.__hiddenTable.style.display = ''; w.__hiddenTable.classList.remove('matrix-hidden'); } } catch (e) {}
+          w.remove();
+        }
+        matrixInjected = false;
+      }
+      function injectMatrix(containerEl) {
+        if (matrixInjected) return;
+        matrixInjected = true;
+        console.log('[Matrix] Replacing Sirius Web table with custom Matrix view');
+        containerEl.style.display = 'none';
+        var wrapper = document.createElement('div');
+        wrapper.id = 'matrix-wrapper';
+        wrapper.setAttribute('data-repid', currentMatrixRepId());
+        wrapper.__hiddenTable = containerEl;
+        wrapper.style.cssText = 'height:100%;overflow:hidden';
+        containerEl.parentElement.insertBefore(wrapper, containerEl.nextSibling);
+        if (window.renderDoDAFMatrix) window.renderDoDAFMatrix(wrapper);
+        else {
+          var check = setInterval(function() {
+            if (window.renderDoDAFMatrix) { clearInterval(check); window.renderDoDAFMatrix(wrapper); }
+          }, 50);
+        }
+      }
+      function scanForMatrix() {
+        var w = document.getElementById('matrix-wrapper');
+        // If the active representation changed (switched/reopened), tear down the stale matrix immediately
+        // so its previous content cannot flash before the new one is injected (also properly unmounts the root).
+        // Guard: only when BOTH ids are known and differ, so a transient empty id can't tear down a fresh view.
+        var repNow = currentMatrixRepId();
+        var repWas = w ? w.getAttribute('data-repid') : '';
+        if (w && repWas && repNow && repWas !== repNow) { teardownMatrix(); w = null; }
+        if (w && w.previousElementSibling && !w.previousElementSibling.closest('[data-testid="table-representation"]')) {
+          teardownMatrix(); w = null;
+        }
+        if (matrixInjected && !document.getElementById('matrix-wrapper')) matrixInjected = false;
+        if (document.getElementById('rules-wrapper') || document.getElementById('prediction-wrapper')) return;
+        // Always scan to skip standard tables, but don't double-inject
+        if (matrixInjected) return;
+        if (window.location.pathname.indexOf('/projects/') < 0) return;
+        var reps = document.querySelectorAll('[data-testid="table-representation"]');
+        for (var r = 0; r < reps.length; r++) {
+          var rep = reps[r];
+          if (rep.offsetParent === null) continue;
+          if (rep.closest('[class*="ganttContainer"], [class*="explorer"], [class*="sidebar"], [class*="tree"]')) continue;
+          // Skip Rules / Prediction tables
+          var ths = rep.querySelectorAll('th');
+          var isCustomTable = false;
+          for (var hi = 0; hi < ths.length; hi++) {
+            var t = ths[hi].textContent;
+            if (t.indexOf('规则') >= 0 || t.indexOf('应用于') >= 0 || t.indexOf('技术和技能') >= 0 || t.indexOf('短期') >= 0) { isCustomTable = true; break; }
+          }
+          if (isCustomTable) continue;
+          // Only inject Matrix for views with "矩阵"/"追溯"/"映射" in tab name
+          var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
+          var tabName = tab ? (tab.textContent || '') : '';
+          if (tabName.indexOf('矩阵') < 0 && tabName.indexOf('追溯') < 0 && tabName.indexOf('映射') < 0) continue;
+          var table = rep.querySelector('.MuiTableContainer-root table') || rep.querySelector('table');
+          var trCount = table ? table.querySelectorAll('tr').length : 0;
+          if (trCount >= 2) { injectMatrix(rep); return; }
+        }
+      }
+      setInterval(function() { scanForMatrix(); }, 200);
+      window._injectMatrix = function() {
+        teardownMatrix(); scanForMatrix();
+      };
+      // ===== DoDAFv2 General View Custom Right-Click Menu =====
+      (function() {
+        function isDoDAFv2() {
+          var tree = document.querySelector('[class*="tree"]');
+          return tree && /DoDAF/i.test(tree.textContent);
+        }
+        var editingCtxId = null, targetObjId = null, repIdFromUrl = null;
+        function getRepId() {
+          var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
+          if (tab) { var rid = tab.getAttribute('data-representationid'); if (rid) return rid; }
+          var m = window.location.search.match(/[?&]selection=([^&]+)/);
+          if (m && m[1]) return m[1];
+          m = window.location.search.match(/[?&]representation=([^&]+)/);
+          return m ? m[1] : window.location.pathname.split('/').pop();
+        }
+        function getCtxAndTarget(cb) {
+          var m = window.location.pathname.match(/\/projects\/([^/]+)\/edit/);
+          editingCtxId = m ? m[1] : null;
+          if (!editingCtxId) return;
+          var rid = getRepId() || 'default-matrix';
+          fetch('/api/matrix/' + rid + '/target-object-id?ctxId=' + editingCtxId + '&tableOnly=false')
+            .then(function(r){return r.json();})
+            .then(function(d){ console.log('[DoDAF] repId='+rid+' target:',JSON.stringify(d)); targetObjId = d.targetObjectId; if(!targetObjId){ targetObjId = rid; console.log('[DoDAF] fallback obj=',targetObjId); } if(d.editingContextId) editingCtxId = d.editingContextId; _viewName = d.viewName || null; console.log('[DoDAF] final ctx=',editingCtxId,'obj=',targetObjId,'view=',_viewName); cb(); })
+            .catch(function(){});
+        }
+        var _lastMenuX=0,_lastMenuY=0;
+        var _nameCounter = {};
+        function nextName(base) { _nameCounter[base] = (_nameCounter[base] || 0) + 1; return base + _nameCounter[base]; }
+        function createElement(alias, name, descId) { var u='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);}); var fullName = nextName(name); var desc=(descId||'SysMLv2EditService-PartDefinition')+':'+fullName; var pid=targetObjId||editingCtxId; var repId = getRepId(); // Get container-relative position
+          var container = document.querySelector('.react-flow__renderer') || document.querySelector('.react-flow') || document.querySelector('[data-representationid]');
+          var rx=100,ry=100;
+          if(container){ var b=container.getBoundingClientRect(); rx=_lastMenuX-b.left; ry=_lastMenuY-b.top;
+            var vp=document.querySelector('.react-flow__viewport');
+            if(vp){ var t=vp.style.transform||''; var m=t.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)\s*scale\(([-\d.]+)\)/);
+              if(m){ var tx=parseFloat(m[1]),ty=parseFloat(m[2]),s=parseFloat(m[3]);
+                rx=(rx-tx)/s; ry=(ry-ty)/s; } } }
+          console.log('[DoDAF] create name=',fullName,'pos=',rx,ry);
+          fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:pid,childCreationDescriptionId:desc}}})}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] create:',JSON.stringify(d));var sid=d&&d.data&&d.data.createChild&&d.data.createChild.object;if(!sid)return;
+          return fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'mutation d($i:DropOnDiagramInput!){dropOnDiagram(input:$i){__typename ... on ErrorPayload{message}}}',variables:{i:{id:crypto.randomUUID(),editingContextId:editingCtxId,representationId:repId,objectIds:[sid.id],startingPositionX:rx,startingPositionY:ry,diagramTargetElementId:''}}})}).then(function(r){return r.json()}).then(function(d2){console.log('[DoDAF] drop:',JSON.stringify(d2))})}).catch(function(e){console.error('[DoDAF] err:',e)})
+        }
+        var _viewName = null;
+        function getViewName() { return _viewName; }
+        function show(x,y){_lastMenuX=x;_lastMenuY=y;var old=document.getElementById('dodaf-ctx');if(old) old.remove();
+          var vn = getViewName();
+          var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
+          if (tab && tab.textContent) vn = (vn && vn.indexOf('Package') < 0) ? vn : tab.textContent;
+          console.log('[DoDAF] show viewName=',vn,'tab=',tab?tab.textContent:'none');
+          var e = document.getElementById('dodaf-ctx'); if(e) e.remove();
+          var h = '';
+          // AV-1_概述和摘要信息 specific menu
+          if (vn && vn.indexOf('AV-1') >= 0) {
+            var i1 = [{l:'架构描述(ArchitectureDescription)',a:'node',n:'ArchitectureDescription',d:'SysMLv2EditService-PartDefinition'},{l:'架构元数据描述(ArchitectureMetadataDescription)',a:'node',n:'ArchitectureMetadataDescription',d:'SysMLv2EditService-PartDefinition'},{l:'执行者(Performer)',a:'node',n:'Performer',d:'SysMLv2EditService-PartDefinition'},{l:'任务阶段(MissionPhase)',a:'node',n:'MissionPhase',d:'SysMLv2EditService-PartDefinition'},{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'顶层作战概念(TopLevelOperationalConcept)',a:'node',n:'TopLevelOperationalConcept',d:'SysMLv2EditService-PartDefinition'},{l:'任务意图(MissionIntent)',a:'node',n:'MissionIntent',d:'SysMLv2EditService-PartDefinition'},{l:'任务(Task)',a:'node',n:'Task',d:'SysMLv2EditService-PartDefinition'},{l:'任务背景(MissionBackground)',a:'node',n:'MissionBackground',d:'SysMLv2EditService-PartDefinition'},{l:'目标(Objective)',a:'node',n:'Objective',d:'SysMLv2EditService-PartDefinition'},{l:'环境(Environment)',a:'node',n:'Environment',d:'SysMLv2EditService-PartDefinition'},{l:'作战问题(OperationalProblem)',a:'node',n:'OperationalProblem',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else // CV-1_能力构想 specific menu
+          if (vn && vn.indexOf('CV-1') >= 0) {
+            var i1 = [{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationCapability)',a:'capability',n:'OperationCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'任务阶段(TaskStage)',a:'capability',n:'TaskStage',d:'SysMLv2EditService-PartDefinition'},{l:'任务意图(TaskIntent)',a:'capability',n:'TaskIntent',d:'SysMLv2EditService-PartDefinition'},{l:'实施阶段(ImplementationPhase)',a:'capability',n:'ImplementationPhase',d:'SysMLv2EditService-PartDefinition'},{l:'愿景(Vision)',a:'capability',n:'Vision',d:'SysMLv2EditService-PartDefinition'},{l:'愿景描述(VisionDescription)',a:'capability',n:'VisionDescription',d:'SysMLv2EditService-PartDefinition'},{l:'目标(Target)',a:'capability',n:'Target',d:'SysMLv2EditService-PartDefinition'},{l:'时间标尺(TimeScale)',a:'capability',n:'TimeScale',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('CV-2') >= 0) {
+            var i1 = [{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationCapability)',a:'capability',n:'OperationCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'任务阶段(TaskStage)',a:'capability',n:'TaskStage',d:'SysMLv2EditService-PartDefinition'},{l:'时间标尺(TimeScale)',a:'capability',n:'TimeScale',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('CV-4') >= 0) {
+            var i1 = [{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationCapability)',a:'capability',n:'OperationCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('DIV-1') >= 0) {
+            var i1 = [{l:'概念实体(ConceptEntity)',a:'node',n:'ConceptEntity',d:'SysMLv2EditService-PartDefinition'},{l:'概念可观测量(ConceptObservable)',a:'node',n:'ConceptObservable',d:'SysMLv2EditService-PartDefinition'},{l:'交换元素(ExchangeElement)',a:'node',n:'ExchangeElement',d:'SysMLv2EditService-PartDefinition'},{l:'信息(Information)',a:'node',n:'Information',d:'SysMLv2EditService-PartDefinition'},{l:'信息要素(InformationElement)',a:'node',n:'InformationElement',d:'SysMLv2EditService-PartDefinition'},{l:'信息传输模式(InformationTransmissionPattern)',a:'node',n:'InformationTransmissionPattern',d:'SysMLv2EditService-PartDefinition'},{l:'效能指标(EffectivenessIndicator)',a:'node',n:'EffectivenessIndicator',d:'SysMLv2EditService-PartDefinition'},{l:'效能指标参数(EffectivenessIndicatorParameter)',a:'node',n:'EffectivenessIndicatorParameter',d:'SysMLv2EditService-PartDefinition'},{l:'命令(Command)',a:'node',n:'Command',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('DIV-2') >= 0) {
+            var i1 = [{l:'逻辑实体(LogicalEntity)',a:'node',n:'LogicalEntity',d:'SysMLv2EditService-PartDefinition'},{l:'逻辑测量量(LogicalMeasure)',a:'node',n:'LogicalMeasure',d:'SysMLv2EditService-PartDefinition'},{l:'逻辑测量系统(LogicalMeasurementSystem)',a:'node',n:'LogicalMeasurementSystem',d:'SysMLv2EditService-PartDefinition'},{l:'逻辑数据模型(LogicalDataModel)',a:'node',n:'LogicalDataModel',d:'SysMLv2EditService-PartDefinition'},{l:'交换元素(ExchangeElement)',a:'node',n:'ExchangeElement',d:'SysMLv2EditService-PartDefinition'},{l:'实体(Entity)',a:'node',n:'Entity',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('DIV-3') >= 0) {
+            var i1 = [{l:'平台实体(PlatformEntity)',a:'node',n:'PlatformEntity',d:'SysMLv2EditService-PartDefinition'},{l:'物理数据模型(PhysicalDataModel)',a:'node',n:'PhysicalDataModel',d:'SysMLv2EditService-PartDefinition'},{l:'交换元素(ExchangeElement)',a:'node',n:'ExchangeElement',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('OV-2') >= 0) {
+            var i1 = [{l:'执行者(Performer)',a:'node',n:'Performer',d:'SysMLv2EditService-PartDefinition'},{l:'节点端口(NodePort)',a:'node',n:'NodePort',d:'SysMLv2EditService-PartDefinition'},{l:'位置(Location)',a:'node',n:'Location',d:'SysMLv2EditService-PartDefinition'},{l:'条件(Condition)',a:'node',n:'Condition',d:'SysMLv2EditService-PartDefinition'},{l:'任务(Task)',a:'node',n:'Task',d:'SysMLv2EditService-PartDefinition'},{l:'部队(Force)',a:'node',n:'Force',d:'SysMLv2EditService-PartDefinition'},{l:'角色(Role)',a:'node',n:'Role',d:'SysMLv2EditService-PartDefinition'},{l:'装备(Equipment)',a:'node',n:'Equipment',d:'SysMLv2EditService-PartDefinition'},{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'作战行动(OperationalAction)',a:'node',n:'OperationalAction',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('OV-4') >= 0) {
+            var i1 = [{l:'实际组织(ActualOrganization)',a:'node',n:'ActualOrganization',d:'SysMLv2EditService-PartDefinition'},{l:'个人(Person)',a:'node',n:'Person',d:'SysMLv2EditService-PartDefinition'},{l:'实际个人(ActualPerson)',a:'node',n:'ActualPerson',d:'SysMLv2EditService-PartDefinition'},{l:'职责(Duty)',a:'node',n:'Duty',d:'SysMLv2EditService-PartDefinition'},{l:'部队(Force)',a:'node',n:'Force',d:'SysMLv2EditService-PartDefinition'},{l:'角色(Role)',a:'node',n:'Role',d:'SysMLv2EditService-PartDefinition'},{l:'装备(Equip)',a:'node',n:'Equip',d:'SysMLv2EditService-PartDefinition'},{l:'作战行动(OperationalAction)',a:'node',n:'OperationalAction',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('OV-5a') >= 0) {
+            var i1 = [{l:'作战行动(OperationalAction)',a:'node',n:'OperationalAction',d:'SysMLv2EditService-PartDefinition'},{l:'执行者(Performer)',a:'node',n:'Performer',d:'SysMLv2EditService-PartDefinition'},{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'任务(Task)',a:'node',n:'Task',d:'SysMLv2EditService-PartDefinition'},{l:'条件(Condition)',a:'node',n:'Condition',d:'SysMLv2EditService-PartDefinition'},{l:'装备(Equip)',a:'node',n:'Equip',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('OV-5b') >= 0) {
+            var i1 = [{l:'任务阶段(MissionPhase)',a:'node',n:'MissionPhase',d:'SysMLv2EditService-PartDefinition'},{l:'作战问题(OperationalProblem)',a:'node',n:'OperationalProblem',d:'SysMLv2EditService-PartDefinition'},{l:'作战活动(OperationalActivity)',a:'node',n:'OperationalActivity',d:'SysMLv2EditService-PartDefinition'},{l:'作战任务(OperationalTask)',a:'node',n:'OperationalTask',d:'SysMLv2EditService-PartDefinition'},{l:'作战模型(OperationalModel)',a:'node',n:'OperationalModel',d:'SysMLv2EditService-PartDefinition'},{l:'通信活动(CommunicationActivity)',a:'node',n:'CommunicationActivity',d:'SysMLv2EditService-PartDefinition'},{l:'发信活动(TransmitActivity)',a:'node',n:'TransmitActivity',d:'SysMLv2EditService-PartDefinition'},{l:'收信活动(ReceiveActivity)',a:'node',n:'ReceiveActivity',d:'SysMLv2EditService-PartDefinition'},{l:'机动活动(ManeuverActivity)',a:'node',n:'ManeuverActivity',d:'SysMLv2EditService-PartDefinition'},{l:'悬浮机动(HoverManeuver)',a:'node',n:'HoverManeuver',d:'SysMLv2EditService-PartDefinition'},{l:'转移机动(TransferManeuver)',a:'node',n:'TransferManeuver',d:'SysMLv2EditService-PartDefinition'},{l:'筹划机动(PlanManeuver)',a:'node',n:'PlanManeuver',d:'SysMLv2EditService-PartDefinition'},{l:'研判活动(AnalysisActivity)',a:'node',n:'AnalysisActivity',d:'SysMLv2EditService-PartDefinition'},{l:'指控活动(CommandControlActivity)',a:'node',n:'CommandControlActivity',d:'SysMLv2EditService-PartDefinition'},{l:'探测活动(DetectionActivity)',a:'node',n:'DetectionActivity',d:'SysMLv2EditService-PartDefinition'},{l:'打击活动(StrikeActivity)',a:'node',n:'StrikeActivity',d:'SysMLv2EditService-PartDefinition'},{l:'防御活动(DefenseActivity)',a:'node',n:'DefenseActivity',d:'SysMLv2EditService-PartDefinition'},{l:'保障活动(SupportActivity)',a:'node',n:'SupportActivity',d:'SysMLv2EditService-PartDefinition'},{l:'装备(Equip)',a:'node',n:'Equip',d:'SysMLv2EditService-PartDefinition'},{l:'时间标尺(TimeScale)',a:'capability',n:'TimeScale',d:'SysMLv2EditService-PartDefinition'},{l:'活动参数节点(ActivityParameterNode)',a:'node',n:'ActivityParameterNode',d:'SysMLv2EditService-PartDefinition'},{l:'开始节点(InitialNode)',a:'node',n:'InitialNode',d:'SysMLv2EditService-PartDefinition'},{l:'决定节点(DecisionNode)',a:'node',n:'DecisionNode',d:'SysMLv2EditService-PartDefinition'},{l:'合并节点(MergeNode)',a:'node',n:'MergeNode',d:'SysMLv2EditService-PartDefinition'},{l:'水平分支节点(HorizontalForkNode)',a:'node',n:'HorizontalForkNode',d:'SysMLv2EditService-PartDefinition'},{l:'垂直分支节点(VerticalForkNode)',a:'node',n:'VerticalForkNode',d:'SysMLv2EditService-PartDefinition'},{l:'水平集合节点(HorizontalJoinNode)',a:'node',n:'HorizontalJoinNode',d:'SysMLv2EditService-PartDefinition'},{l:'垂直集合节点(VerticalJoinNode)',a:'node',n:'VerticalJoinNode',d:'SysMLv2EditService-PartDefinition'},{l:'活动最终节点(ActivityFinalNode)',a:'node',n:'ActivityFinalNode',d:'SysMLv2EditService-PartDefinition'},{l:'流最终节点(FlowFinalNode)',a:'node',n:'FlowFinalNode',d:'SysMLv2EditService-PartDefinition'},{l:'不透明动作(OpaqueAction)',a:'node',n:'OpaqueAction',d:'SysMLv2EditService-PartDefinition'},{l:'信号(Signal)',a:'node',n:'Signal',d:'SysMLv2EditService-PartDefinition'},{l:'垂直活动分区(VerticalPartition)',a:'node',n:'VerticalPartition',d:'SysMLv2EditService-PartDefinition'},{l:'水平活动分区(HorizontalPartition)',a:'node',n:'HorizontalPartition',d:'SysMLv2EditService-PartDefinition'},{l:'巡逻活动(PatrolActivity)',a:'node',n:'PatrolActivity',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('OV-6c') >= 0) {
+            var i1 = [{l:'生命线(Lifeline)',a:'node',n:'Lifeline',d:'SysMLv2EditService-PartDefinition'},{l:'组合片段(CombinedFragment)',a:'node',n:'CombinedFragment',d:'SysMLv2EditService-PartDefinition'},{l:'状态不变量(StateInvariant)',a:'node',n:'StateInvariant',d:'SysMLv2EditService-PartDefinition'}];
+            var i3 = [{l:'作战消息(OperationalMessage)',a:'',n:'OperationalMessage',d:'SysMLv2EditService-PartUsage'},{l:'同步调用消息(SynchronousCallMessage)',a:'',n:'SynchronousCallMessage',d:'SysMLv2EditService-PartUsage'},{l:'异步调用消息(AsynchronousCallMessage)',a:'',n:'AsynchronousCallMessage',d:'SysMLv2EditService-PartUsage'},{l:'发送信号消息(SendSignalMessage)',a:'',n:'SendSignalMessage',d:'SysMLv2EditService-PartUsage'},{l:'创建消息(CreateMessage)',a:'',n:'CreateMessage',d:'SysMLv2EditService-PartUsage'},{l:'交互消息(InteractionMessage)',a:'',n:'InteractionMessage',d:'SysMLv2EditService-PartUsage'},{l:'外部触发消息(ExternalTriggerMessage)',a:'',n:'ExternalTriggerMessage',d:'SysMLv2EditService-PartUsage'},{l:'删除消息(DeleteMessage)',a:'',n:'DeleteMessage',d:'SysMLv2EditService-PartUsage'},{l:'恢复消息(ResumeMessage)',a:'',n:'ResumeMessage',d:'SysMLv2EditService-PartUsage'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">关系</div>';
+            i3.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" data-rel="1" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('PV-2') >= 0) {
+            var i1 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'系统(System)',a:'node',n:'System',d:'SysMLv2EditService-PartDefinition'},{l:'功能(Function)',a:'node',n:'Function',d:'SysMLv2EditService-PartDefinition'},{l:'作战行动(OperationalAction)',a:'node',n:'OperationalAction',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('PV-1') >= 0) {
+            var i1 = [{l:'项目(Project)',a:'node',n:'Project',d:'SysMLv2EditService-PartDefinition'},{l:'项目类型(ProjectType)',a:'node',n:'ProjectType',d:'SysMLv2EditService-PartDefinition'},{l:'项目活动(ProjectActivity)',a:'node',n:'ProjectActivity',d:'SysMLv2EditService-PartDefinition'},{l:'状态指示器(StateIndicator)',a:'node',n:'StateIndicator',d:'SysMLv2EditService-PartDefinition'},{l:'项目里程碑(ProjectMilestone)',a:'node',n:'ProjectMilestone',d:'SysMLv2EditService-PartDefinition'},{l:'实际项目里程碑(ActualProjectMilestone)',a:'node',n:'ActualProjectMilestone',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('SvcV-1') >= 0) {
+            var i1 = [{l:'服务访问(ServiceAccess)',a:'node',n:'ServiceAccess',d:'SysMLv2EditService-PartDefinition'},{l:'服务接口(ServiceInterface)',a:'node',n:'ServiceInterface',d:'SysMLv2EditService-PartDefinition'},{l:'系统(System)',a:'node',n:'System',d:'SysMLv2EditService-PartDefinition'},{l:'软件(Software)',a:'node',n:'Software',d:'SysMLv2EditService-PartDefinition'},{l:'组织类型(OrganizationType)',a:'node',n:'OrganizationType',d:'SysMLv2EditService-PartDefinition'},{l:'资源端口(ResourcePort)',a:'node',n:'ResourcePort',d:'SysMLv2EditService-PartDefinition'},{l:'能力配置(CapabilityConfiguration)',a:'node',n:'CapabilityConfiguration',d:'SysMLv2EditService-PartDefinition'},{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'位置类型(LocationType)',a:'node',n:'LocationType',d:'SysMLv2EditService-PartDefinition'},{l:'位置(Location)',a:'node',n:'Location',d:'SysMLv2EditService-PartDefinition'},{l:'功能(Function)',a:'node',n:'Function',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('SvcV-2') >= 0) {
+            var i1 = [{l:'服务访问(ServiceAccess)',a:'node',n:'ServiceAccess',d:'SysMLv2EditService-PartDefinition'},{l:'接口(Interface)',a:'node',n:'Interface',d:'SysMLv2EditService-PartDefinition'},{l:'系统(System)',a:'node',n:'System',d:'SysMLv2EditService-PartDefinition'},{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'位置(Location)',a:'node',n:'Location',d:'SysMLv2EditService-PartDefinition'},{l:'功能(Function)',a:'node',n:'Function',d:'SysMLv2EditService-PartDefinition'},{l:'条件(Condition)',a:'node',n:'Condition',d:'SysMLv2EditService-PartDefinition'},{l:'协议(Protocol)',a:'node',n:'Protocol',d:'SysMLv2EditService-PartDefinition'},{l:'资源端口(ResourcePort)',a:'node',n:'ResourcePort',d:'SysMLv2EditService-PartDefinition'},{l:'功能标准(FunctionStandard)',a:'node',n:'FunctionStandard',d:'SysMLv2EditService-PartDefinition'},{l:'标准配置(StandardConfiguration)',a:'node',n:'StandardConfiguration',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('SvcV-4') >= 0) {
+            var i1 = [{l:'服务访问(ServiceAccess)',a:'node',n:'ServiceAccess',d:'SysMLv2EditService-PartDefinition'},{l:'系统(System)',a:'node',n:'System',d:'SysMLv2EditService-PartDefinition'},{l:'软件(Software)',a:'node',n:'Software',d:'SysMLv2EditService-PartDefinition'},{l:'条件(Condition)',a:'node',n:'Condition',d:'SysMLv2EditService-PartDefinition'},{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'能力配置(CapabilityConfiguration)',a:'node',n:'CapabilityConfiguration',d:'SysMLv2EditService-PartDefinition'},{l:'个人类型(PersonType)',a:'node',n:'PersonType',d:'SysMLv2EditService-PartDefinition'},{l:'组织类型(OrganizationType)',a:'node',n:'OrganizationType',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('SV-1') >= 0) {
+            var i1 = [{l:'系统(System)',a:'node',n:'System',d:'SysMLv2EditService-PartDefinition'},{l:'软件(Software)',a:'node',n:'Software',d:'SysMLv2EditService-PartDefinition'},{l:'个人类型(PersonType)',a:'node',n:'PersonType',d:'SysMLv2EditService-PartDefinition'},{l:'组织类型(OrganizationType)',a:'node',n:'OrganizationType',d:'SysMLv2EditService-PartDefinition'},{l:'资源端口(ResourcePort)',a:'node',n:'ResourcePort',d:'SysMLv2EditService-PartDefinition'},{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'能力配置(CapabilityConfiguration)',a:'node',n:'CapabilityConfiguration',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('SV-2') >= 0) {
+            var i1 = [{l:'系统(System)',a:'node',n:'System',d:'SysMLv2EditService-PartDefinition'},{l:'软件(Software)',a:'node',n:'Software',d:'SysMLv2EditService-PartDefinition'},{l:'能力配置(CapabilityConfiguration)',a:'node',n:'CapabilityConfiguration',d:'SysMLv2EditService-PartDefinition'},{l:'组织类型(OrganizationType)',a:'node',n:'OrganizationType',d:'SysMLv2EditService-PartDefinition'},{l:'个人类型(PersonType)',a:'node',n:'PersonType',d:'SysMLv2EditService-PartDefinition'},{l:'资源端口(ResourcePort)',a:'node',n:'ResourcePort',d:'SysMLv2EditService-PartDefinition'},{l:'技术标准(TechnicalStandard)',a:'node',n:'TechnicalStandard',d:'SysMLv2EditService-PartDefinition'},{l:'功能标准(FunctionStandard)',a:'node',n:'FunctionStandard',d:'SysMLv2EditService-PartDefinition'},{l:'协议(Protocol)',a:'node',n:'Protocol',d:'SysMLv2EditService-PartDefinition'},{l:'标准配置(StandardConfiguration)',a:'node',n:'StandardConfiguration',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('SV-4') >= 0) {
+            var i1 = [{l:'功能(Function)',a:'node',n:'Function',d:'SysMLv2EditService-PartDefinition'},{l:'系统(System)',a:'node',n:'System',d:'SysMLv2EditService-PartDefinition'},{l:'软件(Software)',a:'node',n:'Software',d:'SysMLv2EditService-PartDefinition'},{l:'条件(Condition)',a:'node',n:'Condition',d:'SysMLv2EditService-PartDefinition'},{l:'能力配置(CapabilityConfiguration)',a:'node',n:'CapabilityConfiguration',d:'SysMLv2EditService-PartDefinition'},{l:'组织类型(OrganizationType)',a:'node',n:'OrganizationType',d:'SysMLv2EditService-PartDefinition'},{l:'个人类型(PersonType)',a:'node',n:'PersonType',d:'SysMLv2EditService-PartDefinition'},{l:'服务访问(ServiceAccess)',a:'node',n:'ServiceAccess',d:'SysMLv2EditService-PartDefinition'},{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else if (vn && vn.indexOf('Sequence') >= 0) {
+            var i1 = [{l:'生命线(Lifeline)',a:'node',n:'Lifeline',d:'SysMLv2EditService-PartDefinition'},{l:'消息(Message)',a:'',n:'Message',d:'SysMLv2EditService-PartUsage'},{l:'组合片段(CombinedFragment)',a:'',n:'CombinedFragment',d:'SysMLv2EditService-PartUsage'},{l:'交互(Interaction)',a:'',n:'Interaction',d:'SysMLv2EditService-PartUsage'},{l:'状态不变量(StateInvariant)',a:'',n:'StateInvariant',d:'SysMLv2EditService-ConstraintUsage'},{l:'时间约束(TimeConstraint)',a:'',n:'TimeConstraint',d:'SysMLv2EditService-ConstraintUsage'},{l:'持续约束(DurationConstraint)',a:'',n:'DurationConstraint',d:'SysMLv2EditService-ConstraintUsage'},{l:'执行规约(ExecutionSpecification)',a:'',n:'ExecutionSpecification',d:'SysMLv2EditService-PartUsage'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">时序图元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else {
+          var i1=[{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战节点(OperationalNode)',a:'node',n:'OperationalNode',d:'SysMLv2EditService-PartDefinition'},{l:'系统节点(SystemNode)',a:'node',n:'SystemNode',d:'SysMLv2EditService-PartDefinition'},{l:'组织(Organization)',a:'organization',n:'Organization',d:'SysMLv2EditService-PartDefinition'},{l:'作战活动(Action)',a:'',n:'Action',d:'SysMLv2EditService-ActionUsage'}];
+          var i2=[{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+          var h='<div style="width:240px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+          h+='<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+          i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+          h+='<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+          h+='<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+          i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+          h+='</div>';
+          }
+          e=document.createElement('div');e.id='dodaf-ctx';e.innerHTML=h;
+          e.style.cssText='position:fixed;z-index:99999;background:#111827;max-height:500px;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.6);left:'+Math.min(x,innerWidth-250)+'px;top:'+Math.min(y,innerHeight-320)+'px';
+          document.body.appendChild(e);
+          var inner = e.querySelector('div');
+          if (inner) inner.style.background = '#111827';
+          e.querySelectorAll('.di').forEach(function(it){it.onmouseenter=function(){this.style.background='#102334'};it.onmouseleave=function(){this.style.background='transparent'};it.onclick=function(){var a=it.getAttribute('data-a'),n=it.getAttribute('data-n'),d=it.getAttribute('data-d'),rel=it.getAttribute('data-rel');if(rel==='1'){showRelDialog(n,d);e.style.display='none'}else{getCtxAndTarget(function(){createElement(a,n,d)});e.style.display='none'}}}); }
+        function showRelDialog(name, descId) {
+          var old = document.getElementById('rel-dialog');
+          if (old) old.remove();
+          var lifelines = [];
+          document.querySelectorAll('[data-testid*="Label content"]').forEach(function(l) {
+            if (l.textContent.indexOf('Lifeline') >= 0) lifelines.push(l.textContent.trim().split('\\n').pop().trim());
+          });
+          if (lifelines.length < 2) { alert('Need at least 2 Lifeline elements'); return; }
+          var dlg = document.createElement('div');
+          dlg.id = 'rel-dialog';
+          dlg.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6)';
+          var srcOpts = lifelines.map(function(l) { return '<option value="' + l + '">' + l + '</option>'; }).join('');
+          var tgtOpts = lifelines.map(function(l) { return '<option value="' + l + '">' + l + '</option>'; }).join('');
+          dlg.innerHTML = '<div style="background:#1e293b;border-radius:12px;padding:24px;min-width:360px;box-shadow:0 8px 30px rgba(0,0,0,0.5);color:#e2e8f0;font:13px system-ui,sans-serif">' +
+            '<h3 style="margin:0 0 16px;font-size:16px">' + name + '</h3>' +
+            '<div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:#94a3b8">Source</label><select id="rel-src" style="width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:#e2e8f0;padding:8px;font-size:13px">' + srcOpts + '</select></div>' +
+            '<div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:#94a3b8">Target</label><select id="rel-tgt" style="width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:#e2e8f0;padding:8px;font-size:13px">' + tgtOpts + '</select></div>' +
+            '<div style="display:flex;gap:8px;justify-content:flex-end"><button id="rel-cancel" style="background:#334155;color:#cbd5e1;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:12px">Cancel</button><button id="rel-ok" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 18px;cursor:pointer;font-size:12px">OK</button></div></div>';
+          document.body.appendChild(dlg);
+          if (lifelines.length > 1) dlg.querySelector('#rel-tgt').value = lifelines[1];
+          dlg.querySelector('#rel-cancel').onclick = function() { dlg.remove(); };
+          dlg.querySelector('#rel-ok').onclick = function() {
+            var src = dlg.querySelector('#rel-src').value;
+            var tgt = dlg.querySelector('#rel-tgt').value;
+            if (src === tgt) { alert('Source and target must be different'); return; }
+            var srcId, tgtId, srcNode, tgtNode;
+            document.querySelectorAll('[data-svg="rect"]').forEach(function(nd) {
+              var lb = nd.querySelector('[data-testid*="Label content"]');
+              var rfNode = nd.closest('.react-flow__node');
+              if (lb && lb.textContent.indexOf(src) >= 0) { srcNode = nd; srcId = rfNode ? rfNode.getAttribute('data-id') : null; }
+              if (lb && lb.textContent.indexOf(tgt) >= 0) { tgtNode = nd; tgtId = rfNode ? rfNode.getAttribute('data-id') : null; }
+            });
+            dlg.remove();
+            if (srcNode && tgtNode) {
+              var sr = srcNode.getBoundingClientRect();
+              var tr = tgtNode.getBoundingClientRect();
+              _lastMenuX = (sr.left + sr.right + tr.left + tr.right) / 4;
+              _lastMenuY = (sr.bottom + tr.top) / 2;
+            }
+            var repId = getRepId();
+            console.log('[RelDialog] src='+src+' tgt='+tgt+' srcId='+srcId+' tgtId='+tgtId);
+            if (srcId && tgtId) {
+              var fullName = nextName(name);
+              var desc = (descId||'SysMLv2EditService-PartUsage')+':'+fullName;
+              var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);});
+              var pid = targetObjId || editingCtxId;
+              var body = JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:pid,childCreationDescriptionId:desc}}});
+              fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] edge create:',JSON.stringify(d));var s=d&&d.data&&d.data.createChild&&d.data.createChild.object;if(s&&s.id){
+                var body2=JSON.stringify({query:'mutation d($i:DropOnDiagramInput!){dropOnDiagram(input:$i){__typename ... on DropOnDiagramSuccessPayload{id}... on ErrorPayload{message}}}',variables:{i:{id:crypto.randomUUID(),editingContextId:editingCtxId,representationId:repId,objectIds:[s.id],startingPositionX:0,startingPositionY:0,diagramTargetElementId:''}}});
+                fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body2}).then(function(r2){return r2.json()}).then(function(d2){console.log('[DoDAF] edge drop:',JSON.stringify(d2))});
+                // Draw DOM overlay dashed line between source and target
+                setTimeout(function() {
+                  if (srcNode && tgtNode) {
+                    var oldOverlay = document.querySelector('[data-rel-msg="'+name+'"]');
+                    if (oldOverlay) oldOverlay.remove();
+                    var overlay = document.createElement('div');
+                    overlay.setAttribute('data-rel-msg', name);
+                    overlay.style.cssText = 'position:fixed;pointer-events:none;z-index:9000;border-left:2px dashed #3b82f6;transform-origin:top left';
+                    var sr2 = srcNode.getBoundingClientRect();
+                    var tr2 = tgtNode.getBoundingClientRect();
+                    var x1 = sr2.left + sr2.width / 2;
+                    var y1 = sr2.bottom;
+                    var x2 = tr2.left + tr2.width / 2;
+                    var y2 = tr2.top;
+                    var dx = x2 - x1, dy = y2 - y1;
+                    var len = Math.sqrt(dx*dx + dy*dy);
+                    var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    overlay.style.left = x1 + 'px';
+                    overlay.style.top = y1 + 'px';
+                    overlay.style.height = len + 'px';
+                    overlay.style.transform = 'rotate(' + (angle - 90) + 'deg)';
+                    document.body.appendChild(overlay);
+                  }
+                }, 200);
+              }});
+            }
+          };
+          dlg.onclick = function(e) { if (e.target === dlg) dlg.remove(); };
+        }
+        function intercept(e){if(!isDoDAFv2())return;var t=e.target;if(t.closest('.react-flow__node')||t.closest('button')||t.closest('input')||t.closest('[class*="explorer"]')||t.closest('[class*="sidebar"]')||t.closest('[class*="tree"]'))return;if(!t.closest('#mainArea')&&!t.closest('[data-testid="representation-area"]')&&!t.closest('.react-flow__viewport')&&!t.closest('.react-flow__pane'))return;if(document.querySelector('[class*="gantt"]')||document.querySelector('[class*="Gantt"]')||document.querySelector('[data-testid*="gantt"]')||document.querySelector('[data-testid*="Gantt"]'))return;if(document.querySelector('[data-testid="table-representation"]')||document.getElementById('rules-wrapper'))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();_viewName = null; targetObjId = null; getCtxAndTarget(function(){show(e.clientX,e.clientY)})}
+        window.addEventListener('contextmenu',intercept,true);
+        document.addEventListener('click',function(ev){var e=document.getElementById('dodaf-ctx');if(e&&!ev.target.closest('#dodaf-ctx'))e.style.display='none'});
+      })();
+      // ===== Custom DoDAF Rules & Prediction View injection =====
+      var rulesInjected = false, predInjected = false;
+      function hideRightPanel() {
+        var rp = document.getElementById('right');
+        if (rp) { rp.style.flex = '0 0 0px'; rp.style.maxWidth = '0px'; rp.style.minWidth = '0px'; rp.style.overflow = 'hidden'; }
+        var sr = document.querySelector('[data-testid="site-right"]');
+        if (sr) sr.style.display = 'none';
+        var rr = document.querySelector('[data-testid="right-resizer"]');
+        if (rr) rr.style.display = 'none';
+      }
+      function injectCustomView(containerEl, wrapperId, renderFn) {
+        containerEl.style.display = 'none';
+        var hc = document.getElementById('matrix-hide-css'); if (hc) hc.remove();
+        var wrapper = document.createElement('div');
+        wrapper.id = wrapperId;
+        wrapper.setAttribute('data-repid', currentMatrixRepId());
+        wrapper.style.cssText = 'height:100%;overflow:hidden';
+        containerEl.parentElement.insertBefore(wrapper, containerEl.nextSibling);
+        if (renderFn) renderFn(wrapper);
+        else { var check = setInterval(function() { if (renderFn) { clearInterval(check); renderFn(wrapper); } }, 50); }
+        matrixInjected = true;
+        // Force-hide right side panel
+        var rightPanel = document.getElementById('right');
+        if (rightPanel) { rightPanel.style.flex = '0 0 0px'; rightPanel.style.maxWidth = '0px'; rightPanel.style.minWidth = '0px'; rightPanel.style.overflow = 'hidden'; }
+        var siteRight = document.querySelector('[data-testid="site-right"]');
+        if (siteRight) siteRight.style.display = 'none';
+      }
+      function scanCustomViews() {
+        // Reset flags if wrapper was removed (tab closed)
+        if (!document.getElementById('rules-wrapper')) rulesInjected = false;
+        if (!document.getElementById('prediction-wrapper')) predInjected = false;
+        // Restore table visibility if wrapper is gone but table is hidden (skip when matrix-wrapper present)
+        var mw2 = document.getElementById('matrix-wrapper');
+        if (!rulesInjected && !predInjected && !mw2) {
+          var hiddenTable = document.querySelector('[data-testid="table-representation"]');
+          if (hiddenTable && hiddenTable.style.display === 'none') hiddenTable.style.display = '';
+        }
+        // If wrapper exists (from factory render), ensure side panel is hidden
+        // Use representation ID to detect which custom view is active
+        var rw = document.getElementById('rules-wrapper');
+        var pw = document.getElementById('prediction-wrapper');
+        var curRepId = currentMatrixRepId();
+        var rwRep = rw ? rw.getAttribute('data-repid') : '';
+        var pwRep = pw ? pw.getAttribute('data-repid') : '';
+        // If wrapper's rep ID doesn't match current, we switched away — cleanup + restore table
+        if (rw && rwRep !== curRepId) {
+          if (rw.__rulesRoot) rw.__rulesRoot.unmount(); rw.remove(); rulesInjected = false;
+          var ht = document.querySelector('[data-testid="table-representation"]');
+          if (ht && ht.style.display === 'none') ht.style.display = '';
+        }
+        if (pw && pwRep !== curRepId) {
+          if (pw.__predictionRoot) pw.__predictionRoot.unmount(); pw.remove(); predInjected = false;
+          var ht2 = document.querySelector('[data-testid="table-representation"]');
+          if (ht2 && ht2.style.display === 'none') ht2.style.display = '';
+        }
+        if (rw || pw) { hideRightPanel(); return; }
+        if (rulesInjected || predInjected) return;
+        var rep = document.querySelector('[data-testid="table-representation"]');
+        if (!rep || rep.offsetParent === null) return;
+        var curRep = currentMatrixRepId();
+        // Rules View — check table headers
+        if (!rulesInjected) {
+          var ths = rep.querySelectorAll('th');
+          for (var h = 0; h < ths.length; h++) {
+            var txt = ths[h].textContent;
+            if (txt.indexOf('规则') >= 0 || txt.indexOf('应用于') >= 0 || txt.indexOf('序号') >= 0) {
+              var pw = document.getElementById('prediction-wrapper'); if (pw) { pw.remove(); predInjected = false; }
+              rulesInjected = true;
+              var rw = document.getElementById('rules-wrapper'); if (rw) rw.setAttribute('data-repid', curRep);
+              else injectCustomView(rep, 'rules-wrapper', window.renderDoDAFRules);
+              return;
+            }
+          }
+        }
+        // Prediction View — check table headers
+        if (!predInjected) {
+          var ths2 = rep.querySelectorAll('th');
+          for (var h2 = 0; h2 < ths2.length; h2++) {
+            var txt2 = ths2[h2].textContent;
+            if (txt2.indexOf('技术和技能领域') >= 0 || txt2.indexOf('短期') >= 0) {
+              var rw2 = document.getElementById('rules-wrapper'); if (rw2) { rw2.remove(); rulesInjected = false; }
+              predInjected = true;
+              var pw2 = document.getElementById('prediction-wrapper'); if (pw2) pw2.setAttribute('data-repid', curRep);
+              else injectCustomView(rep, 'prediction-wrapper', window.renderDoDAFPrediction);
+              return;
+            }
+          }
+        }
+      }
+      setInterval(scanCustomViews, 200);
+
+      // Lifeline UML style: add dashed tail extending to view bottom + replace icon
+      function styleLifelines() {
+        var viewport = document.querySelector('.react-flow__viewport');
+        var flowPane = document.querySelector('.react-flow__pane');
+        if (viewport && flowPane) {
+          var nodes = document.querySelectorAll('[data-svg="rect"]');
+          for (var i = 0; i < nodes.length; i++) {
+            var n = nodes[i];
+            var label = n.querySelector('[data-testid*="Label content"]');
+            if (!label || (label.textContent.indexOf('Lifeline') < 0 && label.textContent.indexOf('Lifeline') < 0)) continue;
+            // Replace icon
+            var img = n.querySelector('img');
+            if (img && img.src.indexOf('lifeline') < 0) {
+              img.src = 'http://localhost:8080/images/lifeline.svg';
+              img.alt = '«Lifeline»';
+            }
+            // Dashed tail
+            var tail = n.querySelector('[data-lifeline-tail]');
+            if (!tail) {
+              tail = document.createElement('div');
+              tail.setAttribute('data-lifeline-tail', '1');
+              tail.style.cssText = 'position:absolute;top:100%;left:50%;width:0;border-left:2px dashed #666;transform:translateX(-50%);pointer-events:none';
+              n.style.position = 'relative';
+              n.appendChild(tail);
+            }
+            var rect = n.getBoundingClientRect();
+            var paneRect = flowPane.getBoundingClientRect();
+            var h = paneRect.bottom - rect.bottom;
+            if (h > 0) tail.style.height = h + 'px';
+          }
+        }
+      }
+      setInterval(styleLifelines, 300);
+
+      // Replace Lifeline icon in Explorer tree
+      function fixLifelineTreeIcons() {
+        var items = document.querySelectorAll('[data-treeitemid]');
+        for (var i = 0; i < items.length; i++) {
+          var it = items[i];
+          if (it.getAttribute('data-lifeline-icon') === '1') continue;
+          var label = it.querySelector('[class*="MuiTreeItem-label"]') || it;
+          if (label.textContent.indexOf('Lifeline') >= 0 || label.textContent.indexOf('Lifeline') >= 0) {
+            var img = it.querySelector('img');
+            if (img && img.src.indexOf('lifeline') < 0 && img.src.indexOf('PartDefinition') >= 0) {
+              img.src = 'http://localhost:8080/images/lifeline.svg';
+              it.setAttribute('data-lifeline-icon', '1');
+            }
+          }
+        }
+      }
+      setInterval(fixLifelineTreeIcons, 500);
+
+      

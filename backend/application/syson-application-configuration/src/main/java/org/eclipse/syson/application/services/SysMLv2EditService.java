@@ -262,10 +262,10 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalAction");
             } else if (childCreationDescriptionId.contains("ActualOrganization")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:ActualOrganization");
-            } else if (childCreationDescriptionId.contains("Person") && !childCreationDescriptionId.contains("PersonType")) {
-                if (eObject instanceof Element created) setAlias(created, "dodaf:Person");
             } else if (childCreationDescriptionId.contains("ActualPerson")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:ActualPerson");
+            } else if (childCreationDescriptionId.contains("Person") && !childCreationDescriptionId.contains("PersonType")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Person");
             } else if (eObject instanceof Element created && this.isDoDAFProject(container)) {
                 this.tagDoDAFAlias(created, childCreationDescriptionId);
             }
