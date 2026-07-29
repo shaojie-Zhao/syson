@@ -248,6 +248,8 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Performer");
             } else if (childCreationDescriptionId.contains("Location")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Location");
+            } else if (childCreationDescriptionId.contains("Condition")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Condition");
             } else if (eObject instanceof Element created && this.isDoDAFProject(container)) {
                 this.tagDoDAFAlias(created, childCreationDescriptionId);
             }
@@ -461,6 +463,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             else if (n.startsWith("Target")) setAlias(element, "dodaf:Target");
             else if (n.startsWith("Performer")) setAlias(element, "dodaf:Performer");
             else if (n.startsWith("Location")) setAlias(element, "dodaf:Location");
+            else if (n.startsWith("Condition")) setAlias(element, "dodaf:Condition");
             else if (n.startsWith("TimeScale")) setAlias(element, "dodaf:TimeScale");
             else if (n.startsWith("EquipCapability")) setAlias(element, "dodaf:EquipCapability");
             else if (n.startsWith("Lifeline")) setAlias(element, "dodaf:Lifeline");
