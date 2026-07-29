@@ -1161,6 +1161,22 @@
               imgD.alt = 'Condition';
             }
           }
+          // --- AnalysisActivity ---
+          else if (txt.indexOf('AnalysisActivity') >= 0) {
+            var imgZ = n.querySelector('img');
+            if (imgZ && imgZ.src.indexOf('AnalysisActivity') < 0) {
+              imgZ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f97316" stroke-width="1"/><line x1="8" y1="4" x2="8" y2="12" stroke="#f97316" stroke-width="0.8"/><line x1="4" y1="8" x2="12" y2="8" stroke="#f97316" stroke-width="0.8"/></svg>');
+              imgZ.alt = 'AnalysisActivity';
+            }
+          }
+          // --- CommandControlActivity ---
+          else if (txt.indexOf('CommandControlActivity') >= 0) {
+            var imgAA = n.querySelector('img');
+            if (imgAA && imgAA.src.indexOf('CommandControlActivity') < 0) {
+              imgAA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#dc2626" stroke-width="1.5"/><path d="M3 11l3-6 2 4 2-2 3 4" fill="none" stroke="#dc2626" stroke-width="1.2"/></svg>');
+              imgAA.alt = 'CommandControlActivity';
+            }
+          }
           // --- PlanManeuver ---
           else if (txt.indexOf('PlanManeuver') >= 0) {
             var imgY = n.querySelector('img');
@@ -1441,6 +1457,22 @@
             if (imgD && imgD.src.indexOf('Condition') < 0) {
               imgD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 12,6 10,6 10,12 6,12 6,6 4,6" fill="#eab308"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="5" font-weight="bold">?</text></svg>');
               it.setAttribute('data-cd-icon', '1');
+            }
+          }
+          // AnalysisActivity tree icon
+          if (it.getAttribute('data-aa-icon') !== '1' && label.textContent.indexOf('AnalysisActivity') >= 0) {
+            var imgZ = it.querySelector('img');
+            if (imgZ && imgZ.src.indexOf('AnalysisActivity') < 0) {
+              imgZ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f97316" stroke-width="1"/><line x1="8" y1="4" x2="8" y2="12" stroke="#f97316" stroke-width="0.8"/><line x1="4" y1="8" x2="12" y2="8" stroke="#f97316" stroke-width="0.8"/></svg>');
+              it.setAttribute('data-aa-icon', '1');
+            }
+          }
+          // CommandControlActivity tree icon
+          if (it.getAttribute('data-cc-icon') !== '1' && label.textContent.indexOf('CommandControlActivity') >= 0) {
+            var imgAA = it.querySelector('img');
+            if (imgAA && imgAA.src.indexOf('CommandControlActivity') < 0) {
+              imgAA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#dc2626" stroke-width="1.5"/><path d="M3 11l3-6 2 4 2-2 3 4" fill="none" stroke="#dc2626" stroke-width="1.2"/></svg>');
+              it.setAttribute('data-cc-icon', '1');
             }
           }
           // PlanManeuver tree icon

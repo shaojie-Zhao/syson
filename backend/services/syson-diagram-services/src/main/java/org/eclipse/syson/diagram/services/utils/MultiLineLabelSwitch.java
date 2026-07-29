@@ -161,6 +161,10 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "TransferManeuver";
         } else if (element.getAliasIds().contains("dodaf:PlanManeuver")) {
             return "PlanManeuver";
+        } else if (element.getAliasIds().contains("dodaf:AnalysisActivity")) {
+            return "AnalysisActivity";
+        } else if (element.getAliasIds().contains("dodaf:CommandControlActivity")) {
+            return "CommandControlActivity";
         } else if (element.getAliasIds().contains("dodaf:TimeScale")) {
             return "TimeScale";
         } else if (element.getAliasIds().contains("dodaf:EquipCapability")) {
