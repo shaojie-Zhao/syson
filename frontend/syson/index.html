@@ -1209,6 +1209,14 @@
               imgJ.alt = 'ActualOrganization';
             }
           }
+          // --- ActualPerson (before Person) ---
+          else if (txt.indexOf('ActualPerson') >= 0) {
+            var imgL = n.querySelector('img');
+            if (imgL && imgL.src.indexOf('ActualPerson') < 0) {
+              imgL.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="4.5" r="2" fill="#f97316"/><ellipse cx="8" cy="11" rx="4" ry="3" fill="#f97316"/><path d="M4 8l2 2 5-5" fill="none" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgL.alt = 'ActualPerson';
+            }
+          }
           // --- Person ---
           else if (txt.indexOf('Person') >= 0) {
             var imgK = n.querySelector('img');
@@ -1377,6 +1385,14 @@
             if (imgJ && imgJ.src.indexOf('ActualOrganization') < 0) {
               imgJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="8" width="4" height="6" rx="0.5" fill="#14b8a6"/><rect x="9" y="5" width="4" height="9" rx="0.5" fill="#14b8a6"/><rect x="5" y="2" width="3" height="3" rx="0.5" fill="#5eead4"/></svg>');
               it.setAttribute('data-ao-icon', '1');
+            }
+          }
+          // ActualPerson tree icon (before Person)
+          if (it.getAttribute('data-ap-icon') !== '1' && label.textContent.indexOf('ActualPerson') >= 0) {
+            var imgL = it.querySelector('img');
+            if (imgL && imgL.src.indexOf('ActualPerson') < 0) {
+              imgL.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="4.5" r="2" fill="#f97316"/><ellipse cx="8" cy="11" rx="4" ry="3" fill="#f97316"/><path d="M4 8l2 2 5-5" fill="none" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              it.setAttribute('data-ap-icon', '1');
             }
           }
           // Person tree icon
