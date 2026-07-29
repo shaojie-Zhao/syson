@@ -250,6 +250,8 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Location");
             } else if (childCreationDescriptionId.contains("Condition")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Condition");
+            } else if (childCreationDescriptionId.contains("Task") && !childCreationDescriptionId.contains("TaskStage") && !childCreationDescriptionId.contains("TaskIntent")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Task");
             } else if (eObject instanceof Element created && this.isDoDAFProject(container)) {
                 this.tagDoDAFAlias(created, childCreationDescriptionId);
             }
@@ -455,6 +457,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             // Map by menu item base name (strip trailing numbers from auto-numbering)
             if (n.startsWith("Capability")) setAlias(element, "dodaf:capability");
             else if (n.startsWith("OperationalCapability")) setAlias(element, "dodaf:OperationalCapability");
+            else if (n.startsWith("Task") && !n.startsWith("TaskStage") && !n.startsWith("TaskIntent")) setAlias(element, "dodaf:Task");
             else if (n.startsWith("TaskStage")) setAlias(element, "dodaf:TaskStage");
             else if (n.startsWith("TaskIntent")) setAlias(element, "dodaf:TaskIntent");
             else if (n.startsWith("ImplementationPhase")) setAlias(element, "dodaf:ImplementationPhase");
