@@ -1161,6 +1161,14 @@
               imgD.alt = 'Condition';
             }
           }
+          // --- ReceiveActivity ---
+          else if (txt.indexOf('ReceiveActivity') >= 0) {
+            var imgU = n.querySelector('img');
+            if (imgU && imgU.src.indexOf('ReceiveActivity') < 0) {
+              imgU.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/><path d="M13 8l-5 4v-3H1V7h7V4z" fill="#6366f1"/></svg>');
+              imgU.alt = 'ReceiveActivity';
+            }
+          }
           // --- TransmitActivity ---
           else if (txt.indexOf('TransmitActivity') >= 0) {
             var imgT = n.querySelector('img');
@@ -1401,6 +1409,14 @@
             if (imgD && imgD.src.indexOf('Condition') < 0) {
               imgD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 12,6 10,6 10,12 6,12 6,6 4,6" fill="#eab308"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="5" font-weight="bold">?</text></svg>');
               it.setAttribute('data-cd-icon', '1');
+            }
+          }
+          // ReceiveActivity tree icon
+          if (it.getAttribute('data-ra-icon') !== '1' && label.textContent.indexOf('ReceiveActivity') >= 0) {
+            var imgU = it.querySelector('img');
+            if (imgU && imgU.src.indexOf('ReceiveActivity') < 0) {
+              imgU.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/><path d="M13 8l-5 4v-3H1V7h7V4z" fill="#6366f1"/></svg>');
+              it.setAttribute('data-ra-icon', '1');
             }
           }
           // TransmitActivity tree icon
