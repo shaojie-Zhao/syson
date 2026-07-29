@@ -1169,6 +1169,14 @@
               imgZ.alt = 'AnalysisActivity';
             }
           }
+          // --- DetectionActivity ---
+          else if (txt.indexOf('DetectionActivity') >= 0) {
+            var imgAB = n.querySelector('img');
+            if (imgAB && imgAB.src.indexOf('DetectionActivity') < 0) {
+              imgAB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><circle cx="8" cy="8" r="1.5" fill="#10b981"/><circle cx="8" cy="8" r="4" fill="none" stroke="#10b981" stroke-width="0.8"/><circle cx="8" cy="8" r="6" fill="none" stroke="#10b981" stroke-width="0.4"/></svg>');
+              imgAB.alt = 'DetectionActivity';
+            }
+          }
           // --- CommandControlActivity ---
           else if (txt.indexOf('CommandControlActivity') >= 0) {
             var imgAA = n.querySelector('img');
@@ -1465,6 +1473,14 @@
             if (imgZ && imgZ.src.indexOf('AnalysisActivity') < 0) {
               imgZ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f97316" stroke-width="1"/><line x1="8" y1="4" x2="8" y2="12" stroke="#f97316" stroke-width="0.8"/><line x1="4" y1="8" x2="12" y2="8" stroke="#f97316" stroke-width="0.8"/></svg>');
               it.setAttribute('data-aa-icon', '1');
+            }
+          }
+          // DetectionActivity tree icon
+          if (it.getAttribute('data-da-icon') !== '1' && label.textContent.indexOf('DetectionActivity') >= 0) {
+            var imgAB = it.querySelector('img');
+            if (imgAB && imgAB.src.indexOf('DetectionActivity') < 0) {
+              imgAB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><circle cx="8" cy="8" r="1.5" fill="#10b981"/><circle cx="8" cy="8" r="4" fill="none" stroke="#10b981" stroke-width="0.8"/><circle cx="8" cy="8" r="6" fill="none" stroke="#10b981" stroke-width="0.4"/></svg>');
+              it.setAttribute('data-da-icon', '1');
             }
           }
           // CommandControlActivity tree icon
