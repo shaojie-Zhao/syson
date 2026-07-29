@@ -250,6 +250,8 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Location");
             } else if (childCreationDescriptionId.contains("Condition")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Condition");
+            } else if (childCreationDescriptionId.contains("OperationalTask")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalTask");
             } else if (childCreationDescriptionId.contains("Task") && !childCreationDescriptionId.contains("TaskStage") && !childCreationDescriptionId.contains("TaskIntent")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Task");
             } else if (childCreationDescriptionId.contains("Force")) {
@@ -272,8 +274,6 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalProblem");
             } else if (childCreationDescriptionId.contains("OperationalActivity")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalActivity");
-            } else if (childCreationDescriptionId.contains("OperationalTask")) {
-                if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalTask");
             } else if (childCreationDescriptionId.contains("Person") && !childCreationDescriptionId.contains("PersonType")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Person");
             } else if (eObject instanceof Element created && this.isDoDAFProject(container)) {
