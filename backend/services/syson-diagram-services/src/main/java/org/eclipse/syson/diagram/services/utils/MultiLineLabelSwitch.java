@@ -133,6 +133,8 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "ActualOrganization";
         } else if (element.getAliasIds().contains("dodaf:Person")) {
             return "Person";
+        } else if (element.getAliasIds().contains("dodaf:ActualPerson")) {
+            return "ActualPerson";
         } else if (element.getAliasIds().contains("dodaf:TimeScale")) {
             return "TimeScale";
         } else if (element.getAliasIds().contains("dodaf:EquipCapability")) {
