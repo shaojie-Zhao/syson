@@ -1201,6 +1201,14 @@
               imgI.alt = 'OperationalAction';
             }
           }
+          // --- ActualOrganization ---
+          else if (txt.indexOf('ActualOrganization') >= 0) {
+            var imgJ = n.querySelector('img');
+            if (imgJ && imgJ.src.indexOf('ActualOrganization') < 0) {
+              imgJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="8" width="4" height="6" rx="0.5" fill="#14b8a6"/><rect x="9" y="5" width="4" height="9" rx="0.5" fill="#14b8a6"/><rect x="5" y="2" width="3" height="3" rx="0.5" fill="#5eead4"/></svg>');
+              imgJ.alt = 'ActualOrganization';
+            }
+          }
           // --- Vision ---
           else if (txt.indexOf('Vision') >= 0) {
             var img8 = n.querySelector('img');
@@ -1345,6 +1353,14 @@
             if (imgI && imgI.src.indexOf('OperationalAction') < 0) {
               imgI.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22d3ee" stroke-width="1.5"/><polygon points="3,13 8,2 13,13 8,10" fill="#22d3ee"/></svg>');
               it.setAttribute('data-oa-icon', '1');
+            }
+          }
+          // ActualOrganization tree icon
+          if (it.getAttribute('data-ao-icon') !== '1' && label.textContent.indexOf('ActualOrganization') >= 0) {
+            var imgJ = it.querySelector('img');
+            if (imgJ && imgJ.src.indexOf('ActualOrganization') < 0) {
+              imgJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="8" width="4" height="6" rx="0.5" fill="#14b8a6"/><rect x="9" y="5" width="4" height="9" rx="0.5" fill="#14b8a6"/><rect x="5" y="2" width="3" height="3" rx="0.5" fill="#5eead4"/></svg>');
+              it.setAttribute('data-ao-icon', '1');
             }
           }
           // Vision tree icon
