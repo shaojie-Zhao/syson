@@ -183,6 +183,10 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "MergeNode";
         } else if (element.getAliasIds().contains("dodaf:HorizontalForkNode")) {
             return "HorizontalForkNode";
+        } else if (element.getAliasIds().contains("dodaf:VerticalForkNode")) {
+            return "VerticalForkNode";
+        } else if (element.getAliasIds().contains("dodaf:HorizontalJoinNode")) {
+            return "HorizontalJoinNode";
         } else if (element.getAliasIds().contains("dodaf:TimeScale")) {
             return "TimeScale";
         } else if (element.getAliasIds().contains("dodaf:EquipCapability")) {
