@@ -219,6 +219,14 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "ResourcePort";
         } else if (element.getAliasIds().contains("dodaf:CapabilityConfiguration")) {
             return "CapabilityConfiguration";
+        } else if (element.getAliasIds().contains("dodaf:TechnicalStandard")) {
+            return "TechnicalStandard";
+        } else if (element.getAliasIds().contains("dodaf:FunctionStandard")) {
+            return "FunctionStandard";
+        } else if (element.getAliasIds().contains("dodaf:Protocol")) {
+            return "Protocol";
+        } else if (element.getAliasIds().contains("dodaf:StandardConfiguration")) {
+            return "StandardConfiguration";
         } else if (element.getAliasIds().contains("dodaf:TimeScale")) {
             return "TimeScale";
         } else if (element.getAliasIds().contains("dodaf:EquipCapability")) {
