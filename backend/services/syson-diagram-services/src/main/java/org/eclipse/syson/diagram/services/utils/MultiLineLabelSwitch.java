@@ -249,6 +249,24 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "Project";
         } else if (element.getAliasIds().contains("dodaf:StateIndicator")) {
             return "StateIndicator";
+        } else if (element.getAliasIds().contains("dodaf:ConceptEntity")) {
+            return "ConceptEntity";
+        } else if (element.getAliasIds().contains("dodaf:ConceptObservable")) {
+            return "ConceptObservable";
+        } else if (element.getAliasIds().contains("dodaf:ExchangeElement")) {
+            return "ExchangeElement";
+        } else if (element.getAliasIds().contains("dodaf:InformationTransmissionPattern")) {
+            return "InformationTransmissionPattern";
+        } else if (element.getAliasIds().contains("dodaf:InformationElement")) {
+            return "InformationElement";
+        } else if (element.getAliasIds().contains("dodaf:Information")) {
+            return "Information";
+        } else if (element.getAliasIds().contains("dodaf:EffectivenessIndicatorParameter")) {
+            return "EffectivenessIndicatorParameter";
+        } else if (element.getAliasIds().contains("dodaf:EffectivenessIndicator")) {
+            return "EffectivenessIndicator";
+        } else if (element.getAliasIds().contains("dodaf:Command")) {
+            return "Command";
         } else if (element.getAliasIds().contains("dodaf:TimeScale")) {
             return "TimeScale";
         } else if (element.getAliasIds().contains("dodaf:EquipCapability")) {

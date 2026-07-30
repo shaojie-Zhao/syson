@@ -622,6 +622,15 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             else if (n.startsWith("ProjectType")) setAlias(element, "dodaf:ProjectType");
             else if (n.startsWith("Project") && !n.startsWith("ProjectActivity") && !n.startsWith("ProjectMilestone") && !n.startsWith("ProjectType")) setAlias(element, "dodaf:Project");
             else if (n.startsWith("StateIndicator")) setAlias(element, "dodaf:StateIndicator");
+            else if (n.startsWith("ConceptEntity")) setAlias(element, "dodaf:ConceptEntity");
+            else if (n.startsWith("ConceptObservable")) setAlias(element, "dodaf:ConceptObservable");
+            else if (n.startsWith("ExchangeElement")) setAlias(element, "dodaf:ExchangeElement");
+            else if (n.startsWith("InformationTransmissionPattern")) setAlias(element, "dodaf:InformationTransmissionPattern");
+            else if (n.startsWith("InformationElement")) setAlias(element, "dodaf:InformationElement");
+            else if (n.startsWith("Information")) setAlias(element, "dodaf:Information");
+            else if (n.startsWith("EffectivenessIndicatorParameter")) setAlias(element, "dodaf:EffectivenessIndicatorParameter");
+            else if (n.startsWith("EffectivenessIndicator")) setAlias(element, "dodaf:EffectivenessIndicator");
+            else if (n.startsWith("Command")) setAlias(element, "dodaf:Command");
             else {
                 String alias = DODAF_TYPE_TO_ALIAS.get(aliasedId);
                 if (alias != null && !element.getAliasIds().contains(alias)) element.getAliasIds().add(alias);
