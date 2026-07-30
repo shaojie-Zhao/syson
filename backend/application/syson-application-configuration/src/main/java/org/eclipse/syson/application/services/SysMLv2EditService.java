@@ -294,6 +294,8 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:VerticalForkNode");
             } else if (childCreationDescriptionId.contains("HorizontalJoinNode")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:HorizontalJoinNode");
+            } else if (childCreationDescriptionId.contains("VerticalJoinNode")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:VerticalJoinNode");
             } else if (childCreationDescriptionId.contains("Task") && !childCreationDescriptionId.contains("TaskStage") && !childCreationDescriptionId.contains("TaskIntent")) {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Task");
             } else if (childCreationDescriptionId.contains("Force")) {
@@ -563,6 +565,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             else if (n.startsWith("HorizontalForkNode")) setAlias(element, "dodaf:HorizontalForkNode");
             else if (n.startsWith("VerticalForkNode")) setAlias(element, "dodaf:VerticalForkNode");
             else if (n.startsWith("HorizontalJoinNode")) setAlias(element, "dodaf:HorizontalJoinNode");
+            else if (n.startsWith("VerticalJoinNode")) setAlias(element, "dodaf:VerticalJoinNode");
             else if (n.startsWith("ActualOrganization")) setAlias(element, "dodaf:ActualOrganization");
             else if (n.startsWith("ActualPerson")) setAlias(element, "dodaf:ActualPerson");
             else if (n.startsWith("Duty")) setAlias(element, "dodaf:Duty");

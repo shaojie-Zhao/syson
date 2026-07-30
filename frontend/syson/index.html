@@ -1241,6 +1241,14 @@
               imgHJ.alt = 'HorizontalJoinNode';
             }
           }
+          // --- VerticalJoinNode ---
+          else if (txt.indexOf('VerticalJoinNode') >= 0) {
+            var imgVJ = n.querySelector('img');
+            if (imgVJ && imgVJ.src.indexOf('VerticalJoinNode') < 0) {
+              imgVJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a21caf" stroke-width="1.5"/><rect x="5" y="2" width="4" height="12" fill="#a21caf"/><circle cx="7" cy="4" r="1" fill="#1e293b"/><circle cx="7" cy="12" r="1" fill="#1e293b"/></svg>');
+              imgVJ.alt = 'VerticalJoinNode';
+            }
+          }
           // --- StrikeActivity ---
           else if (txt.indexOf('StrikeActivity') >= 0) {
             var imgAC = n.querySelector('img');
@@ -1625,6 +1633,14 @@
             if (imgHJ && imgHJ.src.indexOf('HorizontalJoinNode') < 0) {
               imgHJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/><rect x="2" y="5" width="12" height="4" fill="#6366f1"/><circle cx="4" cy="7" r="1" fill="#1e293b"/><circle cx="12" cy="7" r="1" fill="#1e293b"/></svg>');
               imgHJ.alt = 'HorizontalJoinNode'; it.setAttribute('data-hj-icon', '1');
+            }
+          }
+          // VerticalJoinNode tree icon
+          if (it.getAttribute('data-vj-icon') !== '1' && label.textContent.indexOf('VerticalJoinNode') >= 0) {
+            var imgVJ = it.querySelector('img');
+            if (imgVJ && imgVJ.src.indexOf('VerticalJoinNode') < 0) {
+              imgVJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a21caf" stroke-width="1.5"/><rect x="5" y="2" width="4" height="12" fill="#a21caf"/><circle cx="7" cy="4" r="1" fill="#1e293b"/><circle cx="7" cy="12" r="1" fill="#1e293b"/></svg>');
+              imgVJ.alt = 'VerticalJoinNode'; it.setAttribute('data-vj-icon', '1');
             }
           }
           // StrikeActivity tree icon
