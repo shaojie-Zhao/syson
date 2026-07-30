@@ -251,6 +251,16 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "StateIndicator";
         } else if (element.getAliasIds().contains("dodaf:ConceptEntity")) {
             return "ConceptEntity";
+        } else if (element.getAliasIds().contains("dodaf:LogicalEntity")) {
+            return "LogicalEntity";
+        } else if (element.getAliasIds().contains("dodaf:LogicalMeasure")) {
+            return "LogicalMeasure";
+        } else if (element.getAliasIds().contains("dodaf:LogicalDataModel")) {
+            return "LogicalDataModel";
+        } else if (element.getAliasIds().contains("dodaf:LogicalMeasurementSystem")) {
+            return "LogicalMeasurementSystem";
+        } else if (element.getAliasIds().contains("dodaf:Entity")) {
+            return "Entity";
         } else if (element.getAliasIds().contains("dodaf:ConceptObservable")) {
             return "ConceptObservable";
         } else if (element.getAliasIds().contains("dodaf:ExchangeElement")) {

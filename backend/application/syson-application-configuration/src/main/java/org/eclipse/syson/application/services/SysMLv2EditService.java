@@ -623,6 +623,11 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             else if (n.startsWith("Project") && !n.startsWith("ProjectActivity") && !n.startsWith("ProjectMilestone") && !n.startsWith("ProjectType")) setAlias(element, "dodaf:Project");
             else if (n.startsWith("StateIndicator")) setAlias(element, "dodaf:StateIndicator");
             else if (n.startsWith("ConceptEntity")) setAlias(element, "dodaf:ConceptEntity");
+            else if (n.startsWith("LogicalEntity")) setAlias(element, "dodaf:LogicalEntity");
+            else if (n.startsWith("LogicalMeasure")) setAlias(element, "dodaf:LogicalMeasure");
+            else if (n.startsWith("LogicalDataModel")) setAlias(element, "dodaf:LogicalDataModel");
+            else if (n.startsWith("LogicalMeasurementSystem")) setAlias(element, "dodaf:LogicalMeasurementSystem");
+            else if (n.startsWith("Entity") && !n.startsWith("ConceptEntity")) setAlias(element, "dodaf:Entity");
             else if (n.startsWith("ConceptObservable")) setAlias(element, "dodaf:ConceptObservable");
             else if (n.startsWith("ExchangeElement")) setAlias(element, "dodaf:ExchangeElement");
             else if (n.startsWith("InformationTransmissionPattern")) setAlias(element, "dodaf:InformationTransmissionPattern");
