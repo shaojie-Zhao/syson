@@ -1004,7 +1004,7 @@
           var ht2 = document.querySelector('[data-testid="table-representation"]');
           if (ht2 && ht2.style.display === 'none') ht2.style.display = '';
         }
-        if (rw || pw) { hideRightPanel(); return; }
+        if ((rw && rw.style.display !== 'none') || (pw && pw.style.display !== 'none')) { hideRightPanel(); return; }
         if (rulesInjected || predInjected) return;
         // Check if current view is Rules (OV-6a) by tab name
         var tabSel = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
