@@ -1744,8 +1744,8 @@
           if (lblEl) {
             var txtLen = (lblEl.textContent || '').length;
             var parent = n.closest('[data-id]');
-            if (parent && txtLen > 12) {
-              var extra = (txtLen - 12) * 7;
+            if (parent && txtLen > 10) {
+              var extra = (txtLen - 10) * 5;
               parent.style.width = (120 + extra) + 'px';
             }
           }
