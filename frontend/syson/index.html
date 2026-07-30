@@ -1739,6 +1739,16 @@
               img8.alt = 'Vision';
             }
           }
+          // Auto-expand node width for long labels
+          var lblEl = n.querySelector('[data-testid*="Label content"]');
+          if (lblEl) {
+            var txtLen = (lblEl.textContent || '').length;
+            var parent = n.closest('[data-id]');
+            if (parent && txtLen > 12) {
+              var extra = (txtLen - 12) * 7;
+              parent.style.width = (120 + extra) + 'px';
+            }
+          }
         }
       }
       setInterval(styleLifelines, 300);
