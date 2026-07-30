@@ -963,7 +963,7 @@
         var wrapper = document.createElement('div');
         wrapper.id = wrapperId;
         wrapper.setAttribute('data-repid', currentMatrixRepId());
-        wrapper.style.cssText = 'height:100%;overflow:hidden';
+        wrapper.style.cssText = 'width:100%;height:100%;overflow:auto';
         containerEl.parentElement.insertBefore(wrapper, containerEl.nextSibling);
         if (renderFn) renderFn(wrapper);
         else { var check = setInterval(function() { if (renderFn) { clearInterval(check); renderFn(wrapper); } }, 50); }
