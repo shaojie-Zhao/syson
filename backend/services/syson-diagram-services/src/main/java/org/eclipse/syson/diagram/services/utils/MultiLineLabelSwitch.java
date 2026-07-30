@@ -171,6 +171,18 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "StrikeActivity";
         } else if (element.getAliasIds().contains("dodaf:DefenseActivity")) {
             return "DefenseActivity";
+        } else if (element.getAliasIds().contains("dodaf:SupportActivity")) {
+            return "SupportActivity";
+        } else if (element.getAliasIds().contains("dodaf:ActivityParameterNode")) {
+            return "ActivityParameterNode";
+        } else if (element.getAliasIds().contains("dodaf:InitialNode")) {
+            return "InitialNode";
+        } else if (element.getAliasIds().contains("dodaf:DecisionNode")) {
+            return "DecisionNode";
+        } else if (element.getAliasIds().contains("dodaf:MergeNode")) {
+            return "MergeNode";
+        } else if (element.getAliasIds().contains("dodaf:HorizontalForkNode")) {
+            return "HorizontalForkNode";
         } else if (element.getAliasIds().contains("dodaf:TimeScale")) {
             return "TimeScale";
         } else if (element.getAliasIds().contains("dodaf:EquipCapability")) {
