@@ -1249,6 +1249,126 @@
               imgVJ.alt = 'VerticalJoinNode';
             }
           }
+          // --- ActivityFinalNode ---
+          else if (txt.indexOf('ActivityFinalNode') >= 0) {
+            var imgAF = n.querySelector('img');
+            if (imgAF && imgAF.src.indexOf('ActivityFinalNode') < 0) {
+              imgAF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#dc2626" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#dc2626"/><path d="M6 6l4 4M10 6l-4 4" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgAF.alt = 'ActivityFinalNode';
+            }
+          }
+          // --- FlowFinalNode ---
+          else if (txt.indexOf('FlowFinalNode') >= 0) {
+            var imgFF = n.querySelector('img');
+            if (imgFF && imgFF.src.indexOf('FlowFinalNode') < 0) {
+              imgFF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#dc2626" stroke-width="1.5"/><circle cx="8" cy="8" r="5" fill="none" stroke="#dc2626" stroke-width="1.5"/><path d="M6 6l4 4M10 6l-4 4" stroke="#dc2626" stroke-width="1.5"/></svg>');
+              imgFF.alt = 'FlowFinalNode';
+            }
+          }
+          // --- OpaqueAction ---
+          else if (txt.indexOf('OpaqueAction') >= 0) {
+            var imgOA = n.querySelector('img');
+            if (imgOA && imgOA.src.indexOf('OpaqueAction') < 0) {
+              imgOA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6b7280" stroke-width="1.5"/><rect x="3" y="4" width="10" height="8" rx="1" fill="#6b7280"/><path d="M5 7h6M5 9h4" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgOA.alt = 'OpaqueAction';
+            }
+          }
+          // --- Signal ---
+          else if (txt.indexOf('Signal') >= 0) {
+            var imgSG = n.querySelector('img');
+            if (imgSG && imgSG.src.indexOf('Signal') < 0) {
+              imgSG.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 14,13 2,13" fill="#eab308"/></svg>');
+              imgSG.alt = 'Signal';
+            }
+          }
+          // --- VerticalPartition ---
+          else if (txt.indexOf('VerticalPartition') >= 0) {
+            var imgVP = n.querySelector('img');
+            if (imgVP && imgVP.src.indexOf('VerticalPartition') < 0) {
+              imgVP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#84cc16" stroke-width="1.5"/><line x1="8" y1="2" x2="8" y2="14" stroke="#84cc16" stroke-width="1" stroke-dasharray="2 1"/></svg>');
+              imgVP.alt = 'VerticalPartition';
+            }
+          }
+          // --- HorizontalPartition ---
+          else if (txt.indexOf('HorizontalPartition') >= 0) {
+            var imgHP = n.querySelector('img');
+            if (imgHP && imgHP.src.indexOf('HorizontalPartition') < 0) {
+              imgHP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#84cc16" stroke-width="1.5"/><line x1="2" y1="8" x2="14" y2="8" stroke="#84cc16" stroke-width="1" stroke-dasharray="2 1"/></svg>');
+              imgHP.alt = 'HorizontalPartition';
+            }
+          }
+          // --- PatrolActivity ---
+          else if (txt.indexOf('PatrolActivity') >= 0) {
+            var imgPA = n.querySelector('img');
+            if (imgPA && imgPA.src.indexOf('PatrolActivity') < 0) {
+              imgPA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="6" cy="6" r="3" fill="#22c55e"/><circle cx="6" cy="6" r="1" fill="#1e293b"/><circle cx="12" cy="12" r="3" fill="#22c55e"/><circle cx="12" cy="12" r="1" fill="#1e293b"/></svg>');
+              imgPA.alt = 'PatrolActivity';
+            }
+          }
+          // --- TimeConstraint ---
+          else if (txt.indexOf('TimeConstraint') >= 0) {
+            var imgTC = n.querySelector('img');
+            if (imgTC && imgTC.src.indexOf('TimeConstraint') < 0) {
+              imgTC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#0ea5e9" stroke-width="1.5"/><line x1="8" y1="5" x2="8" y2="8" stroke="#0ea5e9" stroke-width="1.5"/><line x1="8" y1="8" x2="11" y2="8" stroke="#0ea5e9" stroke-width="1.5"/></svg>');
+              imgTC.alt = 'TimeConstraint';
+            }
+          }
+          // --- DurationConstraint ---
+          else if (txt.indexOf('DurationConstraint') >= 0) {
+            var imgDC = n.querySelector('img');
+            if (imgDC && imgDC.src.indexOf('DurationConstraint') < 0) {
+              imgDC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><rect x="4" y="3" width="8" height="10" rx="1" fill="#f97316"/><line x1="6" y1="8" x2="10" y2="8" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgDC.alt = 'DurationConstraint';
+            }
+          }
+          // --- System ---
+          else if (txt.indexOf('System') >= 0 && txt.indexOf('SystemNode') < 0) {
+            var imgSYS = n.querySelector('img');
+            if (imgSYS && imgSYS.src.indexOf('SystemSVG') < 0) {
+              imgSYS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><polygon points="8,2 14,5.5 14,10.5 8,14 2,10.5 2,5.5" fill="#3b82f6"/></svg>');
+              imgSYS.alt = 'System'; imgSYS.setAttribute('data-sys-icon','1');
+            }
+          }
+          // --- Software ---
+          else if (txt.indexOf('Software') >= 0) {
+            var imgSW = n.querySelector('img');
+            if (imgSW && imgSW.src.indexOf('Software') < 0) {
+              imgSW.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#60a5fa" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#60a5fa"/><line x1="5" y1="6" x2="11" y2="6" stroke="#1e293b" stroke-width="1"/><line x1="5" y1="8" x2="9" y2="8" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgSW.alt = 'Software';
+            }
+          }
+          // --- PersonType ---
+          else if (txt.indexOf('PersonType') >= 0) {
+            var imgPT = n.querySelector('img');
+            if (imgPT && imgPT.src.indexOf('PersonType') < 0) {
+              imgPT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><circle cx="8" cy="4.5" r="2" fill="#14b8a6"/><ellipse cx="8" cy="11" rx="4" ry="3" fill="#14b8a6"/><line x1="6" y1="11" x2="10" y2="11" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgPT.alt = 'PersonType';
+            }
+          }
+          // --- OrganizationType ---
+          else if (txt.indexOf('OrganizationType') >= 0) {
+            var imgOT = n.querySelector('img');
+            if (imgOT && imgOT.src.indexOf('OrganizationType') < 0) {
+              imgOT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="2" width="10" height="4" fill="#14b8a6"/><rect x="3" y="8" width="10" height="6" fill="none" stroke="#14b8a6" stroke-width="1.5"/></svg>');
+              imgOT.alt = 'OrganizationType';
+            }
+          }
+          // --- ResourcePort ---
+          else if (txt.indexOf('ResourcePort') >= 0) {
+            var imgRP = n.querySelector('img');
+            if (imgRP && imgRP.src.indexOf('ResourcePort') < 0) {
+              imgRP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#8b5cf6"/><polygon points="8,4 12,8 8,12 4,8" fill="none" stroke="#8b5cf6" stroke-width="1"/></svg>');
+              imgRP.alt = 'ResourcePort';
+            }
+          }
+          // --- CapabilityConfiguration ---
+          else if (txt.indexOf('CapabilityConfiguration') >= 0) {
+            var imgCC = n.querySelector('img');
+            if (imgCC && imgCC.src.indexOf('CapabilityConfiguration') < 0) {
+              imgCC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="6" cy="6" r="3" fill="#f59e0b"/><circle cx="10" cy="10" r="3" fill="#f59e0b"/><line x1="8" y1="5" x2="8" y2="8" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgCC.alt = 'CapabilityConfiguration';
+            }
+          }
           // --- StrikeActivity ---
           else if (txt.indexOf('StrikeActivity') >= 0) {
             var imgAC = n.querySelector('img');
@@ -1641,6 +1761,126 @@
             if (imgVJ && imgVJ.src.indexOf('VerticalJoinNode') < 0) {
               imgVJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a21caf" stroke-width="1.5"/><rect x="5" y="2" width="4" height="12" fill="#a21caf"/><circle cx="7" cy="4" r="1" fill="#1e293b"/><circle cx="7" cy="12" r="1" fill="#1e293b"/></svg>');
               imgVJ.alt = 'VerticalJoinNode'; it.setAttribute('data-vj-icon', '1');
+            }
+          }
+          // ActivityFinalNode tree icon
+          if (it.getAttribute('data-af-icon') !== '1' && label.textContent.indexOf('ActivityFinalNode') >= 0) {
+            var imgAF = it.querySelector('img');
+            if (imgAF && imgAF.src.indexOf('ActivityFinalNode') < 0) {
+              imgAF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#dc2626" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#dc2626"/><path d="M6 6l4 4M10 6l-4 4" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgAF.alt = 'ActivityFinalNode'; it.setAttribute('data-af-icon', '1');
+            }
+          }
+          // FlowFinalNode tree icon
+          if (it.getAttribute('data-ff-icon') !== '1' && label.textContent.indexOf('FlowFinalNode') >= 0) {
+            var imgFF = it.querySelector('img');
+            if (imgFF && imgFF.src.indexOf('FlowFinalNode') < 0) {
+              imgFF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#dc2626" stroke-width="1.5"/><circle cx="8" cy="8" r="5" fill="none" stroke="#dc2626" stroke-width="1.5"/><path d="M6 6l4 4M10 6l-4 4" stroke="#dc2626" stroke-width="1.5"/></svg>');
+              imgFF.alt = 'FlowFinalNode'; it.setAttribute('data-ff-icon', '1');
+            }
+          }
+          // OpaqueAction tree icon
+          if (it.getAttribute('data-oa-icon') !== '1' && label.textContent.indexOf('OpaqueAction') >= 0) {
+            var imgOA = it.querySelector('img');
+            if (imgOA && imgOA.src.indexOf('OpaqueAction') < 0) {
+              imgOA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6b7280" stroke-width="1.5"/><rect x="3" y="4" width="10" height="8" rx="1" fill="#6b7280"/><path d="M5 7h6M5 9h4" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgOA.alt = 'OpaqueAction'; it.setAttribute('data-oa-icon', '1');
+            }
+          }
+          // Signal tree icon
+          if (it.getAttribute('data-sg-icon') !== '1' && label.textContent.indexOf('Signal') >= 0) {
+            var imgSG = it.querySelector('img');
+            if (imgSG && imgSG.src.indexOf('Signal') < 0) {
+              imgSG.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 14,13 2,13" fill="#eab308"/></svg>');
+              imgSG.alt = 'Signal'; it.setAttribute('data-sg-icon', '1');
+            }
+          }
+          // VerticalPartition tree icon
+          if (it.getAttribute('data-vp-icon') !== '1' && label.textContent.indexOf('VerticalPartition') >= 0) {
+            var imgVP = it.querySelector('img');
+            if (imgVP && imgVP.src.indexOf('VerticalPartition') < 0) {
+              imgVP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#84cc16" stroke-width="1.5"/><line x1="8" y1="2" x2="8" y2="14" stroke="#84cc16" stroke-width="1" stroke-dasharray="2 1"/></svg>');
+              imgVP.alt = 'VerticalPartition'; it.setAttribute('data-vp-icon', '1');
+            }
+          }
+          // HorizontalPartition tree icon
+          if (it.getAttribute('data-hp-icon') !== '1' && label.textContent.indexOf('HorizontalPartition') >= 0) {
+            var imgHP = it.querySelector('img');
+            if (imgHP && imgHP.src.indexOf('HorizontalPartition') < 0) {
+              imgHP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#84cc16" stroke-width="1.5"/><line x1="2" y1="8" x2="14" y2="8" stroke="#84cc16" stroke-width="1" stroke-dasharray="2 1"/></svg>');
+              imgHP.alt = 'HorizontalPartition'; it.setAttribute('data-hp-icon', '1');
+            }
+          }
+          // PatrolActivity tree icon
+          if (it.getAttribute('data-pa-icon') !== '1' && label.textContent.indexOf('PatrolActivity') >= 0) {
+            var imgPA = it.querySelector('img');
+            if (imgPA && imgPA.src.indexOf('PatrolActivity') < 0) {
+              imgPA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="6" cy="6" r="3" fill="#22c55e"/><circle cx="6" cy="6" r="1" fill="#1e293b"/><circle cx="12" cy="12" r="3" fill="#22c55e"/><circle cx="12" cy="12" r="1" fill="#1e293b"/></svg>');
+              imgPA.alt = 'PatrolActivity'; it.setAttribute('data-pa-icon', '1');
+            }
+          }
+          // TimeConstraint tree icon
+          if (it.getAttribute('data-tc-icon') !== '1' && label.textContent.indexOf('TimeConstraint') >= 0) {
+            var imgTC = it.querySelector('img');
+            if (imgTC && imgTC.src.indexOf('TimeConstraint') < 0) {
+              imgTC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#0ea5e9" stroke-width="1.5"/><line x1="8" y1="5" x2="8" y2="8" stroke="#0ea5e9" stroke-width="1.5"/><line x1="8" y1="8" x2="11" y2="8" stroke="#0ea5e9" stroke-width="1.5"/></svg>');
+              imgTC.alt = 'TimeConstraint'; it.setAttribute('data-tc-icon', '1');
+            }
+          }
+          // DurationConstraint tree icon
+          if (it.getAttribute('data-dc-icon') !== '1' && label.textContent.indexOf('DurationConstraint') >= 0) {
+            var imgDC = it.querySelector('img');
+            if (imgDC && imgDC.src.indexOf('DurationConstraint') < 0) {
+              imgDC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><rect x="4" y="3" width="8" height="10" rx="1" fill="#f97316"/><line x1="6" y1="8" x2="10" y2="8" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgDC.alt = 'DurationConstraint'; it.setAttribute('data-dc-icon', '1');
+            }
+          }
+          // System tree icon
+          if (it.getAttribute('data-sys-icon') !== '1' && label.textContent.indexOf('System') >= 0 && label.textContent.indexOf('SystemNode') < 0) {
+            var imgSYS = it.querySelector('img');
+            if (imgSYS && imgSYS.src.indexOf('SystemSVG') < 0) {
+              imgSYS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><polygon points="8,2 14,5.5 14,10.5 8,14 2,10.5 2,5.5" fill="#3b82f6"/></svg>');
+              imgSYS.alt = 'System'; it.setAttribute('data-sys-icon', '1');
+            }
+          }
+          // Software tree icon
+          if (it.getAttribute('data-sw-icon') !== '1' && label.textContent.indexOf('Software') >= 0) {
+            var imgSW = it.querySelector('img');
+            if (imgSW && imgSW.src.indexOf('Software') < 0) {
+              imgSW.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#60a5fa" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#60a5fa"/><line x1="5" y1="6" x2="11" y2="6" stroke="#1e293b" stroke-width="1"/><line x1="5" y1="8" x2="9" y2="8" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgSW.alt = 'Software'; it.setAttribute('data-sw-icon', '1');
+            }
+          }
+          // PersonType tree icon
+          if (it.getAttribute('data-pt-icon') !== '1' && label.textContent.indexOf('PersonType') >= 0) {
+            var imgPT = it.querySelector('img');
+            if (imgPT && imgPT.src.indexOf('PersonType') < 0) {
+              imgPT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><circle cx="8" cy="4.5" r="2" fill="#14b8a6"/><ellipse cx="8" cy="11" rx="4" ry="3" fill="#14b8a6"/><line x1="6" y1="11" x2="10" y2="11" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgPT.alt = 'PersonType'; it.setAttribute('data-pt-icon', '1');
+            }
+          }
+          // OrganizationType tree icon
+          if (it.getAttribute('data-ot-icon') !== '1' && label.textContent.indexOf('OrganizationType') >= 0) {
+            var imgOT = it.querySelector('img');
+            if (imgOT && imgOT.src.indexOf('OrganizationType') < 0) {
+              imgOT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="2" width="10" height="4" fill="#14b8a6"/><rect x="3" y="8" width="10" height="6" fill="none" stroke="#14b8a6" stroke-width="1.5"/></svg>');
+              imgOT.alt = 'OrganizationType'; it.setAttribute('data-ot-icon', '1');
+            }
+          }
+          // ResourcePort tree icon
+          if (it.getAttribute('data-rp-icon') !== '1' && label.textContent.indexOf('ResourcePort') >= 0) {
+            var imgRP = it.querySelector('img');
+            if (imgRP && imgRP.src.indexOf('ResourcePort') < 0) {
+              imgRP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#8b5cf6"/><polygon points="8,4 12,8 8,12 4,8" fill="none" stroke="#8b5cf6" stroke-width="1"/></svg>');
+              imgRP.alt = 'ResourcePort'; it.setAttribute('data-rp-icon', '1');
+            }
+          }
+          // CapabilityConfiguration tree icon
+          if (it.getAttribute('data-cc-icon') !== '1' && label.textContent.indexOf('CapabilityConfiguration') >= 0) {
+            var imgCC = it.querySelector('img');
+            if (imgCC && imgCC.src.indexOf('CapabilityConfiguration') < 0) {
+              imgCC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="6" cy="6" r="3" fill="#f59e0b"/><circle cx="10" cy="10" r="3" fill="#f59e0b"/><line x1="8" y1="5" x2="8" y2="8" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgCC.alt = 'CapabilityConfiguration'; it.setAttribute('data-cc-icon', '1');
             }
           }
           // StrikeActivity tree icon

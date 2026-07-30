@@ -189,6 +189,36 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "HorizontalJoinNode";
         } else if (element.getAliasIds().contains("dodaf:VerticalJoinNode")) {
             return "VerticalJoinNode";
+        } else if (element.getAliasIds().contains("dodaf:ActivityFinalNode")) {
+            return "ActivityFinalNode";
+        } else if (element.getAliasIds().contains("dodaf:FlowFinalNode")) {
+            return "FlowFinalNode";
+        } else if (element.getAliasIds().contains("dodaf:OpaqueAction")) {
+            return "OpaqueAction";
+        } else if (element.getAliasIds().contains("dodaf:Signal")) {
+            return "Signal";
+        } else if (element.getAliasIds().contains("dodaf:VerticalPartition")) {
+            return "VerticalPartition";
+        } else if (element.getAliasIds().contains("dodaf:HorizontalPartition")) {
+            return "HorizontalPartition";
+        } else if (element.getAliasIds().contains("dodaf:PatrolActivity")) {
+            return "PatrolActivity";
+        } else if (element.getAliasIds().contains("dodaf:TimeConstraint")) {
+            return "TimeConstraint";
+        } else if (element.getAliasIds().contains("dodaf:DurationConstraint")) {
+            return "DurationConstraint";
+        } else if (element.getAliasIds().contains("dodaf:System")) {
+            return "System";
+        } else if (element.getAliasIds().contains("dodaf:Software")) {
+            return "Software";
+        } else if (element.getAliasIds().contains("dodaf:PersonType")) {
+            return "PersonType";
+        } else if (element.getAliasIds().contains("dodaf:OrganizationType")) {
+            return "OrganizationType";
+        } else if (element.getAliasIds().contains("dodaf:ResourcePort")) {
+            return "ResourcePort";
+        } else if (element.getAliasIds().contains("dodaf:CapabilityConfiguration")) {
+            return "CapabilityConfiguration";
         } else if (element.getAliasIds().contains("dodaf:TimeScale")) {
             return "TimeScale";
         } else if (element.getAliasIds().contains("dodaf:EquipCapability")) {
