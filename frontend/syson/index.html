@@ -1433,6 +1433,14 @@
               imgLT.alt = 'LocationType';
             }
           }
+          // --- Interface ---
+          else if (txt.indexOf('Interface') >= 0) {
+            var imgIF = n.querySelector('img');
+            if (imgIF && imgIF.src.indexOf('InterfaceSVG') < 0) {
+              imgIF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/><rect x="9" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/></svg>');
+              imgIF.alt = 'Interface'; imgIF.setAttribute('data-if-icon','1');
+            }
+          }
           // --- StrikeActivity ---
           else if (txt.indexOf('StrikeActivity') >= 0) {
             var imgAC = n.querySelector('img');
@@ -2009,6 +2017,14 @@
             if (imgLT && imgLT.src.indexOf('LocationType') < 0) {
               imgLT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="5" r="3" fill="#f97316"/><polygon points="5,7 11,7 13,14 3,14" fill="none" stroke="#f97316" stroke-width="1"/></svg>');
               imgLT.alt = 'LocationType'; it.setAttribute('data-lt-icon', '1');
+            }
+          }
+          // Interface tree icon
+          if (it.getAttribute('data-if-icon') !== '1' && label.textContent.indexOf('Interface') >= 0) {
+            var imgIF = it.querySelector('img');
+            if (imgIF && imgIF.src.indexOf('InterfaceSVG') < 0) {
+              imgIF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/><rect x="9" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/></svg>');
+              imgIF.alt = 'Interface'; it.setAttribute('data-if-icon', '1');
             }
           }
           // StrikeActivity tree icon
