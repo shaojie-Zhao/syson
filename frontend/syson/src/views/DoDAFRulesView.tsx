@@ -8,7 +8,7 @@ function getEditingContextId(): string {
 
 interface Rule { id: string; name: string; applied: string; description: string; ruleType: string; owner: string; parentId?: string; children?: Rule[]; }
 
-export default function DoDAFRulesView() {
+export default React.forwardRef<HTMLDivElement, {}>(function DoDAFRulesView() {
   const ctxId = getEditingContextId();
   const [rules, setRules] = useState<Rule[]>([]);
   const [filtered, setFiltered] = useState<Rule[]>([]);
@@ -295,4 +295,4 @@ export default function DoDAFRulesView() {
       </div>
     </div>
   );
-}
+});
