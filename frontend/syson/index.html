@@ -991,14 +991,16 @@
         var curRepId = currentMatrixRepId();
         var rwRep = rw ? rw.getAttribute('data-repid') : '';
         var pwRep = pw ? pw.getAttribute('data-repid') : '';
-        // If wrapper's rep ID doesn't match current, we switched away — cleanup + restore table
+        // If wrapper's rep ID doesn't match current, we switched away — hide it
         if (rw && rwRep !== curRepId) {
-          if (rw.__rulesRoot) rw.__rulesRoot.unmount(); rw.remove(); rulesInjected = false;
+          rw.style.display = 'none';
+          rulesInjected = false;
           var ht = document.querySelector('[data-testid="table-representation"]');
           if (ht && ht.style.display === 'none') ht.style.display = '';
         }
         if (pw && pwRep !== curRepId) {
-          if (pw.__predictionRoot) pw.__predictionRoot.unmount(); pw.remove(); predInjected = false;
+          pw.style.display = 'none';
+          predInjected = false;
           var ht2 = document.querySelector('[data-testid="table-representation"]');
           if (ht2 && ht2.style.display === 'none') ht2.style.display = '';
         }
@@ -1017,6 +1019,8 @@
             wrapper.style.cssText = 'width:100%;height:100%;overflow:auto';
             var area = document.querySelector('[data-testid="representation-area"]');
             if (area) { area.appendChild(wrapper); }
+          } else {
+            rw.style.display = '';
           }
           rw = document.getElementById('rules-wrapper');
           if (rw && !rw.__rulesRoot) { rw.setAttribute('data-repid', currentMatrixRepId()); window.renderDoDAFRules(rw); }
@@ -1032,6 +1036,8 @@
             wrapper.style.cssText = 'width:100%;height:100%;overflow:auto';
             var area = document.querySelector('[data-testid="representation-area"]');
             if (area) { area.appendChild(wrapper); }
+          } else {
+            pw.style.display = '';
           }
           pw = document.getElementById('prediction-wrapper');
           if (pw && !pw.__predictionRoot) { pw.setAttribute('data-repid', currentMatrixRepId()); window.renderDoDAFPrediction(pw); }
