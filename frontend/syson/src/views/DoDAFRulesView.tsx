@@ -86,23 +86,7 @@ export default React.forwardRef<HTMLDivElement, {}>(function DoDAFRulesView() {
   const [scopeId, setScopeId] = useState(() => { try { return localStorage.getItem(STORAGE_KEY + '_scopeId') || ''; } catch(e) { return ''; } });
   const [scopeName, setScopeName] = useState(() => { try { return localStorage.getItem(STORAGE_KEY + '_scopeName') || ''; } catch(e) { return ''; } });
   const [typePickerOpen, setTypePickerOpen] = useState(false);
-  const dodafTypes = ['Capability','OperationalNode','SystemNode','Organization','InformationExchange','ActionUsage','PartUsage','InterfaceUsage','RequirementUsage','Function',
-   'OperationalCapability','EquipCapability','TaskStage','TaskIntent','ImplementationPhase','Vision','VisionDescription','Target','TimeScale',
-   'ArchitectureDescription','ArchitectureMetadataDescription','Performer','MissionPhase','Task','MissionBackground','Objective','Environment','OperationalProblem',
-   'TopLevelOperationalConcept','MissionIntent',
-   'ConceptEntity','ConceptObservable','ExchangeElement','Information','InformationElement','InformationTransmissionPattern','EffectivenessIndicator','EffectivenessIndicatorParameter','Command',
-   'LogicalEntity','LogicalMeasure','LogicalMeasurementSystem','LogicalDataModel','Entity',
-   'PlatformEntity','PhysicalDataModel',
-   'NodePort','Location','Condition','Force','Role','Equipment','OperationalAction',
-   'ActualOrganization','Person','ActualPerson','Duty',
-   'OperationalActivity','OperationalTask','OperationalModel','CommunicationActivity','TransmitActivity','ReceiveActivity','ManeuverActivity','HoverManeuver','TransferManeuver','PlanManeuver',
-   'AnalysisActivity','CommandControlActivity','DetectionActivity','StrikeActivity','DefenseActivity','SupportActivity','PatrolActivity',
-   'ActivityParameterNode','InitialNode','DecisionNode','MergeNode','HorizontalForkNode','VerticalForkNode','HorizontalJoinNode','VerticalJoinNode','ActivityFinalNode','FlowFinalNode','OpaqueAction','Signal','VerticalPartition','HorizontalPartition',
-   'Lifeline','CombinedFragment','StateInvariant','TimeConstraint','DurationConstraint','ExecutionSpecification','Interaction','Message',
-   'Project','ProjectType','ProjectActivity','StateIndicator','ProjectMilestone','ActualProjectMilestone',
-   'ServiceAccess','ServiceInterface','Software','OrganizationType','ResourcePort','LocationType',
-   'System','Interface','Protocol','FunctionStandard','StandardConfiguration','TechnicalStandard','CapabilityConfiguration',
-   'ServiceAccess','CapabilityConfiguration','PersonType','OrganizationType'];
+  const dodafTypes = ['Capability','OperationalNode','SystemNode','Organization','InformationExchange','ActionUsage','PartUsage','InterfaceUsage','RequirementUsage','Function','OperationalCapability','EquipCapability','TaskStage','TaskIntent','ImplementationPhase','Vision','VisionDescription','Target','TimeScale','ArchitectureDescription','ArchitectureMetadataDescription','Performer','MissionPhase','Task','MissionBackground','Objective','Environment','OperationalProblem','TopLevelOperationalConcept','MissionIntent','ConceptEntity','ConceptObservable','ExchangeElement','Information','InformationElement','InformationTransmissionPattern','EffectivenessIndicator','EffectivenessIndicatorParameter','Command','LogicalEntity','LogicalMeasure','LogicalMeasurementSystem','LogicalDataModel','Entity','PlatformEntity','PhysicalDataModel','NodePort','Location','Condition','Force','Role','Equipment','OperationalAction','ActualOrganization','Person','ActualPerson','Duty','OperationalActivity','OperationalTask','OperationalModel','CommunicationActivity','TransmitActivity','ReceiveActivity','ManeuverActivity','HoverManeuver','TransferManeuver','PlanManeuver','AnalysisActivity','CommandControlActivity','DetectionActivity','StrikeActivity','DefenseActivity','SupportActivity','PatrolActivity','ActivityParameterNode','InitialNode','DecisionNode','MergeNode','HorizontalForkNode','VerticalForkNode','HorizontalJoinNode','VerticalJoinNode','ActivityFinalNode','FlowFinalNode','OpaqueAction','Signal','VerticalPartition','HorizontalPartition','Lifeline','CombinedFragment','StateInvariant','TimeConstraint','DurationConstraint','ExecutionSpecification','Interaction','Message','Project','ProjectType','ProjectActivity','StateIndicator','ProjectMilestone','ActualProjectMilestone','ServiceAccess','ServiceInterface','Software','OrganizationType','ResourcePort','LocationType','System','Interface','Protocol','FunctionStandard','StandardConfiguration','TechnicalStandard','CapabilityConfiguration','PersonType'];
   const [typeSearch, setTypeSearch] = useState<string>('');
   const TYPE_LABELS: Record<string,string> = {
     Capability:'能力', OperationalNode:'作战节点', SystemNode:'系统节点', Organization:'组织',
@@ -293,7 +277,7 @@ export default React.forwardRef<HTMLDivElement, {}>(function DoDAFRulesView() {
               <h3 style={{ margin: '0 0 12px', fontSize: 15, color: '#f1f5f9' }}>选择元类型</h3>
               <input value={typeSearch} onChange={e => setTypeSearch(e.target.value)} placeholder="输入类型名称搜索..." style={{ background: '#162242', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 4, color: '#e2e8f0', padding: '6px 10px', fontSize: 13, marginBottom: 12 }} autoFocus />
               <div style={{ flex: 1, overflow: 'auto', minHeight: 200 }}>
-              {dodafTypes.filter(t => !typeSearch || t.toLowerCase().includes(typeSearch.toLowerCase())).map(t => {
+              {dodafTypes.filter(t => !typeSearch || typeLabel(t).toLowerCase().includes(typeSearch.toLowerCase())).map(t => {
                 var checked = typeFilter.split(',').indexOf(t) >= 0;
                 return <label key={t} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', cursor: 'pointer', fontSize: 13 }}>
                   <input type="checkbox" checked={checked} onChange={() => {
