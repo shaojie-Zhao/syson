@@ -119,4 +119,10 @@ public class SysONDefaultResourceProvider implements IDefaultSysMLv2ResourceProv
         var resource = this.getEmptyResource(resourcePath, name);
         return new Dodafv2TemplateBuilder().buildProjectResource(resource);
     }
+
+    @Override
+    public Resource getDodafv2BlankResource(UUID resourcePath, String name) {
+        var resource = this.getEmptyResource(resourcePath, name);
+        return new Dodafv2BlankTemplateBuilder().buildProjectResource(resource);
+    }
 }

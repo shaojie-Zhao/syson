@@ -34,4 +34,6 @@ public interface IDefaultSysMLv2ResourceProvider {
     Resource getDodafv2LibraryResource(UUID resourcePath, String name);
 
     Resource getDodafv2ProjectResource(UUID resourcePath, String name);
+
+    Resource getDodafv2BlankResource(UUID resourcePath, String name);
 }

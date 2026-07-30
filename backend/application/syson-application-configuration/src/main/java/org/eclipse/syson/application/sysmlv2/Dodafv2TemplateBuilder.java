@@ -18,6 +18,7 @@ public class Dodafv2TemplateBuilder {
         vd(lp,"SequenceView");
         vd(lp,"TableView");
         vd(lp,"OV1View");
+        vd(lp,"PredictionView");
         return r;
     }
 

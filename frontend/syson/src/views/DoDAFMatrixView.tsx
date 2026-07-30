@@ -52,12 +52,52 @@ const S: Record<string, string> = {Satisfy: '✓', Allocate: '→', Trace: '↗'
 // Chinese display labels for relation types (internal keys stay English for the backend typeMap).
 const RELATION_LABELS: Record<string, string> = {Satisfy: '满足', Allocate: '分配', Trace: '追溯', Dependency: '依赖', Derive: '派生'};
 const relLabel = (t: string): string => (RELATION_LABELS[t] ? RELATION_LABELS[t] + '（' + t + '）' : t);
-const TYPES = ['Capability', 'OperationalNode', 'SystemNode', 'Organization', 'InformationExchange', 'ActionUsage', 'PartUsage', 'InterfaceUsage', 'RequirementUsage', 'Function', 'TaskStage', 'SystemFunction'];
+const TYPES = ['OperationalCapability','EquipCapability','TaskIntent','ImplementationPhase','Vision','VisionDescription','Target','TimeScale','ArchitectureDescription','ArchitectureMetadataDescription','Performer','MissionPhase','Task','MissionBackground','Objective','Environment','OperationalProblem','TopLevelOperationalConcept','MissionIntent','ConceptEntity','ConceptObservable','ExchangeElement','Information','InformationElement','InformationTransmissionPattern','EffectivenessIndicator','EffectivenessIndicatorParameter','Command','LogicalEntity','LogicalMeasure','LogicalMeasurementSystem','LogicalDataModel','Entity','PlatformEntity','PhysicalDataModel','NodePort','Location','Condition','Force','Role','Equipment','OperationalAction','ActualOrganization','Person','ActualPerson','Duty','OperationalActivity','OperationalTask','OperationalModel','CommunicationActivity','TransmitActivity','ReceiveActivity','ManeuverActivity','HoverManeuver','TransferManeuver','PlanManeuver','AnalysisActivity','CommandControlActivity','DetectionActivity','StrikeActivity','DefenseActivity','SupportActivity','PatrolActivity','ActivityParameterNode','InitialNode','DecisionNode','MergeNode','HorizontalForkNode','VerticalForkNode','HorizontalJoinNode','VerticalJoinNode','ActivityFinalNode','FlowFinalNode','OpaqueAction','Signal','VerticalPartition','HorizontalPartition','Lifeline','CombinedFragment','StateInvariant','TimeConstraint','DurationConstraint','ExecutionSpecification','Interaction','Message','Project','ProjectType','ProjectActivity','StateIndicator','ProjectMilestone','ActualProjectMilestone','ServiceAccess','ServiceInterface','Software','OrganizationType','ResourcePort','LocationType','System','Interface','Protocol','FunctionStandard','StandardConfiguration','TechnicalStandard','CapabilityConfiguration','PersonType'];
 // Chinese display labels for element (meta) types (internal keys stay English for filtering/backend).
 const TYPE_LABELS: Record<string, string> = {
-    Capability: '作战能力', OperationalNode: '作战节点', SystemNode: '系统节点', Organization: '组织',
-    InformationExchange: '信息交换', ActionUsage: '作战活动', PartUsage: '部件', InterfaceUsage: '接口',
+    Capability: '能力', OperationalNode: '作战节点', SystemNode: '系统节点', Organization: '组织',
+    InformationExchange: '信息交换', ActionUsage: '动作', PartUsage: '部件', InterfaceUsage: '接口',
     RequirementUsage: '需求', Function: '功能', TaskStage: '任务阶段', SystemFunction: '系统功能',
+    OperationalCapability:'作战能力', EquipCapability:'装备能力',
+    TaskIntent:'任务意图', ImplementationPhase:'实施阶段', Vision:'愿景', VisionDescription:'愿景描述',
+    Target:'目标', TimeScale:'时间标尺',
+    ArchitectureDescription:'架构描述', ArchitectureMetadataDescription:'架构元数据描述',
+    Performer:'执行者', MissionPhase:'任务阶段', Task:'任务', MissionBackground:'任务背景',
+    Objective:'目标', Environment:'环境', OperationalProblem:'作战问题',
+    TopLevelOperationalConcept:'顶层作战概念', MissionIntent:'任务意图',
+    ConceptEntity:'概念实体', ConceptObservable:'概念可观测量', ExchangeElement:'交换元素',
+    Information:'信息', InformationElement:'信息要素', InformationTransmissionPattern:'信息传输模式',
+    EffectivenessIndicator:'效能指标', EffectivenessIndicatorParameter:'效能指标参数', Command:'命令',
+    LogicalEntity:'逻辑实体', LogicalMeasure:'逻辑测量量', LogicalMeasurementSystem:'逻辑测量系统',
+    LogicalDataModel:'逻辑数据模型', Entity:'实体',
+    PlatformEntity:'平台实体', PhysicalDataModel:'物理数据模型',
+    NodePort:'节点端口', Location:'位置', Condition:'条件', Force:'部队', Role:'角色',
+    Equipment:'装备', OperationalAction:'作战行动',
+    ActualOrganization:'实际组织', Person:'个人', ActualPerson:'实际个人', Duty:'职责',
+    OperationalActivity:'作战活动', OperationalTask:'作战任务', OperationalModel:'作战模型',
+    CommunicationActivity:'通信活动', TransmitActivity:'发信活动', ReceiveActivity:'收信活动',
+    ManeuverActivity:'机动活动', HoverManeuver:'悬浮机动', TransferManeuver:'转移机动',
+    PlanManeuver:'筹划机动', AnalysisActivity:'研判活动', CommandControlActivity:'指控活动',
+    DetectionActivity:'探测活动', StrikeActivity:'打击活动', DefenseActivity:'防御活动',
+    SupportActivity:'保障活动', PatrolActivity:'巡逻活动',
+    ActivityParameterNode:'活动参数节点', InitialNode:'开始节点', DecisionNode:'决定节点',
+    MergeNode:'合并节点', HorizontalForkNode:'水平分支节点', VerticalForkNode:'垂直分支节点',
+    HorizontalJoinNode:'水平集合节点', VerticalJoinNode:'垂直集合节点',
+    ActivityFinalNode:'活动最终节点', FlowFinalNode:'流最终节点',
+    OpaqueAction:'不透明动作', Signal:'信号',
+    VerticalPartition:'垂直活动分区', HorizontalPartition:'水平活动分区',
+    Lifeline:'生命线', CombinedFragment:'组合片段', StateInvariant:'状态不变量',
+    TimeConstraint:'时间约束', DurationConstraint:'持续约束',
+    ExecutionSpecification:'执行规约', Interaction:'交互', Message:'消息',
+    Project:'项目', ProjectType:'项目类型', ProjectActivity:'项目活动',
+    StateIndicator:'状态指示器', ProjectMilestone:'项目里程碑',
+    ActualProjectMilestone:'实际项目里程碑',
+    ServiceAccess:'服务访问', ServiceInterface:'服务接口', Software:'软件',
+    OrganizationType:'组织类型', ResourcePort:'资源端口', LocationType:'位置类型',
+    System:'系统', Interface:'接口', Protocol:'协议',
+    FunctionStandard:'功能标准', StandardConfiguration:'标准配置',
+    TechnicalStandard:'技术标准', CapabilityConfiguration:'能力配置',
+    PersonType:'个人类型',
 };
 const typeLabel = (t: string): string => (TYPE_LABELS[t] ? TYPE_LABELS[t] + '（' + t + '）' : t);
 // DoDAF type icons live under /images/dodaf/{DodafType}.svg; fall back to the SysML class icon
@@ -104,6 +144,7 @@ export default function DoDAFMatrixView() {
     const [colScopeName, setColScopeName] = useState<string>(saved?.colScopeName || '');
     const [typePicker, setTypePicker] = useState<'row' | 'col' | null>(null);
     const [rt, setRt] = useState('Satisfy');
+  const [typeSearch, setTypeSearch] = useState<string>('');
     const [tr, setTr] = useState(false);
     const [cfg, setCfg] = useState(true);
     const [sel, setSel] = useState<{ row: string; col: string } | null>(null);
@@ -900,10 +941,12 @@ export default function DoDAFMatrixView() {
                             boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
                         }}
                         onClick={(e) => e.stopPropagation()}>
-                        <h3 style={{margin: '0 0 16px', fontSize: 15, color: '#f1f5f9'}}>
+                        <h3 style={{margin: '0 0 12px', fontSize: 15, color: '#f1f5f9'}}>
                             选择{typePicker === 'row' ? '行' : '列'}元类型
                         </h3>
-                        {TYPES.filter((t) => t !== 'ALL').map((t) => {
+                        <input value={typeSearch} onChange={e => setTypeSearch(e.target.value)} placeholder="输入类型名称搜索..." style={{ background: '#162242', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 4, color: '#e2e8f0', padding: '6px 10px', fontSize: 13, marginBottom: 12, width:'100%', boxSizing:'border-box' }} autoFocus />
+                        <div style={{maxHeight: 320, overflow: 'auto'}}>
+                        {TYPES.filter((t) => t !== 'ALL' && (!typeSearch || typeLabel(t).toLowerCase().includes(typeSearch.toLowerCase()))).map((t) => {
                             const sel = typePicker === 'row' ? rowT : colT;
                             const setFn = typePicker === 'row' ? setRowT : setColT;
                             return (
@@ -932,6 +975,7 @@ export default function DoDAFMatrixView() {
                                 </label>
                             );
                         })}
+                        </div>
                         <div style={{display: 'flex', gap: 8, marginTop: 16, justifyContent: 'space-between'}}>
                             <div style={{display: 'flex', gap: 8}}>
                                 <button onClick={() => {

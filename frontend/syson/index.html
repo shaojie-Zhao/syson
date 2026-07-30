@@ -492,6 +492,9 @@
         for (var i = 0; i < allDivs.length; i++) {
           var cn = allDivs[i].className;
           if (cn && typeof cn === 'string' && cn.indexOf('ganttContainer') >= 0) {
+            // Found Gantt — remove Prediction/Rules wrappers
+            var pw = document.getElementById('prediction-wrapper'); if (pw) { pw.remove(); predInjected = false; }
+            var rw = document.getElementById('rules-wrapper'); if (rw) { rw.remove(); rulesInjected = false; }
             injectGanttApp(allDivs[i]);
             return true;
           }
@@ -505,6 +508,8 @@
       var matrixInjected = false;
       function currentMatrixRepId() {
         var m = window.location.search.match(/[?&]representation=([^&]+)/);
+        if (m) return m[1];
+        m = window.location.search.match(/[?&]selection=([^&]+)/);
         return m ? m[1] : '';
       }
       function teardownMatrix() {
@@ -538,6 +543,8 @@
       function scanForMatrix() {
         var w = document.getElementById('matrix-wrapper');
         // If the active representation changed (switched/reopened), tear down the stale matrix immediately
+        // so its previous content cannot flash before the new one is injected (also properly unmounts the root).
+        // Guard: only when BOTH ids are known and differ, so a transient empty id can't tear down a fresh view.
         var repNow = currentMatrixRepId();
         var repWas = w ? w.getAttribute('data-repid') : '';
         if (w && repWas && repNow && repWas !== repNow) { teardownMatrix(); w = null; }
@@ -554,11 +561,11 @@
           var rep = reps[r];
           if (rep.offsetParent === null) continue;
           if (rep.closest('[class*="ganttContainer"], [class*="explorer"], [class*="sidebar"], [class*="tree"]')) continue;
-          // Skip Rules / Prediction tables by column header content
+          // Skip Rules / Prediction tables
           var ths = rep.querySelectorAll('th');
           var isCustomTable = false;
           for (var hi = 0; hi < ths.length; hi++) {
-            var t = ths[hi].textContent || '';
+            var t = ths[hi].textContent;
             if (t.indexOf('规则') >= 0 || t.indexOf('应用于') >= 0 || t.indexOf('技术和技能') >= 0 || t.indexOf('短期') >= 0) { isCustomTable = true; break; }
           }
           if (isCustomTable) continue;
@@ -568,8 +575,7 @@
           if (tabName.indexOf('矩阵') < 0 && tabName.indexOf('追溯') < 0 && tabName.indexOf('映射') < 0) continue;
           var table = rep.querySelector('.MuiTableContainer-root table') || rep.querySelector('table');
           var trCount = table ? table.querySelectorAll('tr').length : 0;
-          // Inject if: (a) non-custom table with >= 2 rows, OR (b) matrix data detected
-          if (trCount >= 2 || isMatrixTable) { injectMatrix(rep); return; }
+          if (trCount >= 2) { injectMatrix(rep); return; }
         }
       }
       setInterval(function() { scanForMatrix(); }, 200);
@@ -625,9 +631,20 @@
           console.log('[DoDAF] show viewName=',vn,'tab=',tab?tab.textContent:'none');
           var e = document.getElementById('dodaf-ctx'); if(e) e.remove();
           var h = '';
-          // CV-1_能力构想 specific menu
+          // AV-1_概述和摘要信息 specific menu
+          if (vn && vn.indexOf('AV-1') >= 0) {
+            var i1 = [{l:'架构描述(ArchitectureDescription)',a:'node',n:'ArchitectureDescription',d:'SysMLv2EditService-PartDefinition'},{l:'架构元数据描述(ArchitectureMetadataDescription)',a:'node',n:'ArchitectureMetadataDescription',d:'SysMLv2EditService-PartDefinition'},{l:'执行者(Performer)',a:'node',n:'Performer',d:'SysMLv2EditService-PartDefinition'},{l:'任务阶段(MissionPhase)',a:'node',n:'MissionPhase',d:'SysMLv2EditService-PartDefinition'},{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'顶层作战概念(TopLevelOperationalConcept)',a:'node',n:'TopLevelOperationalConcept',d:'SysMLv2EditService-PartDefinition'},{l:'任务意图(MissionIntent)',a:'node',n:'MissionIntent',d:'SysMLv2EditService-PartDefinition'},{l:'任务(Task)',a:'node',n:'Task',d:'SysMLv2EditService-PartDefinition'},{l:'任务背景(MissionBackground)',a:'node',n:'MissionBackground',d:'SysMLv2EditService-PartDefinition'},{l:'目标(Objective)',a:'node',n:'Objective',d:'SysMLv2EditService-PartDefinition'},{l:'环境(Environment)',a:'node',n:'Environment',d:'SysMLv2EditService-PartDefinition'},{l:'作战问题(OperationalProblem)',a:'node',n:'OperationalProblem',d:'SysMLv2EditService-PartDefinition'}];
+            var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
+            var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
+            i1.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '<div style="margin:4px 0;border-top:1px solid rgba(255,255,255,0.06)"></div>';
+            h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">通用元素</div>';
+            i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
+            h += '</div>';
+          } else // CV-1_能力构想 specific menu
           if (vn && vn.indexOf('CV-1') >= 0) {
-            var i1 = [{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationCapability)',a:'capability',n:'OperationCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'任务阶段(TaskStage)',a:'capability',n:'TaskStage',d:'SysMLv2EditService-PartDefinition'},{l:'任务意图(TaskIntent)',a:'capability',n:'TaskIntent',d:'SysMLv2EditService-PartDefinition'},{l:'实施阶段(ImplementationPhase)',a:'capability',n:'ImplementationPhase',d:'SysMLv2EditService-PartDefinition'},{l:'愿景(Vision)',a:'capability',n:'Vision',d:'SysMLv2EditService-PartDefinition'},{l:'愿景描述(VisionDescription)',a:'capability',n:'VisionDescription',d:'SysMLv2EditService-PartDefinition'},{l:'目标(Target)',a:'capability',n:'Target',d:'SysMLv2EditService-PartDefinition'},{l:'时间标尺(TimeScale)',a:'capability',n:'TimeScale',d:'SysMLv2EditService-PartDefinition'}];
+            var i1 = [{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'任务阶段(TaskStage)',a:'capability',n:'TaskStage',d:'SysMLv2EditService-PartDefinition'},{l:'任务意图(TaskIntent)',a:'capability',n:'TaskIntent',d:'SysMLv2EditService-PartDefinition'},{l:'实施阶段(ImplementationPhase)',a:'capability',n:'ImplementationPhase',d:'SysMLv2EditService-PartDefinition'},{l:'愿景(Vision)',a:'capability',n:'Vision',d:'SysMLv2EditService-PartDefinition'},{l:'愿景描述(VisionDescription)',a:'capability',n:'VisionDescription',d:'SysMLv2EditService-PartDefinition'},{l:'目标(Target)',a:'capability',n:'Target',d:'SysMLv2EditService-PartDefinition'},{l:'时间标尺(TimeScale)',a:'capability',n:'TimeScale',d:'SysMLv2EditService-PartDefinition'}];
             var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
             var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
             h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
@@ -637,7 +654,7 @@
             i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
             h += '</div>';
           } else if (vn && vn.indexOf('CV-2') >= 0) {
-            var i1 = [{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationCapability)',a:'capability',n:'OperationCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'任务阶段(TaskStage)',a:'capability',n:'TaskStage',d:'SysMLv2EditService-PartDefinition'},{l:'时间标尺(TimeScale)',a:'capability',n:'TimeScale',d:'SysMLv2EditService-PartDefinition'}];
+            var i1 = [{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'任务阶段(TaskStage)',a:'capability',n:'TaskStage',d:'SysMLv2EditService-PartDefinition'},{l:'时间标尺(TimeScale)',a:'capability',n:'TimeScale',d:'SysMLv2EditService-PartDefinition'}];
             var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
             var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
             h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
@@ -647,7 +664,7 @@
             i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
             h += '</div>';
           } else if (vn && vn.indexOf('CV-4') >= 0) {
-            var i1 = [{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationCapability)',a:'capability',n:'OperationCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'}];
+            var i1 = [{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'}];
             var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
             var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
             h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
@@ -697,7 +714,7 @@
             i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
             h += '</div>';
           } else if (vn && vn.indexOf('OV-4') >= 0) {
-            var i1 = [{l:'实际组织(ActualOrganization)',a:'node',n:'ActualOrganization',d:'SysMLv2EditService-PartDefinition'},{l:'个人(Person)',a:'node',n:'Person',d:'SysMLv2EditService-PartDefinition'},{l:'实际个人(ActualPerson)',a:'node',n:'ActualPerson',d:'SysMLv2EditService-PartDefinition'},{l:'职责(Duty)',a:'node',n:'Duty',d:'SysMLv2EditService-PartDefinition'},{l:'部队(Force)',a:'node',n:'Force',d:'SysMLv2EditService-PartDefinition'},{l:'角色(Role)',a:'node',n:'Role',d:'SysMLv2EditService-PartDefinition'},{l:'装备(Equip)',a:'node',n:'Equip',d:'SysMLv2EditService-PartDefinition'},{l:'作战行动(OperationalAction)',a:'node',n:'OperationalAction',d:'SysMLv2EditService-PartDefinition'}];
+            var i1 = [{l:'实际组织(ActualOrganization)',a:'node',n:'ActualOrganization',d:'SysMLv2EditService-PartDefinition'},{l:'个人(Person)',a:'node',n:'Person',d:'SysMLv2EditService-PartDefinition'},{l:'实际个人(ActualPerson)',a:'node',n:'ActualPerson',d:'SysMLv2EditService-PartDefinition'},{l:'职责(Duty)',a:'node',n:'Duty',d:'SysMLv2EditService-PartDefinition'},{l:'部队(Force)',a:'node',n:'Force',d:'SysMLv2EditService-PartDefinition'},{l:'角色(Role)',a:'node',n:'Role',d:'SysMLv2EditService-PartDefinition'},{l:'装备(Equipment)',a:'node',n:'Equipment',d:'SysMLv2EditService-PartDefinition'},{l:'作战行动(OperationalAction)',a:'node',n:'OperationalAction',d:'SysMLv2EditService-PartDefinition'}];
             var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
             var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
             h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
@@ -707,7 +724,7 @@
             i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
             h += '</div>';
           } else if (vn && vn.indexOf('OV-5a') >= 0) {
-            var i1 = [{l:'作战行动(OperationalAction)',a:'node',n:'OperationalAction',d:'SysMLv2EditService-PartDefinition'},{l:'执行者(Performer)',a:'node',n:'Performer',d:'SysMLv2EditService-PartDefinition'},{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'任务(Task)',a:'node',n:'Task',d:'SysMLv2EditService-PartDefinition'},{l:'条件(Condition)',a:'node',n:'Condition',d:'SysMLv2EditService-PartDefinition'},{l:'装备(Equip)',a:'node',n:'Equip',d:'SysMLv2EditService-PartDefinition'}];
+            var i1 = [{l:'作战行动(OperationalAction)',a:'node',n:'OperationalAction',d:'SysMLv2EditService-PartDefinition'},{l:'执行者(Performer)',a:'node',n:'Performer',d:'SysMLv2EditService-PartDefinition'},{l:'能力(Capability)',a:'capability',n:'Capability',d:'SysMLv2EditService-PartDefinition'},{l:'作战能力(OperationalCapability)',a:'capability',n:'OperationalCapability',d:'SysMLv2EditService-PartDefinition'},{l:'装备能力(EquipCapability)',a:'capability',n:'EquipCapability',d:'SysMLv2EditService-PartDefinition'},{l:'任务(Task)',a:'node',n:'Task',d:'SysMLv2EditService-PartDefinition'},{l:'条件(Condition)',a:'node',n:'Condition',d:'SysMLv2EditService-PartDefinition'},{l:'装备(Equipment)',a:'node',n:'Equipment',d:'SysMLv2EditService-PartDefinition'}];
             var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
             var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
             h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
@@ -717,7 +734,7 @@
             i2.forEach(function(v){h+='<div class="di" data-a="'+v.a+'" data-n="'+v.n+'" data-d="'+v.d+'" style="padding:8px 16px;cursor:pointer">'+v.l+'</div>';});
             h += '</div>';
           } else if (vn && vn.indexOf('OV-5b') >= 0) {
-            var i1 = [{l:'任务阶段(MissionPhase)',a:'node',n:'MissionPhase',d:'SysMLv2EditService-PartDefinition'},{l:'作战问题(OperationalProblem)',a:'node',n:'OperationalProblem',d:'SysMLv2EditService-PartDefinition'},{l:'作战活动(OperationalActivity)',a:'node',n:'OperationalActivity',d:'SysMLv2EditService-PartDefinition'},{l:'作战任务(OperationalTask)',a:'node',n:'OperationalTask',d:'SysMLv2EditService-PartDefinition'},{l:'作战模型(OperationalModel)',a:'node',n:'OperationalModel',d:'SysMLv2EditService-PartDefinition'},{l:'通信活动(CommunicationActivity)',a:'node',n:'CommunicationActivity',d:'SysMLv2EditService-PartDefinition'},{l:'发信活动(TransmitActivity)',a:'node',n:'TransmitActivity',d:'SysMLv2EditService-PartDefinition'},{l:'收信活动(ReceiveActivity)',a:'node',n:'ReceiveActivity',d:'SysMLv2EditService-PartDefinition'},{l:'机动活动(ManeuverActivity)',a:'node',n:'ManeuverActivity',d:'SysMLv2EditService-PartDefinition'},{l:'悬浮机动(HoverManeuver)',a:'node',n:'HoverManeuver',d:'SysMLv2EditService-PartDefinition'},{l:'转移机动(TransferManeuver)',a:'node',n:'TransferManeuver',d:'SysMLv2EditService-PartDefinition'},{l:'筹划机动(PlanManeuver)',a:'node',n:'PlanManeuver',d:'SysMLv2EditService-PartDefinition'},{l:'研判活动(AnalysisActivity)',a:'node',n:'AnalysisActivity',d:'SysMLv2EditService-PartDefinition'},{l:'指控活动(CommandControlActivity)',a:'node',n:'CommandControlActivity',d:'SysMLv2EditService-PartDefinition'},{l:'探测活动(DetectionActivity)',a:'node',n:'DetectionActivity',d:'SysMLv2EditService-PartDefinition'},{l:'打击活动(StrikeActivity)',a:'node',n:'StrikeActivity',d:'SysMLv2EditService-PartDefinition'},{l:'防御活动(DefenseActivity)',a:'node',n:'DefenseActivity',d:'SysMLv2EditService-PartDefinition'},{l:'保障活动(SupportActivity)',a:'node',n:'SupportActivity',d:'SysMLv2EditService-PartDefinition'},{l:'装备(Equip)',a:'node',n:'Equip',d:'SysMLv2EditService-PartDefinition'},{l:'时间标尺(TimeScale)',a:'capability',n:'TimeScale',d:'SysMLv2EditService-PartDefinition'},{l:'活动参数节点(ActivityParameterNode)',a:'node',n:'ActivityParameterNode',d:'SysMLv2EditService-PartDefinition'},{l:'开始节点(InitialNode)',a:'node',n:'InitialNode',d:'SysMLv2EditService-PartDefinition'},{l:'决定节点(DecisionNode)',a:'node',n:'DecisionNode',d:'SysMLv2EditService-PartDefinition'},{l:'合并节点(MergeNode)',a:'node',n:'MergeNode',d:'SysMLv2EditService-PartDefinition'},{l:'水平分支节点(HorizontalForkNode)',a:'node',n:'HorizontalForkNode',d:'SysMLv2EditService-PartDefinition'},{l:'垂直分支节点(VerticalForkNode)',a:'node',n:'VerticalForkNode',d:'SysMLv2EditService-PartDefinition'},{l:'水平集合节点(HorizontalJoinNode)',a:'node',n:'HorizontalJoinNode',d:'SysMLv2EditService-PartDefinition'},{l:'垂直集合节点(VerticalJoinNode)',a:'node',n:'VerticalJoinNode',d:'SysMLv2EditService-PartDefinition'},{l:'活动最终节点(ActivityFinalNode)',a:'node',n:'ActivityFinalNode',d:'SysMLv2EditService-PartDefinition'},{l:'流最终节点(FlowFinalNode)',a:'node',n:'FlowFinalNode',d:'SysMLv2EditService-PartDefinition'},{l:'不透明动作(OpaqueAction)',a:'node',n:'OpaqueAction',d:'SysMLv2EditService-PartDefinition'},{l:'信号(Signal)',a:'node',n:'Signal',d:'SysMLv2EditService-PartDefinition'},{l:'垂直活动分区(VerticalPartition)',a:'node',n:'VerticalPartition',d:'SysMLv2EditService-PartDefinition'},{l:'水平活动分区(HorizontalPartition)',a:'node',n:'HorizontalPartition',d:'SysMLv2EditService-PartDefinition'},{l:'巡逻活动(PatrolActivity)',a:'node',n:'PatrolActivity',d:'SysMLv2EditService-PartDefinition'}];
+            var i1 = [{l:'任务阶段(MissionPhase)',a:'node',n:'MissionPhase',d:'SysMLv2EditService-PartDefinition'},{l:'作战问题(OperationalProblem)',a:'node',n:'OperationalProblem',d:'SysMLv2EditService-PartDefinition'},{l:'作战活动(OperationalActivity)',a:'node',n:'OperationalActivity',d:'SysMLv2EditService-PartDefinition'},{l:'作战任务(OperationalTask)',a:'node',n:'OperationalTask',d:'SysMLv2EditService-PartDefinition'},{l:'作战模型(OperationalModel)',a:'node',n:'OperationalModel',d:'SysMLv2EditService-PartDefinition'},{l:'通信活动(CommunicationActivity)',a:'node',n:'CommunicationActivity',d:'SysMLv2EditService-PartDefinition'},{l:'发信活动(TransmitActivity)',a:'node',n:'TransmitActivity',d:'SysMLv2EditService-PartDefinition'},{l:'收信活动(ReceiveActivity)',a:'node',n:'ReceiveActivity',d:'SysMLv2EditService-PartDefinition'},{l:'机动活动(ManeuverActivity)',a:'node',n:'ManeuverActivity',d:'SysMLv2EditService-PartDefinition'},{l:'悬浮机动(HoverManeuver)',a:'node',n:'HoverManeuver',d:'SysMLv2EditService-PartDefinition'},{l:'转移机动(TransferManeuver)',a:'node',n:'TransferManeuver',d:'SysMLv2EditService-PartDefinition'},{l:'筹划机动(PlanManeuver)',a:'node',n:'PlanManeuver',d:'SysMLv2EditService-PartDefinition'},{l:'研判活动(AnalysisActivity)',a:'node',n:'AnalysisActivity',d:'SysMLv2EditService-PartDefinition'},{l:'指控活动(CommandControlActivity)',a:'node',n:'CommandControlActivity',d:'SysMLv2EditService-PartDefinition'},{l:'探测活动(DetectionActivity)',a:'node',n:'DetectionActivity',d:'SysMLv2EditService-PartDefinition'},{l:'打击活动(StrikeActivity)',a:'node',n:'StrikeActivity',d:'SysMLv2EditService-PartDefinition'},{l:'防御活动(DefenseActivity)',a:'node',n:'DefenseActivity',d:'SysMLv2EditService-PartDefinition'},{l:'保障活动(SupportActivity)',a:'node',n:'SupportActivity',d:'SysMLv2EditService-PartDefinition'},{l:'装备(Equipment)',a:'node',n:'Equipment',d:'SysMLv2EditService-PartDefinition'},{l:'时间标尺(TimeScale)',a:'capability',n:'TimeScale',d:'SysMLv2EditService-PartDefinition'},{l:'活动参数节点(ActivityParameterNode)',a:'node',n:'ActivityParameterNode',d:'SysMLv2EditService-PartDefinition'},{l:'开始节点(InitialNode)',a:'node',n:'InitialNode',d:'SysMLv2EditService-PartDefinition'},{l:'决定节点(DecisionNode)',a:'node',n:'DecisionNode',d:'SysMLv2EditService-PartDefinition'},{l:'合并节点(MergeNode)',a:'node',n:'MergeNode',d:'SysMLv2EditService-PartDefinition'},{l:'水平分支节点(HorizontalForkNode)',a:'node',n:'HorizontalForkNode',d:'SysMLv2EditService-PartDefinition'},{l:'垂直分支节点(VerticalForkNode)',a:'node',n:'VerticalForkNode',d:'SysMLv2EditService-PartDefinition'},{l:'水平集合节点(HorizontalJoinNode)',a:'node',n:'HorizontalJoinNode',d:'SysMLv2EditService-PartDefinition'},{l:'垂直集合节点(VerticalJoinNode)',a:'node',n:'VerticalJoinNode',d:'SysMLv2EditService-PartDefinition'},{l:'活动最终节点(ActivityFinalNode)',a:'node',n:'ActivityFinalNode',d:'SysMLv2EditService-PartDefinition'},{l:'流最终节点(FlowFinalNode)',a:'node',n:'FlowFinalNode',d:'SysMLv2EditService-PartDefinition'},{l:'不透明动作(OpaqueAction)',a:'node',n:'OpaqueAction',d:'SysMLv2EditService-PartDefinition'},{l:'信号(Signal)',a:'node',n:'Signal',d:'SysMLv2EditService-PartDefinition'},{l:'垂直活动分区(VerticalPartition)',a:'node',n:'VerticalPartition',d:'SysMLv2EditService-PartDefinition'},{l:'水平活动分区(HorizontalPartition)',a:'node',n:'HorizontalPartition',d:'SysMLv2EditService-PartDefinition'},{l:'巡逻活动(PatrolActivity)',a:'node',n:'PatrolActivity',d:'SysMLv2EditService-PartDefinition'}];
             var i2 = [{l:'包(Package)',a:'',n:'Package',d:'SysMLv2EditService-Package'},{l:'注释(Comment)',a:'',n:'Comment',d:'SysMLv2EditService-Comment'},{l:'约束(Constraint)',a:'requirement',n:'Constraint',d:'SysMLv2EditService-ConstraintUsage'}];
             var h = '<div style="width:260px;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 0;color:#e0e0e0;font:13px system-ui,sans-serif">';
             h += '<div style="padding:4px 12px;color:#64748b;font-size:11px;font-weight:600">元素</div>';
@@ -945,7 +962,8 @@
         var hc = document.getElementById('matrix-hide-css'); if (hc) hc.remove();
         var wrapper = document.createElement('div');
         wrapper.id = wrapperId;
-        wrapper.style.cssText = 'height:100%;overflow:hidden';
+        wrapper.setAttribute('data-repid', currentMatrixRepId());
+        wrapper.style.cssText = 'width:100%;height:100%;overflow:auto';
         containerEl.parentElement.insertBefore(wrapper, containerEl.nextSibling);
         if (renderFn) renderFn(wrapper);
         else { var check = setInterval(function() { if (renderFn) { clearInterval(check); renderFn(wrapper); } }, 50); }
@@ -967,61 +985,111 @@
           if (hiddenTable && hiddenTable.style.display === 'none') hiddenTable.style.display = '';
         }
         // If wrapper exists (from factory render), ensure side panel is hidden
-        // AND clean up opposite wrapper if switching views
+        // Use representation ID to detect which custom view is active
         var rw = document.getElementById('rules-wrapper');
         var pw = document.getElementById('prediction-wrapper');
-        var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
-        var tabText = tab ? tab.textContent : '';
-        if (rw && (tabText.indexOf('OV-6a') >= 0 || tabText.indexOf('规则') >= 0)) {
-          // Rules View is active, remove Prediction wrapper if present
-          if (pw) { if (pw.__predictionRoot) pw.__predictionRoot.unmount(); pw.remove(); predInjected = false; }
-          hideRightPanel(); return;
+        var curRepId = currentMatrixRepId();
+        var rwRep = rw ? rw.getAttribute('data-repid') : '';
+        var pwRep = pw ? pw.getAttribute('data-repid') : '';
+        // If wrapper's rep ID doesn't match current, we switched away — hide it
+        if (rw && rwRep !== curRepId) {
+          rw.style.display = 'none';
+          rulesInjected = false;
+          var ht = document.querySelector('[data-testid="table-representation"]');
+          if (ht && ht.style.display === 'none') ht.style.display = '';
         }
-        if (pw && (tabText.indexOf('技术和技能预测') >= 0 || tabText.indexOf('Prediction') >= 0)) {
-          // Prediction View is active, remove Rules wrapper if present
-          if (rw) { if (rw.__rulesRoot) rw.__rulesRoot.unmount(); rw.remove(); rulesInjected = false; }
-          hideRightPanel(); return;
+        if (pw && pwRep !== curRepId) {
+          pw.style.display = 'none';
+          predInjected = false;
+          var ht2 = document.querySelector('[data-testid="table-representation"]');
+          if (ht2 && ht2.style.display === 'none') ht2.style.display = '';
         }
-        if (rw || pw) { hideRightPanel(); return; }
+        if ((rw && rw.style.display !== 'none') || (pw && pw.style.display !== 'none')) { hideRightPanel(); return; }
         if (rulesInjected || predInjected) return;
+        // Check if current view is Rules (OV-6a) by tab name
+        var tabSel = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
+        var tabNm = tabSel ? (tabSel.textContent || '') : '';
+        if (!rulesInjected && tabNm.indexOf('OV-6a') >= 0) {
+          // Create wrapper even if no table exists yet
+          var rw = document.getElementById('rules-wrapper');
+          if (!rw) {
+            var wrapper = document.createElement('div');
+            wrapper.id = 'rules-wrapper';
+            wrapper.setAttribute('data-repid', currentMatrixRepId());
+            wrapper.style.cssText = 'width:100%;height:100%;overflow:auto';
+            var area = document.querySelector('[data-testid="representation-area"]');
+            if (area) { area.appendChild(wrapper); }
+          } else {
+            rw.style.display = '';
+          }
+          rw = document.getElementById('rules-wrapper');
+          if (rw && !rw.__rulesRoot) { rw.setAttribute('data-repid', currentMatrixRepId()); window.renderDoDAFRules(rw); }
+          rulesInjected = true; hideRightPanel(); return;
+        }
+        // Prediction View — similar check
+        if (!predInjected && (tabNm.indexOf('技术') >= 0 || tabNm.indexOf('Prediction') >= 0 || tabNm.indexOf('SvcV-9') >= 0)) {
+          var pw = document.getElementById('prediction-wrapper');
+          if (!pw) {
+            var wrapper = document.createElement('div');
+            wrapper.id = 'prediction-wrapper';
+            wrapper.setAttribute('data-repid', currentMatrixRepId());
+            wrapper.style.cssText = 'width:100%;height:100%;overflow:auto';
+            var area = document.querySelector('[data-testid="representation-area"]');
+            if (area) { area.appendChild(wrapper); }
+          } else {
+            pw.style.display = '';
+          }
+          pw = document.getElementById('prediction-wrapper');
+          if (pw && !pw.__predictionRoot) { pw.setAttribute('data-repid', currentMatrixRepId()); window.renderDoDAFPrediction(pw); }
+          predInjected = true; hideRightPanel(); return;
+        }
         var rep = document.querySelector('[data-testid="table-representation"]');
         if (!rep || rep.offsetParent === null) return;
-        var tab = document.querySelector('[data-testid*="tab"][data-testselected="true"]');
-        var tabText = tab ? tab.textContent : '';
-        // Rules View
-        if (!rulesInjected && (tabText.indexOf('OV-6a') >= 0 || tabText.indexOf('规则') >= 0)) {
-          // Clean up other wrapper first
-          var pw = document.getElementById('prediction-wrapper'); if (pw) { pw.remove(); predInjected = false; }
-          rulesInjected = true; injectCustomView(rep, 'rules-wrapper', window.renderDoDAFRules);
-          return;
+        var curRep = currentMatrixRepId();
+        // Rules View — check table headers
+        if (!rulesInjected) {
+          var ths = rep.querySelectorAll('th');
+          for (var h = 0; h < ths.length; h++) {
+            var txt = ths[h].textContent;
+            if (txt.indexOf('规则') >= 0 || txt.indexOf('应用于') >= 0 || txt.indexOf('序号') >= 0) {
+              var pw = document.getElementById('prediction-wrapper'); if (pw) { pw.remove(); predInjected = false; }
+              rulesInjected = true;
+              var rw = document.getElementById('rules-wrapper'); if (rw) rw.setAttribute('data-repid', curRep);
+              else injectCustomView(rep, 'rules-wrapper', window.renderDoDAFRules);
+              return;
+            }
+          }
         }
-        // Prediction View
-        if (!predInjected && (tabText.indexOf('技术和技能预测') >= 0 || tabText.indexOf('Prediction') >= 0)) {
-          // Clean up other wrapper first
-          var rw = document.getElementById('rules-wrapper'); if (rw) { rw.remove(); rulesInjected = false; }
-          predInjected = true; injectCustomView(rep, 'prediction-wrapper', window.renderDoDAFPrediction);
-          return;
-        }
-        // Fallback: check table headers
-        var ths = rep.querySelectorAll('th');
-        for (var h = 0; h < ths.length; h++) {
-          var txt = ths[h].textContent;
-          if (!rulesInjected && (txt.indexOf('规则') >= 0 || txt.indexOf('应用于') >= 0)) { rulesInjected = true; injectCustomView(rep, 'rules-wrapper', window.renderDoDAFRules); return; }
-          if (!predInjected && (txt.indexOf('技术和技能领域') >= 0 || txt.indexOf('短期') >= 0)) { predInjected = true; injectCustomView(rep, 'prediction-wrapper', window.renderDoDAFPrediction); return; }
+        // Prediction View — check table headers
+        if (!predInjected) {
+          var ths2 = rep.querySelectorAll('th');
+          for (var h2 = 0; h2 < ths2.length; h2++) {
+            var txt2 = ths2[h2].textContent;
+            if (txt2.indexOf('技术和技能领域') >= 0 || txt2.indexOf('短期') >= 0) {
+              var rw2 = document.getElementById('rules-wrapper'); if (rw2) { rw2.remove(); rulesInjected = false; }
+              predInjected = true;
+              var pw2 = document.getElementById('prediction-wrapper'); if (pw2) pw2.setAttribute('data-repid', curRep);
+              else injectCustomView(rep, 'prediction-wrapper', window.renderDoDAFPrediction);
+              return;
+            }
+          }
         }
       }
       setInterval(scanCustomViews, 200);
 
       // Lifeline UML style: add dashed tail extending to view bottom + replace icon
       function styleLifelines() {
-        var viewport = document.querySelector('.react-flow__viewport');
-        var flowPane = document.querySelector('.react-flow__pane');
-        if (viewport && flowPane) {
-          var nodes = document.querySelectorAll('[data-svg="rect"]');
-          for (var i = 0; i < nodes.length; i++) {
-            var n = nodes[i];
-            var label = n.querySelector('[data-testid*="Label content"]');
-            if (!label || (label.textContent.indexOf('Lifeline') < 0 && label.textContent.indexOf('Lifeline') < 0)) continue;
+        var vp2 = document.querySelector('.react-flow__viewport');
+        var fp2 = document.querySelector('.react-flow__pane');
+        if (!vp2 || !fp2) return;
+        var nodes = document.querySelectorAll('[data-svg="rect"]');
+        for (var i = 0; i < nodes.length; i++) {
+          var n = nodes[i];
+          var lb = n.querySelector('[data-testid*="Label content"]');
+          if (!lb) continue;
+          var txt = lb.textContent;
+          // --- Lifeline UML style ---
+          if (txt.indexOf('Lifeline') >= 0) {
             // Replace icon
             var img = n.querySelector('img');
             if (img && img.src.indexOf('lifeline') < 0) {
@@ -1038,9 +1106,699 @@
               n.appendChild(tail);
             }
             var rect = n.getBoundingClientRect();
-            var paneRect = flowPane.getBoundingClientRect();
+            var paneRect = fp2.getBoundingClientRect();
             var h = paneRect.bottom - rect.bottom;
             if (h > 0) tail.style.height = h + 'px';
+          }
+          // --- OperationalCapability style ---
+          else if (txt.indexOf('OperationalCapability') >= 0) {
+            var img2 = n.querySelector('img');
+            if (img2 && img2.src.indexOf('OperationalCapability') < 0) {
+              img2.src = 'http://localhost:8080/icons/full/obj16/OperationalCapability.svg';
+              img2.alt = 'OperationalCapability';
+            }
+            var r = n.querySelector('rect') || n;
+            if (r) { r.setAttribute('stroke', '#f59e0b'); r.setAttribute('stroke-width', '2.5'); }
+          }
+          // --- TaskStage ---
+          else if (txt.indexOf('TaskStage') >= 0) {
+            var img3 = n.querySelector('img');
+            if (img3 && img3.src.indexOf('TaskStage') < 0) {
+              img3.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="12" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="4" width="3" height="3" fill="#8b5cf6"/><rect x="7" y="4" width="3" height="3" fill="#8b5cf6"/><rect x="11" y="4" width="3" height="3" fill="#8b5cf6"/><rect x="3" y="9" width="7" height="3" rx="1" fill="#a78bfa"/></svg>');
+              img3.alt = 'TaskStage';
+            }
+          }
+          // --- EquipCapability ---
+          else if (txt.indexOf('EquipCapability') >= 0) {
+            var img4 = n.querySelector('img');
+            if (img4 && img4.src.indexOf('EquipCapability') < 0) {
+              img4.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><circle cx="8" cy="5" r="2.5" fill="#10b981"/><rect x="3" y="8" width="10" height="3" rx="1" fill="#34d399"/></svg>');
+              img4.alt = 'EquipCapability';
+            }
+          }
+          // --- TimeScale ---
+          else if (txt.indexOf('TimeScale') >= 0) {
+            var img5 = n.querySelector('img');
+            if (img5 && img5.src.indexOf('TimeScale') < 0) {
+              img5.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="7" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><line x1="8" y1="8" x2="8" y2="4" stroke="#06b6d4" stroke-width="1.5"/><line x1="8" y1="8" x2="11" y2="8" stroke="#06b6d4" stroke-width="1"/></svg>');
+              img5.alt = 'TimeScale';
+            }
+          }
+          // --- TaskIntent ---
+          else if (txt.indexOf('TaskIntent') >= 0) {
+            var img6 = n.querySelector('img');
+            if (img6 && img6.src.indexOf('TaskIntent') < 0) {
+              img6.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f43f5e" stroke-width="1.5"/><circle cx="8" cy="8" r="3" fill="none" stroke="#f43f5e" stroke-width="1"/><circle cx="8" cy="8" r="1.2" fill="#f43f5e"/></svg>');
+              img6.alt = 'TaskIntent';
+            }
+          }
+          // --- ImplementationPhase ---
+          else if (txt.indexOf('ImplementationPhase') >= 0) {
+            var img7 = n.querySelector('img');
+            if (img7 && img7.src.indexOf('ImplementationPhase') < 0) {
+              img7.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/><path d="M4 8h7M10 5l3 3-3 3" fill="none" stroke="#6366f1" stroke-width="1.5"/></svg>');
+              img7.alt = 'ImplementationPhase';
+            }
+          }
+          // --- VisionDescription (check before Vision) ---
+          else if (txt.indexOf('VisionDescription') >= 0) {
+            var img9 = n.querySelector('img');
+            if (img9 && img9.src.indexOf('VisionDescription') < 0) {
+              img9.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="4" y="3" width="8" height="2" rx="0.5" fill="#14b8a6"/><line x1="4" y1="7" x2="12" y2="7" stroke="#14b8a6" stroke-width="1"/><line x1="4" y1="9" x2="10" y2="9" stroke="#14b8a6" stroke-width="0.8"/><line x1="4" y1="11" x2="11" y2="11" stroke="#14b8a6" stroke-width="0.8"/></svg>');
+              img9.alt = 'VisionDescription';
+            }
+          }
+          // --- Target ---
+          else if (txt.indexOf('Target') >= 0) {
+            var imgA = n.querySelector('img');
+            if (imgA && imgA.src.indexOf('Target') < 0) {
+              imgA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f97316" stroke-width="1"/><circle cx="8" cy="8" r="1.5" fill="#f97316"/><line x1="8" y1="1" x2="8" y2="4" stroke="#f97316" stroke-width="1"/><line x1="8" y1="12" x2="8" y2="15" stroke="#f97316" stroke-width="1"/><line x1="1" y1="8" x2="4" y2="8" stroke="#f97316" stroke-width="1"/><line x1="12" y1="8" x2="15" y2="8" stroke="#f97316" stroke-width="1"/></svg>');
+              imgA.alt = 'Target';
+            }
+          }
+          // --- Performer ---
+          else if (txt.indexOf('Performer') >= 0) {
+            var imgB = n.querySelector('img');
+            if (imgB && imgB.src.indexOf('Performer') < 0) {
+              imgB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><circle cx="8" cy="5" r="2.5" fill="#3b82f6"/><path d="M3 13c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5" fill="none" stroke="#3b82f6" stroke-width="1.2"/></svg>');
+              imgB.alt = 'Performer';
+            }
+          }
+          // --- Location ---
+          else if (txt.indexOf('Location') >= 0) {
+            var imgC = n.querySelector('img');
+            if (imgC && imgC.src.indexOf('Location') < 0) {
+              imgC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><path d="M8 2C5.8 2 4 3.8 4 6c0 3 4 8 4 8s4-5 4-8c0-2.2-1.8-4-4-4z" fill="#10b981"/><circle cx="8" cy="6" r="1.5" fill="#1e293b"/></svg>');
+              imgC.alt = 'Location';
+            }
+          }
+          // --- Condition ---
+          else if (txt.indexOf('Condition') >= 0) {
+            var imgD = n.querySelector('img');
+            if (imgD && imgD.src.indexOf('Condition') < 0) {
+              imgD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 12,6 10,6 10,12 6,12 6,6 4,6" fill="#eab308"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="5" font-weight="bold">?</text></svg>');
+              imgD.alt = 'Condition';
+            }
+          }
+          // --- AnalysisActivity ---
+          else if (txt.indexOf('AnalysisActivity') >= 0) {
+            var imgZ = n.querySelector('img');
+            if (imgZ && imgZ.src.indexOf('AnalysisActivity') < 0) {
+              imgZ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f97316" stroke-width="1"/><line x1="8" y1="4" x2="8" y2="12" stroke="#f97316" stroke-width="0.8"/><line x1="4" y1="8" x2="12" y2="8" stroke="#f97316" stroke-width="0.8"/></svg>');
+              imgZ.alt = 'AnalysisActivity';
+            }
+          }
+          // --- DefenseActivity ---
+          else if (txt.indexOf('DefenseActivity') >= 0) {
+            var imgAD = n.querySelector('img');
+            if (imgAD && imgAD.src.indexOf('DefenseActivity') < 0) {
+              imgAD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M8 2L3 5v3c0 3.5 5 6 5 6s5-2.5 5-6V5z" fill="#3b82f6"/></svg>');
+              imgAD.alt = 'DefenseActivity';
+            }
+          }
+          // --- SupportActivity ---
+          else if (txt.indexOf('SupportActivity') >= 0) {
+            var imgSA = n.querySelector('img');
+            if (imgSA && imgSA.src.indexOf('SupportActivity') < 0) {
+              imgSA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="4.5" fill="#22c55e"/><path d="M6 8h4M8 6v4" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgSA.alt = 'SupportActivity';
+            }
+          }
+          // --- ActivityParameterNode ---
+          else if (txt.indexOf('ActivityParameterNode') >= 0) {
+            var imgAP = n.querySelector('img');
+            if (imgAP && imgAP.src.indexOf('ActivityParameterNode') < 0) {
+              imgAP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/><circle cx="8" cy="8" r="3" fill="#a78bfa"/><path d="M8 5v6M5 8h6" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgAP.alt = 'ActivityParameterNode';
+            }
+          }
+          // --- InitialNode ---
+          else if (txt.indexOf('InitialNode') >= 0) {
+            var imgIN = n.querySelector('img');
+            if (imgIN && imgIN.src.indexOf('InitialNode') < 0) {
+              imgIN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#059669" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#059669"/></svg>');
+              imgIN.alt = 'InitialNode';
+            }
+          }
+          // --- DecisionNode ---
+          else if (txt.indexOf('DecisionNode') >= 0) {
+            var imgDN = n.querySelector('img');
+            if (imgDN && imgDN.src.indexOf('DecisionNode') < 0) {
+              imgDN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><polygon points="8,3 13,8 8,13 3,8" fill="#f59e0b"/></svg>');
+              imgDN.alt = 'DecisionNode';
+            }
+          }
+          // --- MergeNode ---
+          else if (txt.indexOf('MergeNode') >= 0) {
+            var imgMN = n.querySelector('img');
+            if (imgMN && imgMN.src.indexOf('MergeNode') < 0) {
+              imgMN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><polygon points="8,3 13,11 3,11" fill="#8b5cf6"/></svg>');
+              imgMN.alt = 'MergeNode';
+            }
+          }
+          // --- HorizontalForkNode ---
+          else if (txt.indexOf('HorizontalForkNode') >= 0) {
+            var imgHF = n.querySelector('img');
+            if (imgHF && imgHF.src.indexOf('HorizontalForkNode') < 0) {
+              imgHF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><rect x="2" y="5" width="12" height="4" fill="#06b6d4"/></svg>');
+              imgHF.alt = 'HorizontalForkNode';
+            }
+          }
+          // --- VerticalForkNode ---
+          else if (txt.indexOf('VerticalForkNode') >= 0) {
+            var imgVF = n.querySelector('img');
+            if (imgVF && imgVF.src.indexOf('VerticalForkNode') < 0) {
+              imgVF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0284c7" stroke-width="1.5"/><rect x="5" y="2" width="4" height="12" fill="#0284c7"/></svg>');
+              imgVF.alt = 'VerticalForkNode';
+            }
+          }
+          // --- HorizontalJoinNode ---
+          else if (txt.indexOf('HorizontalJoinNode') >= 0) {
+            var imgHJ = n.querySelector('img');
+            if (imgHJ && imgHJ.src.indexOf('HorizontalJoinNode') < 0) {
+              imgHJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/><rect x="2" y="5" width="12" height="4" fill="#6366f1"/><circle cx="4" cy="7" r="1" fill="#1e293b"/><circle cx="12" cy="7" r="1" fill="#1e293b"/></svg>');
+              imgHJ.alt = 'HorizontalJoinNode';
+            }
+          }
+          // --- VerticalJoinNode ---
+          else if (txt.indexOf('VerticalJoinNode') >= 0) {
+            var imgVJ = n.querySelector('img');
+            if (imgVJ && imgVJ.src.indexOf('VerticalJoinNode') < 0) {
+              imgVJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a21caf" stroke-width="1.5"/><rect x="5" y="2" width="4" height="12" fill="#a21caf"/><circle cx="7" cy="4" r="1" fill="#1e293b"/><circle cx="7" cy="12" r="1" fill="#1e293b"/></svg>');
+              imgVJ.alt = 'VerticalJoinNode';
+            }
+          }
+          // --- ActivityFinalNode ---
+          else if (txt.indexOf('ActivityFinalNode') >= 0) {
+            var imgAF = n.querySelector('img');
+            if (imgAF && imgAF.src.indexOf('ActivityFinalNode') < 0) {
+              imgAF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#dc2626" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#dc2626"/><path d="M6 6l4 4M10 6l-4 4" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgAF.alt = 'ActivityFinalNode';
+            }
+          }
+          // --- FlowFinalNode ---
+          else if (txt.indexOf('FlowFinalNode') >= 0) {
+            var imgFF = n.querySelector('img');
+            if (imgFF && imgFF.src.indexOf('FlowFinalNode') < 0) {
+              imgFF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#dc2626" stroke-width="1.5"/><circle cx="8" cy="8" r="5" fill="none" stroke="#dc2626" stroke-width="1.5"/><path d="M6 6l4 4M10 6l-4 4" stroke="#dc2626" stroke-width="1.5"/></svg>');
+              imgFF.alt = 'FlowFinalNode';
+            }
+          }
+          // --- OpaqueAction ---
+          else if (txt.indexOf('OpaqueAction') >= 0) {
+            var imgOA = n.querySelector('img');
+            if (imgOA && imgOA.src.indexOf('OpaqueAction') < 0) {
+              imgOA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6b7280" stroke-width="1.5"/><rect x="3" y="4" width="10" height="8" rx="1" fill="#6b7280"/><path d="M5 7h6M5 9h4" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgOA.alt = 'OpaqueAction';
+            }
+          }
+          // --- Signal ---
+          else if (txt.indexOf('Signal') >= 0) {
+            var imgSG = n.querySelector('img');
+            if (imgSG && imgSG.src.indexOf('Signal') < 0) {
+              imgSG.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 14,13 2,13" fill="#eab308"/></svg>');
+              imgSG.alt = 'Signal';
+            }
+          }
+          // --- VerticalPartition ---
+          else if (txt.indexOf('VerticalPartition') >= 0) {
+            var imgVP = n.querySelector('img');
+            if (imgVP && imgVP.src.indexOf('VerticalPartition') < 0) {
+              imgVP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#84cc16" stroke-width="1.5"/><line x1="8" y1="2" x2="8" y2="14" stroke="#84cc16" stroke-width="1" stroke-dasharray="2 1"/></svg>');
+              imgVP.alt = 'VerticalPartition';
+            }
+          }
+          // --- HorizontalPartition ---
+          else if (txt.indexOf('HorizontalPartition') >= 0) {
+            var imgHP = n.querySelector('img');
+            if (imgHP && imgHP.src.indexOf('HorizontalPartition') < 0) {
+              imgHP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#84cc16" stroke-width="1.5"/><line x1="2" y1="8" x2="14" y2="8" stroke="#84cc16" stroke-width="1" stroke-dasharray="2 1"/></svg>');
+              imgHP.alt = 'HorizontalPartition';
+            }
+          }
+          // --- PatrolActivity ---
+          else if (txt.indexOf('PatrolActivity') >= 0) {
+            var imgPA = n.querySelector('img');
+            if (imgPA && imgPA.src.indexOf('PatrolActivity') < 0) {
+              imgPA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="6" cy="6" r="3" fill="#22c55e"/><circle cx="6" cy="6" r="1" fill="#1e293b"/><circle cx="12" cy="12" r="3" fill="#22c55e"/><circle cx="12" cy="12" r="1" fill="#1e293b"/></svg>');
+              imgPA.alt = 'PatrolActivity';
+            }
+          }
+          // --- TimeConstraint ---
+          else if (txt.indexOf('TimeConstraint') >= 0) {
+            var imgTC = n.querySelector('img');
+            if (imgTC && imgTC.src.indexOf('TimeConstraint') < 0) {
+              imgTC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#0ea5e9" stroke-width="1.5"/><line x1="8" y1="5" x2="8" y2="8" stroke="#0ea5e9" stroke-width="1.5"/><line x1="8" y1="8" x2="11" y2="8" stroke="#0ea5e9" stroke-width="1.5"/></svg>');
+              imgTC.alt = 'TimeConstraint';
+            }
+          }
+          // --- DurationConstraint ---
+          else if (txt.indexOf('DurationConstraint') >= 0) {
+            var imgDC = n.querySelector('img');
+            if (imgDC && imgDC.src.indexOf('DurationConstraint') < 0) {
+              imgDC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><rect x="4" y="3" width="8" height="10" rx="1" fill="#f97316"/><line x1="6" y1="8" x2="10" y2="8" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgDC.alt = 'DurationConstraint';
+            }
+          }
+          // --- System ---
+          else if (txt.indexOf('System') >= 0 && txt.indexOf('SystemNode') < 0) {
+            var imgSYS = n.querySelector('img');
+            if (imgSYS && imgSYS.src.indexOf('SystemSVG') < 0) {
+              imgSYS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><polygon points="8,2 14,5.5 14,10.5 8,14 2,10.5 2,5.5" fill="#3b82f6"/></svg>');
+              imgSYS.alt = 'System'; imgSYS.setAttribute('data-sys-icon','1');
+            }
+          }
+          // --- Software ---
+          else if (txt.indexOf('Software') >= 0) {
+            var imgSW = n.querySelector('img');
+            if (imgSW && imgSW.src.indexOf('Software') < 0) {
+              imgSW.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#60a5fa" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#60a5fa"/><line x1="5" y1="6" x2="11" y2="6" stroke="#1e293b" stroke-width="1"/><line x1="5" y1="8" x2="9" y2="8" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgSW.alt = 'Software';
+            }
+          }
+          // --- PersonType ---
+          else if (txt.indexOf('PersonType') >= 0) {
+            var imgPT = n.querySelector('img');
+            if (imgPT && imgPT.src.indexOf('PersonType') < 0) {
+              imgPT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><circle cx="8" cy="4.5" r="2" fill="#14b8a6"/><ellipse cx="8" cy="11" rx="4" ry="3" fill="#14b8a6"/><line x1="6" y1="11" x2="10" y2="11" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgPT.alt = 'PersonType';
+            }
+          }
+          // --- OrganizationType ---
+          else if (txt.indexOf('OrganizationType') >= 0) {
+            var imgOT = n.querySelector('img');
+            if (imgOT && imgOT.src.indexOf('OrganizationType') < 0) {
+              imgOT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="2" width="10" height="4" fill="#14b8a6"/><rect x="3" y="8" width="10" height="6" fill="none" stroke="#14b8a6" stroke-width="1.5"/></svg>');
+              imgOT.alt = 'OrganizationType';
+            }
+          }
+          // --- ResourcePort ---
+          else if (txt.indexOf('ResourcePort') >= 0) {
+            var imgRP = n.querySelector('img');
+            if (imgRP && imgRP.src.indexOf('ResourcePort') < 0) {
+              imgRP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#8b5cf6"/><polygon points="8,4 12,8 8,12 4,8" fill="none" stroke="#8b5cf6" stroke-width="1"/></svg>');
+              imgRP.alt = 'ResourcePort';
+            }
+          }
+          // --- CapabilityConfiguration ---
+          else if (txt.indexOf('CapabilityConfiguration') >= 0) {
+            var imgCC = n.querySelector('img');
+            if (imgCC && imgCC.src.indexOf('CapabilityConfiguration') < 0) {
+              imgCC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="6" cy="6" r="3" fill="#f59e0b"/><circle cx="10" cy="10" r="3" fill="#f59e0b"/><line x1="8" y1="5" x2="8" y2="8" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgCC.alt = 'CapabilityConfiguration';
+            }
+          }
+          // --- TechnicalStandard ---
+          else if (txt.indexOf('TechnicalStandard') >= 0) {
+            var imgTS = n.querySelector('img');
+            if (imgTS && imgTS.src.indexOf('TechnicalStandard') < 0) {
+              imgTS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6b7280" stroke-width="1.5"/><rect x="3" y="2" width="10" height="12" rx="1" fill="#6b7280"/><path d="M5 7l2 2 4-4" stroke="#1e293b" stroke-width="1.5" fill="none"/></svg>');
+              imgTS.alt = 'TechnicalStandard';
+            }
+          }
+          // --- FunctionStandard ---
+          else if (txt.indexOf('FunctionStandard') >= 0) {
+            var imgFS = n.querySelector('img');
+            if (imgFS && imgFS.src.indexOf('FunctionStandard') < 0) {
+              imgFS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><rect x="3" y="2" width="10" height="12" rx="1" fill="#f97316"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="8" font-weight="bold">F</text></svg>');
+              imgFS.alt = 'FunctionStandard';
+            }
+          }
+          // --- Protocol ---
+          else if (txt.indexOf('Protocol') >= 0) {
+            var imgPR = n.querySelector('img');
+            if (imgPR && imgPR.src.indexOf('Protocol') < 0) {
+              imgPR.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="4" cy="8" r="2" fill="#22c55e"/><circle cx="12" cy="8" r="2" fill="#22c55e"/><line x1="6" y1="8" x2="10" y2="8" stroke="#22c55e" stroke-width="1.5"/></svg>');
+              imgPR.alt = 'Protocol';
+            }
+          }
+          // --- StandardConfiguration ---
+          else if (txt.indexOf('StandardConfiguration') >= 0) {
+            var imgSC = n.querySelector('img');
+            if (imgSC && imgSC.src.indexOf('StandardConfiguration') < 0) {
+              imgSC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#3b82f6"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
+              imgSC.alt = 'StandardConfiguration';
+            }
+          }
+          // --- Function ---
+          else if (txt.indexOf('Function') >= 0 && txt.indexOf('FunctionStandard') < 0) {
+            var imgFN = n.querySelector('img');
+            if (imgFN && imgFN.src.indexOf('FunctionSVG') < 0) {
+              imgFN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="5" cy="5" r="3" fill="#22c55e"/><line x1="8" y1="5" x2="13" y2="5" stroke="#22c55e" stroke-width="1.5"/><line x1="3" y1="11" x2="13" y2="11" stroke="#22c55e" stroke-width="1.5"/></svg>');
+              imgFN.alt = 'Function'; imgFN.setAttribute('data-fn-icon','1');
+            }
+          }
+          // --- ServiceAccess ---
+          else if (txt.indexOf('ServiceAccess') >= 0) {
+            var imgSAc = n.querySelector('img');
+            if (imgSAc && imgSAc.src.indexOf('ServiceAccess') < 0) {
+              imgSAc.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="3" y="4" width="10" height="8" rx="2" fill="#3b82f6"/><line x1="6" y1="4" x2="6" y2="12" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgSAc.alt = 'ServiceAccess';
+            }
+          }
+          // --- ServiceInterface ---
+          else if (txt.indexOf('ServiceInterface') >= 0) {
+            var imgSI = n.querySelector('img');
+            if (imgSI && imgSI.src.indexOf('ServiceInterface') < 0) {
+              imgSI.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="4" y="3" width="8" height="10" rx="1" fill="#3b82f6"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
+              imgSI.alt = 'ServiceInterface';
+            }
+          }
+          // --- LocationType ---
+          else if (txt.indexOf('LocationType') >= 0) {
+            var imgLT = n.querySelector('img');
+            if (imgLT && imgLT.src.indexOf('LocationType') < 0) {
+              imgLT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="5" r="3" fill="#f97316"/><polygon points="5,7 11,7 13,14 3,14" fill="none" stroke="#f97316" stroke-width="1"/></svg>');
+              imgLT.alt = 'LocationType';
+            }
+          }
+          // --- Interface ---
+          else if (txt.indexOf('Interface') >= 0) {
+            var imgIF = n.querySelector('img');
+            if (imgIF && imgIF.src.indexOf('InterfaceSVG') < 0) {
+              imgIF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/><rect x="9" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/></svg>');
+              imgIF.alt = 'Interface'; imgIF.setAttribute('data-if-icon','1');
+            }
+          }
+          // --- Project ---
+          else if (txt.indexOf('Project') >= 0 && txt.indexOf('ProjectActivity') < 0 && txt.indexOf('ProjectMilestone') < 0 && txt.indexOf('ProjectType') < 0) {
+            var imgPJ = n.querySelector('img');
+            if (imgPJ && imgPJ.src.indexOf('ProjectSVG') < 0) {
+              imgPJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M3 3h10v10H3z" fill="#3b82f6"/><path d="M3 6h10" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgPJ.alt = 'Project'; imgPJ.setAttribute('data-pj-icon','1');
+            }
+          }
+          // --- ProjectType ---
+          else if (txt.indexOf('ProjectType') >= 0) {
+            var imgPTy = n.querySelector('img');
+            if (imgPTy && imgPTy.src.indexOf('ProjectType') < 0) {
+              imgPTy.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="2" width="10" height="12" rx="1" fill="#14b8a6"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="8" font-weight="bold">P</text></svg>');
+              imgPTy.alt = 'ProjectType';
+            }
+          }
+          // --- ProjectActivity ---
+          else if (txt.indexOf('ProjectActivity') >= 0) {
+            var imgPAc = n.querySelector('img');
+            if (imgPAc && imgPAc.src.indexOf('ProjectActivity') < 0) {
+              imgPAc.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#22c55e"/><polygon points="7,6 7,10 11,8" fill="#1e293b"/></svg>');
+              imgPAc.alt = 'ProjectActivity';
+            }
+          }
+          // --- StateIndicator ---
+          else if (txt.indexOf('StateIndicator') >= 0) {
+            var imgSIc = n.querySelector('img');
+            if (imgSIc && imgSIc.src.indexOf('StateIndicator') < 0) {
+              imgSIc.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#f59e0b"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
+              imgSIc.alt = 'StateIndicator';
+            }
+          }
+          // --- ProjectMilestone ---
+          else if (txt.indexOf('ProjectMilestone') >= 0) {
+            var imgPM = n.querySelector('img');
+            if (imgPM && imgPM.src.indexOf('ProjectMilestone') < 0) {
+              imgPM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><polygon points="4,2 12,2 12,10 8,13 4,10" fill="#8b5cf6"/></svg>');
+              imgPM.alt = 'ProjectMilestone';
+            }
+          }
+          // --- ActualProjectMilestone ---
+          else if (txt.indexOf('ActualProjectMilestone') >= 0) {
+            var imgAPM = n.querySelector('img');
+            if (imgAPM && imgAPM.src.indexOf('ActualProjectMilestone') < 0) {
+              imgAPM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><polygon points="4,2 12,2 12,10 8,13 4,10" fill="#f97316"/><circle cx="8" cy="6" r="1.5" fill="#1e293b"/></svg>');
+              imgAPM.alt = 'ActualProjectMilestone';
+            }
+          }
+          // --- ConceptEntity ---
+          else if (txt.indexOf('ConceptEntity') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#06b6d4"/><circle cx="8" cy="8" r="1.5" fill="#1e293b"/></svg>'); }
+          // --- ConceptObservable ---
+          else if (txt.indexOf('ConceptObservable') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#06b6d4" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#06b6d4"/></svg>'); }
+          // --- ExchangeElement ---
+          else if (txt.indexOf('ExchangeElement') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><path d="M3 8h10M7 4l-4 4 4 4" fill="none" stroke="#8b5cf6" stroke-width="1.5"/></svg>'); }
+          // --- Information ---
+          else if (txt.indexOf('Information') >= 0 && txt.indexOf('InformationElement') < 0 && txt.indexOf('InformationTransmissionPattern') < 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><circle cx="8" cy="5" r="1.5" fill="#3b82f6"/><rect x="6" y="8" width="4" height="5" fill="#3b82f6"/></svg>'); n.querySelector('img').setAttribute('data-info-icon','1'); }
+          // --- InformationElement ---
+          else if (txt.indexOf('InformationElement') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#3b82f6"/><circle cx="8" cy="6" r="1" fill="#1e293b"/><rect x="6" y="8" width="4" height="4" fill="#1e293b"/></svg>'); }
+          // --- InformationTransmissionPattern ---
+          else if (txt.indexOf('InformationTransmissionPattern') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="2" y="3" width="12" height="10" rx="1" fill="none" stroke="#3b82f6" stroke-width="1"/><path d="M4 6h8M4 9h5" stroke="#3b82f6" stroke-width="1.5"/></svg>'); }
+          // --- EffectivenessIndicator ---
+          else if (txt.indexOf('EffectivenessIndicator') >= 0 && txt.indexOf('EffectivenessIndicatorParameter') < 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#f59e0b"/><path d="M6 7l2 2 3-4" fill="none" stroke="#1e293b" stroke-width="1.5"/></svg>'); n.querySelector('img').setAttribute('data-ei-icon','1'); }
+          // --- EffectivenessIndicatorParameter ---
+          else if (txt.indexOf('EffectivenessIndicatorParameter') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="1.5" fill="#f59e0b"/></svg>'); }
+          // --- Command ---
+          else if (txt.indexOf('Command') >= 0 && txt.indexOf('CommandControlActivity') < 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><polygon points="6,3 14,8 6,13" fill="#ef4444"/></svg>'); n.querySelector('img').setAttribute('data-cmd-icon','1'); }
+          // --- LogicalEntity ---
+          else if (txt.indexOf('LogicalEntity') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><ellipse cx="8" cy="5" rx="5" ry="2" fill="#06b6d4"/><rect x="3" y="5" width="10" height="6" fill="#06b6d4"/><ellipse cx="8" cy="11" rx="5" ry="2" fill="#06b6d4"/></svg>'); }
+          // --- LogicalMeasure ---
+          else if (txt.indexOf('LogicalMeasure') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><rect x="3" y="2" width="10" height="12" fill="#f59e0b"/><line x1="5" y1="5" x2="11" y2="5" stroke="#1e293b" stroke-width="1"/><line x1="5" y1="8" x2="9" y2="8" stroke="#1e293b" stroke-width="1"/></svg>'); }
+          // --- LogicalDataModel ---
+          else if (txt.indexOf('LogicalDataModel') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><ellipse cx="8" cy="4" rx="5" ry="2" fill="#3b82f6"/><rect x="3" y="4" width="10" height="8" fill="#3b82f6"/><ellipse cx="8" cy="12" rx="5" ry="2" fill="#3b82f6"/></svg>'); }
+          // --- LogicalMeasurementSystem ---
+          else if (txt.indexOf('LogicalMeasurementSystem') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><circle cx="5" cy="5" r="2" fill="#14b8a6"/><circle cx="11" cy="5" r="2" fill="#14b8a6"/><circle cx="8" cy="11" r="2" fill="#14b8a6"/><line x1="7" y1="5" x2="9" y2="5" stroke="#14b8a6" stroke-width="1"/><line x1="6" y1="7" x2="7" y2="10" stroke="#14b8a6" stroke-width="1"/><line x1="10" y1="7" x2="9" y2="10" stroke="#14b8a6" stroke-width="1"/></svg>'); }
+          // --- Entity ---
+          else if (txt.indexOf('Entity') >= 0 && txt.indexOf('ConceptEntity') < 0 && txt.indexOf('LogicalEntity') < 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#8b5cf6"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>'); n.querySelector('img').setAttribute('data-ent-icon','1'); }
+          // --- ArchitectureDescription ---
+          else if (txt.indexOf('ArchitectureDescription') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M3 3h10v3H3zM3 8h10v5H3z" fill="#3b82f6"/></svg>'); }
+          // --- ArchitectureMetadataDescription ---
+          else if (txt.indexOf('ArchitectureMetadataDescription') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M3 3h10v3H3zM3 8h10v5H3z" fill="#3b82f6"/><circle cx="8" cy="4.5" r="0.8" fill="#1e293b"/></svg>'); }
+          // --- TopLevelOperationalConcept ---
+          else if (txt.indexOf('TopLevelOperationalConcept') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><polygon points="8,2 14,14 2,14" fill="#f59e0b"/></svg>'); }
+          // --- MissionIntent ---
+          else if (txt.indexOf('MissionIntent') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#22c55e"/><path d="M5 8h6M8 5v6" stroke="#1e293b" stroke-width="1.5"/></svg>'); }
+          // --- MissionBackground ---
+          else if (txt.indexOf('MissionBackground') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="none" stroke="#22c55e" stroke-width="1.5"/></svg>'); }
+          // --- Objective ---
+          else if (txt.indexOf('Objective') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#ef4444"/><polygon points="8,5 11,11 5,11" fill="#1e293b"/></svg>'); }
+          // --- Environment ---
+          else if (txt.indexOf('Environment') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><path d="M3 3l5 5 5-5M3 13l5-5 5 5" stroke="#0ea5e9" stroke-width="1.5" fill="none"/></svg>'); }
+          // --- Interface ---
+          else if (txt.indexOf('Interface') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/><rect x="9" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/></svg>'); n.querySelector('img').setAttribute('data-if-icon','1'); }
+          // --- NodePort ---
+          else if (txt.indexOf('NodePort') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="3" fill="#22c55e"/><rect x="7" y="1" width="2" height="5" fill="#22c55e"/></svg>'); }
+          // --- ExecutionSpecification ---
+          else if (txt.indexOf('ExecutionSpecification') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="5" y="2" width="6" height="12" rx="1" fill="#3b82f6"/></svg>'); }
+          // --- Interaction ---
+          else if (txt.indexOf('Interaction') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><ellipse cx="8" cy="8" rx="5" ry="3" fill="#f59e0b"/><path d="M5 5l6 6M11 5l-6 6" stroke="#1e293b" stroke-width="1.5"/></svg>'); }
+          // --- PhysicalDataModel ---
+          else if (txt.indexOf('PhysicalDataModel') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><ellipse cx="8" cy="4" rx="5" ry="2" fill="#14b8a6"/><rect x="3" y="4" width="10" height="8" fill="#14b8a6"/><rect x="5" y="8" width="6" height="2" fill="#1e293b"/></svg>'); }
+          // --- PlatformEntity ---
+          else if (txt.indexOf('PlatformEntity') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#8b5cf6"/><rect x="5" y="5" width="6" height="6" fill="#1e293b"/></svg>'); }
+          // --- StrikeActivity ---
+          else if (txt.indexOf('StrikeActivity') >= 0) {
+            var imgAC = n.querySelector('img');
+            if (imgAC && imgAC.src.indexOf('StrikeActivity') < 0) {
+              imgAC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><circle cx="8" cy="8" r="1" fill="#ef4444"/><line x1="8" y1="2" x2="8" y2="6" stroke="#ef4444" stroke-width="1"/><line x1="8" y1="10" x2="8" y2="14" stroke="#ef4444" stroke-width="1"/><line x1="2" y1="8" x2="6" y2="8" stroke="#ef4444" stroke-width="1"/><line x1="10" y1="8" x2="14" y2="8" stroke="#ef4444" stroke-width="1"/></svg>');
+              imgAC.alt = 'StrikeActivity';
+            }
+          }
+          // --- DetectionActivity ---
+          else if (txt.indexOf('DetectionActivity') >= 0) {
+            var imgAB = n.querySelector('img');
+            if (imgAB && imgAB.src.indexOf('DetectionActivity') < 0) {
+              imgAB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><circle cx="8" cy="8" r="1.5" fill="#10b981"/><circle cx="8" cy="8" r="4" fill="none" stroke="#10b981" stroke-width="0.8"/><circle cx="8" cy="8" r="6" fill="none" stroke="#10b981" stroke-width="0.4"/></svg>');
+              imgAB.alt = 'DetectionActivity';
+            }
+          }
+          // --- CommandControlActivity ---
+          else if (txt.indexOf('CommandControlActivity') >= 0) {
+            var imgAA = n.querySelector('img');
+            if (imgAA && imgAA.src.indexOf('CommandControlActivity') < 0) {
+              imgAA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#dc2626" stroke-width="1.5"/><path d="M3 11l3-6 2 4 2-2 3 4" fill="none" stroke="#dc2626" stroke-width="1.2"/></svg>');
+              imgAA.alt = 'CommandControlActivity';
+            }
+          }
+          // --- PlanManeuver ---
+          else if (txt.indexOf('PlanManeuver') >= 0) {
+            var imgY = n.querySelector('img');
+            if (imgY && imgY.src.indexOf('PlanManeuver') < 0) {
+              imgY.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><rect x="4" y="4" width="3" height="3" fill="#10b981"/><rect x="9" y="4" width="3" height="3" fill="#10b981"/><rect x="4" y="10" width="8" height="2" rx="1" fill="#6ee7b7"/></svg>');
+              imgY.alt = 'PlanManeuver';
+            }
+          }
+          // --- TransferManeuver ---
+          else if (txt.indexOf('TransferManeuver') >= 0) {
+            var imgX = n.querySelector('img');
+            if (imgX && imgX.src.indexOf('TransferManeuver') < 0) {
+              imgX.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M4 8l4-4v3h6v2H8v3z" fill="#3b82f6"/></svg>');
+              imgX.alt = 'TransferManeuver';
+            }
+          }
+          // --- HoverManeuver ---
+          else if (txt.indexOf('HoverManeuver') >= 0) {
+            var imgW = n.querySelector('img');
+            if (imgW && imgW.src.indexOf('HoverManeuver') < 0) {
+              imgW.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/><path d="M8 2v4M5 6h6l-1 5H6z" fill="#a855f7"/></svg>');
+              imgW.alt = 'HoverManeuver';
+            }
+          }
+          // --- ManeuverActivity ---
+          else if (txt.indexOf('ManeuverActivity') >= 0) {
+            var imgV = n.querySelector('img');
+            if (imgV && imgV.src.indexOf('ManeuverActivity') < 0) {
+              imgV.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="7" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="none" stroke="#f97316" stroke-width="1.5"/><path d="M8 3v2M8 11v2" stroke="#f97316" stroke-width="1"/></svg>');
+              imgV.alt = 'ManeuverActivity';
+            }
+          }
+          // --- ReceiveActivity ---
+          else if (txt.indexOf('ReceiveActivity') >= 0) {
+            var imgU = n.querySelector('img');
+            if (imgU && imgU.src.indexOf('ReceiveActivity') < 0) {
+              imgU.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/><path d="M13 8l-5 4v-3H1V7h7V4z" fill="#6366f1"/></svg>');
+              imgU.alt = 'ReceiveActivity';
+            }
+          }
+          // --- TransmitActivity ---
+          else if (txt.indexOf('TransmitActivity') >= 0) {
+            var imgT = n.querySelector('img');
+            if (imgT && imgT.src.indexOf('TransmitActivity') < 0) {
+              imgT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><path d="M3 8l5-4v3h7v2H8v3z" fill="#14b8a6"/></svg>');
+              imgT.alt = 'TransmitActivity';
+            }
+          }
+          // --- CommunicationActivity ---
+          else if (txt.indexOf('CommunicationActivity') >= 0) {
+            var imgS = n.querySelector('img');
+            if (imgS && imgS.src.indexOf('CommunicationActivity') < 0) {
+              imgS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><path d="M4 5h8M4 8h6M4 11h4" fill="none" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round"/></svg>');
+              imgS.alt = 'CommunicationActivity';
+            }
+          }
+          // --- OperationalModel ---
+          else if (txt.indexOf('OperationalModel') >= 0) {
+            var imgR = n.querySelector('img');
+            if (imgR && imgR.src.indexOf('OperationalModel') < 0) {
+              imgR.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#d97706" stroke-width="1.5"/><rect x="4" y="4" width="3" height="3" fill="#d97706"/><rect x="9" y="4" width="3" height="3" fill="#d97706"/><rect x="4" y="9" width="3" height="3" fill="#d97706"/><rect x="9" y="9" width="3" height="3" fill="#d97706"/></svg>');
+              imgR.alt = 'OperationalModel';
+            }
+          }
+          // --- OperationalTask (before Task) ---
+          else if (txt.indexOf('OperationalTask') >= 0) {
+            var imgQ = n.querySelector('img');
+            if (imgQ && imgQ.src.indexOf('OperationalTask') < 0) {
+              imgQ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><path d="M4 8l2 2 3-3M10 5l3 3-3 3" fill="none" stroke="#ef4444" stroke-width="1.2"/></svg>');
+              imgQ.alt = 'OperationalTask';
+            }
+          }
+          // --- Task ---
+          else if (txt.indexOf('Task') >= 0) {
+            var imgE = n.querySelector('img');
+            if (imgE && imgE.src.indexOf('Task') < 0) {
+              imgE.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/><rect x="4" y="4" width="3" height="3" rx="0.5" fill="#64748b"/><line x1="8" y1="5.5" x2="13" y2="5.5" stroke="#64748b" stroke-width="1"/><rect x="4" y="9" width="3" height="3" rx="0.5" fill="#64748b"/><line x1="8" y1="10.5" x2="11" y2="10.5" stroke="#64748b" stroke-width="1"/></svg>');
+              imgE.alt = 'Task';
+            }
+          }
+          // --- Force ---
+          else if (txt.indexOf('Force') >= 0) {
+            var imgF = n.querySelector('img');
+            if (imgF && imgF.src.indexOf('Force') < 0) {
+              imgF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><path d="M3 14V3l4 3 2-1 4 4-2 2-2-1-4 4z" fill="#ef4444"/></svg>');
+              imgF.alt = 'Force';
+            }
+          }
+          // --- Role ---
+          else if (txt.indexOf('Role') >= 0) {
+            var imgG = n.querySelector('img');
+            if (imgG && imgG.src.indexOf('Role') < 0) {
+              imgG.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/><circle cx="8" cy="5.5" r="2.5" fill="#a855f7"/><path d="M3 13.5c0-2 2.2-3.5 5-3.5s5 1.5 5 3.5" fill="#a855f7"/></svg>');
+              imgG.alt = 'Role';
+            }
+          }
+          // --- Equipment ---
+          else if (txt.indexOf('Equipment') >= 0) {
+            var imgH = n.querySelector('img');
+            if (imgH && imgH.src.indexOf('Equipment') < 0) {
+              imgH.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#84cc16" stroke-width="1.5"/><path d="M3 12V5l5-3 5 3v7l-5 3-5-3z" fill="#84cc16"/><line x1="3" y1="12" x2="13" y2="7" stroke="#1e293b" stroke-width="0.8"/></svg>');
+              imgH.alt = 'Equipment';
+            }
+          }
+          // --- Duty ---
+          else if (txt.indexOf('Duty') >= 0) {
+            var imgM = n.querySelector('img');
+            if (imgM && imgM.src.indexOf('Duty') < 0) {
+              imgM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#78716c" stroke-width="1.5"/><path d="M5 5h6l-3 7z" fill="#78716c"/><circle cx="4" cy="4" r="1" fill="#a8a29e"/><circle cx="12" cy="4" r="1" fill="#a8a29e"/></svg>');
+              imgM.alt = 'Duty';
+            }
+          }
+          // --- MissionPhase ---
+          else if (txt.indexOf('MissionPhase') >= 0) {
+            var imgN = n.querySelector('img');
+            if (imgN && imgN.src.indexOf('MissionPhase') < 0) {
+              imgN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><rect x="3" y="3" width="10" height="3" rx="0.5" fill="#0ea5e9"/><rect x="3" y="8" width="6" height="3" rx="0.5" fill="#38bdf8"/><rect x="3" y="13" width="4" height="2" rx="0.5" fill="#7dd3fc"/></svg>');
+              imgN.alt = 'MissionPhase';
+            }
+          }
+          // --- OperationalActivity ---
+          else if (txt.indexOf('OperationalActivity') >= 0) {
+            var imgP = n.querySelector('img');
+            if (imgP && imgP.src.indexOf('OperationalActivity') < 0) {
+              imgP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#db2777" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#db2777" stroke-width="1"/><circle cx="5.5" cy="6.5" r="1" fill="#db2777"/><circle cx="10.5" cy="6.5" r="1" fill="#db2777"/><circle cx="8" cy="9.5" r="1" fill="#db2777"/></svg>');
+              imgP.alt = 'OperationalActivity';
+            }
+          }
+          // --- OperationalProblem ---
+          else if (txt.indexOf('OperationalProblem') >= 0) {
+            var imgO = n.querySelector('img');
+            if (imgO && imgO.src.indexOf('OperationalProblem') < 0) {
+              imgO.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#9ca3af" stroke-width="1.5"/><path d="M4 4h3v3H4zM9 4h3v3H9zM4 9h3v3H4zM9 9h3v3H9z" fill="#9ca3af"/></svg>');
+              imgO.alt = 'OperationalProblem';
+            }
+          }
+          // --- OperationalAction ---
+          else if (txt.indexOf('OperationalAction') >= 0) {
+            var imgI = n.querySelector('img');
+            if (imgI && imgI.src.indexOf('OperationalAction') < 0) {
+              imgI.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22d3ee" stroke-width="1.5"/><polygon points="3,13 8,2 13,13 8,10" fill="#22d3ee"/></svg>');
+              imgI.alt = 'OperationalAction';
+            }
+          }
+          // --- ActualOrganization ---
+          else if (txt.indexOf('ActualOrganization') >= 0) {
+            var imgJ = n.querySelector('img');
+            if (imgJ && imgJ.src.indexOf('ActualOrganization') < 0) {
+              imgJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="8" width="4" height="6" rx="0.5" fill="#14b8a6"/><rect x="9" y="5" width="4" height="9" rx="0.5" fill="#14b8a6"/><rect x="5" y="2" width="3" height="3" rx="0.5" fill="#5eead4"/></svg>');
+              imgJ.alt = 'ActualOrganization';
+            }
+          }
+          // --- ActualPerson (before Person) ---
+          else if (txt.indexOf('ActualPerson') >= 0) {
+            var imgL = n.querySelector('img');
+            if (imgL && imgL.src.indexOf('ActualPerson') < 0) {
+              imgL.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="4.5" r="2" fill="#f97316"/><ellipse cx="8" cy="11" rx="4" ry="3" fill="#f97316"/><path d="M4 8l2 2 5-5" fill="none" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgL.alt = 'ActualPerson';
+            }
+          }
+          // --- Person ---
+          else if (txt.indexOf('Person') >= 0) {
+            var imgK = n.querySelector('img');
+            if (imgK && imgK.src.indexOf('Person') < 0) {
+              imgK.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ec4899" stroke-width="1.5"/><circle cx="8" cy="4.5" r="2" fill="#ec4899"/><ellipse cx="8" cy="11" rx="4" ry="3" fill="#ec4899"/></svg>');
+              imgK.alt = 'Person';
+            }
+          }
+          // --- ActualPerson ---
+          else if (txt.indexOf('ActualPerson') >= 0) {
+            var imgL = n.querySelector('img');
+            if (imgL && imgL.src.indexOf('ActualPerson') < 0) {
+              imgL.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="4.5" r="2" fill="#f97316"/><ellipse cx="8" cy="11" rx="4" ry="3" fill="#f97316"/><path d="M4 8l2 2 5-5" fill="none" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgL.alt = 'ActualPerson';
+            }
+          }
+          // --- Vision ---
+          else if (txt.indexOf('Vision') >= 0) {
+            var img8 = n.querySelector('img');
+            if (img8 && img8.src.indexOf('Vision') < 0) {
+              img8.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 10,6 14,7 11,10 12,14 8,12 4,14 5,10 2,7 6,6" fill="#eab308"/></svg>');
+              img8.alt = 'Vision';
+            }
+          }
+          // Auto-expand node width for long labels
+          var lblEl = n.querySelector('[data-testid*="Label content"]');
+          if (lblEl) {
+            var txtLen = (lblEl.textContent || '').length;
+            var parent = n.closest('[data-id]');
+            if (parent && txtLen > 10) {
+              var extra = (txtLen - 10) * 5;
+              parent.style.width = (120 + extra) + 'px';
+            }
           }
         }
       }
@@ -1048,7 +1806,7 @@
 
       // Replace Lifeline icon in Explorer tree
       function fixLifelineTreeIcons() {
-        var items = document.querySelectorAll('[data-treeitemid]');
+        var items = document.querySelectorAll('[data-treeitemid], [class*="MuiTreeItem-root"], li[role="treeitem"]');
         for (var i = 0; i < items.length; i++) {
           var it = items[i];
           if (it.getAttribute('data-lifeline-icon') === '1') continue;
@@ -1058,6 +1816,839 @@
             if (img && img.src.indexOf('lifeline') < 0 && img.src.indexOf('PartDefinition') >= 0) {
               img.src = 'http://localhost:8080/images/lifeline.svg';
               it.setAttribute('data-lifeline-icon', '1');
+            }
+          }
+          // TaskStage tree icon
+          if (it.getAttribute('data-ts-icon') !== '1' && label.textContent.indexOf('TaskStage') >= 0) {
+            var img3 = it.querySelector('img');
+            if (img3 && img3.src.indexOf('TaskStage') < 0) {
+              img3.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="12" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="4" width="3" height="3" fill="#8b5cf6"/><rect x="7" y="4" width="3" height="3" fill="#8b5cf6"/><rect x="11" y="4" width="3" height="3" fill="#8b5cf6"/><rect x="3" y="9" width="7" height="3" rx="1" fill="#a78bfa"/></svg>');
+              it.setAttribute('data-ts-icon', '1');
+            }
+          }
+          // EquipCapability tree icon
+          if (it.getAttribute('data-ec-icon') !== '1' && label.textContent.indexOf('EquipCapability') >= 0) {
+            var img4 = it.querySelector('img');
+            if (img4 && img4.src.indexOf('EquipCapability') < 0) {
+              img4.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><circle cx="8" cy="5" r="2.5" fill="#10b981"/><rect x="3" y="8" width="10" height="3" rx="1" fill="#34d399"/></svg>');
+              it.setAttribute('data-ec-icon', '1');
+            }
+          }
+          // TimeScale tree icon
+          if (it.getAttribute('data-tsc-icon') !== '1' && label.textContent.indexOf('TimeScale') >= 0) {
+            var img5 = it.querySelector('img');
+            if (img5 && img5.src.indexOf('TimeScale') < 0) {
+              img5.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="7" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><line x1="8" y1="8" x2="8" y2="4" stroke="#06b6d4" stroke-width="1.5"/><line x1="8" y1="8" x2="11" y2="8" stroke="#06b6d4" stroke-width="1"/></svg>');
+              it.setAttribute('data-tsc-icon', '1');
+            }
+          }
+          // TaskIntent tree icon
+          if (it.getAttribute('data-ti-icon') !== '1' && label.textContent.indexOf('TaskIntent') >= 0) {
+            var img6 = it.querySelector('img');
+            if (img6 && img6.src.indexOf('TaskIntent') < 0) {
+              img6.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f43f5e" stroke-width="1.5"/><circle cx="8" cy="8" r="3" fill="none" stroke="#f43f5e" stroke-width="1"/><circle cx="8" cy="8" r="1.2" fill="#f43f5e"/></svg>');
+              it.setAttribute('data-ti-icon', '1');
+            }
+          }
+          // ImplementationPhase tree icon
+          if (it.getAttribute('data-ip-icon') !== '1' && label.textContent.indexOf('ImplementationPhase') >= 0) {
+            var img7 = it.querySelector('img');
+            if (img7 && img7.src.indexOf('ImplementationPhase') < 0) {
+              img7.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/><path d="M4 8h7M10 5l3 3-3 3" fill="none" stroke="#6366f1" stroke-width="1.5"/></svg>');
+              it.setAttribute('data-ip-icon', '1');
+            }
+          }
+          // VisionDescription tree icon (before Vision)
+          if (it.getAttribute('data-vd-icon') !== '1' && label.textContent.indexOf('VisionDescription') >= 0) {
+            var img9 = it.querySelector('img');
+            if (img9 && img9.src.indexOf('VisionDescription') < 0) {
+              img9.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="4" y="3" width="8" height="2" rx="0.5" fill="#14b8a6"/><line x1="4" y1="7" x2="12" y2="7" stroke="#14b8a6" stroke-width="1"/><line x1="4" y1="9" x2="10" y2="9" stroke="#14b8a6" stroke-width="0.8"/><line x1="4" y1="11" x2="11" y2="11" stroke="#14b8a6" stroke-width="0.8"/></svg>');
+              it.setAttribute('data-vd-icon', '1');
+            }
+          }
+          // Target tree icon
+          if (it.getAttribute('data-tg-icon') !== '1' && label.textContent.indexOf('Target') >= 0) {
+            var imgA = it.querySelector('img');
+            if (imgA && imgA.src.indexOf('Target') < 0) {
+              imgA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f97316" stroke-width="1"/><circle cx="8" cy="8" r="1.5" fill="#f97316"/><line x1="8" y1="1" x2="8" y2="4" stroke="#f97316" stroke-width="1"/><line x1="8" y1="12" x2="8" y2="15" stroke="#f97316" stroke-width="1"/><line x1="1" y1="8" x2="4" y2="8" stroke="#f97316" stroke-width="1"/><line x1="12" y1="8" x2="15" y2="8" stroke="#f97316" stroke-width="1"/></svg>');
+              it.setAttribute('data-tg-icon', '1');
+            }
+          }
+          // Performer tree icon
+          if (it.getAttribute('data-pf-icon') !== '1' && label.textContent.indexOf('Performer') >= 0) {
+            var imgB = it.querySelector('img');
+            if (imgB && imgB.src.indexOf('Performer') < 0) {
+              imgB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><circle cx="8" cy="5" r="2.5" fill="#3b82f6"/><path d="M3 13c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5" fill="none" stroke="#3b82f6" stroke-width="1.2"/></svg>');
+              it.setAttribute('data-pf-icon', '1');
+            }
+          }
+          // Location tree icon
+          if (it.getAttribute('data-lc-icon') !== '1' && label.textContent.indexOf('Location') >= 0) {
+            var imgC = it.querySelector('img');
+            if (imgC && imgC.src.indexOf('Location') < 0) {
+              imgC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><path d="M8 2C5.8 2 4 3.8 4 6c0 3 4 8 4 8s4-5 4-8c0-2.2-1.8-4-4-4z" fill="#10b981"/><circle cx="8" cy="6" r="1.5" fill="#1e293b"/></svg>');
+              it.setAttribute('data-lc-icon', '1');
+            }
+          }
+          // Condition tree icon
+          if (it.getAttribute('data-cd-icon') !== '1' && label.textContent.indexOf('Condition') >= 0) {
+            var imgD = it.querySelector('img');
+            if (imgD && imgD.src.indexOf('Condition') < 0) {
+              imgD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 12,6 10,6 10,12 6,12 6,6 4,6" fill="#eab308"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="5" font-weight="bold">?</text></svg>');
+              it.setAttribute('data-cd-icon', '1');
+            }
+          }
+          // AnalysisActivity tree icon
+          if (it.getAttribute('data-aa-icon') !== '1' && label.textContent.indexOf('AnalysisActivity') >= 0) {
+            var imgZ = it.querySelector('img');
+            if (imgZ && imgZ.src.indexOf('AnalysisActivity') < 0) {
+              imgZ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f97316" stroke-width="1"/><line x1="8" y1="4" x2="8" y2="12" stroke="#f97316" stroke-width="0.8"/><line x1="4" y1="8" x2="12" y2="8" stroke="#f97316" stroke-width="0.8"/></svg>');
+              it.setAttribute('data-aa-icon', '1');
+            }
+          }
+          // DefenseActivity tree icon
+          if (it.getAttribute('data-df-icon') !== '1' && label.textContent.indexOf('DefenseActivity') >= 0) {
+            var imgAD = it.querySelector('img');
+            if (imgAD && imgAD.src.indexOf('DefenseActivity') < 0) {
+              imgAD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M8 2L3 5v3c0 3.5 5 6 5 6s5-2.5 5-6V5z" fill="#3b82f6"/></svg>');
+              it.setAttribute('data-df-icon', '1');
+            }
+          }
+          // SupportActivity tree icon
+          if (it.getAttribute('data-sp-icon') !== '1' && label.textContent.indexOf('SupportActivity') >= 0) {
+            var imgSA = it.querySelector('img');
+            if (imgSA && imgSA.src.indexOf('SupportActivity') < 0) {
+              imgSA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="4.5" fill="#22c55e"/><path d="M6 8h4M8 6v4" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgSA.alt = 'SupportActivity'; it.setAttribute('data-sp-icon', '1');
+            }
+          }
+          // ActivityParameterNode tree icon
+          if (it.getAttribute('data-apn-icon') !== '1' && label.textContent.indexOf('ActivityParameterNode') >= 0) {
+            var imgAP = it.querySelector('img');
+            if (imgAP && imgAP.src.indexOf('ActivityParameterNode') < 0) {
+              imgAP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/><circle cx="8" cy="8" r="3" fill="#a78bfa"/><path d="M8 5v6M5 8h6" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgAP.alt = 'ActivityParameterNode'; it.setAttribute('data-apn-icon', '1');
+            }
+          }
+          // InitialNode tree icon
+          if (it.getAttribute('data-in-icon') !== '1' && label.textContent.indexOf('InitialNode') >= 0) {
+            var imgIN = it.querySelector('img');
+            if (imgIN && imgIN.src.indexOf('InitialNode') < 0) {
+              imgIN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#059669" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#059669"/></svg>');
+              imgIN.alt = 'InitialNode'; it.setAttribute('data-in-icon', '1');
+            }
+          }
+          // DecisionNode tree icon
+          if (it.getAttribute('data-dn-icon') !== '1' && label.textContent.indexOf('DecisionNode') >= 0) {
+            var imgDN = it.querySelector('img');
+            if (imgDN && imgDN.src.indexOf('DecisionNode') < 0) {
+              imgDN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><polygon points="8,3 13,8 8,13 3,8" fill="#f59e0b"/></svg>');
+              imgDN.alt = 'DecisionNode'; it.setAttribute('data-dn-icon', '1');
+            }
+          }
+          // MergeNode tree icon
+          if (it.getAttribute('data-mn-icon') !== '1' && label.textContent.indexOf('MergeNode') >= 0) {
+            var imgMN = it.querySelector('img');
+            if (imgMN && imgMN.src.indexOf('MergeNode') < 0) {
+              imgMN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><polygon points="8,3 13,11 3,11" fill="#8b5cf6"/></svg>');
+              imgMN.alt = 'MergeNode'; it.setAttribute('data-mn-icon', '1');
+            }
+          }
+          // HorizontalForkNode tree icon
+          if (it.getAttribute('data-hf-icon') !== '1' && label.textContent.indexOf('HorizontalForkNode') >= 0) {
+            var imgHF = it.querySelector('img');
+            if (imgHF && imgHF.src.indexOf('HorizontalForkNode') < 0) {
+              imgHF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><rect x="2" y="5" width="12" height="4" fill="#06b6d4"/></svg>');
+              imgHF.alt = 'HorizontalForkNode'; it.setAttribute('data-hf-icon', '1');
+            }
+          }
+          // VerticalForkNode tree icon
+          if (it.getAttribute('data-vf-icon') !== '1' && label.textContent.indexOf('VerticalForkNode') >= 0) {
+            var imgVF = it.querySelector('img');
+            if (imgVF && imgVF.src.indexOf('VerticalForkNode') < 0) {
+              imgVF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0284c7" stroke-width="1.5"/><rect x="5" y="2" width="4" height="12" fill="#0284c7"/></svg>');
+              imgVF.alt = 'VerticalForkNode'; it.setAttribute('data-vf-icon', '1');
+            }
+          }
+          // HorizontalJoinNode tree icon
+          if (it.getAttribute('data-hj-icon') !== '1' && label.textContent.indexOf('HorizontalJoinNode') >= 0) {
+            var imgHJ = it.querySelector('img');
+            if (imgHJ && imgHJ.src.indexOf('HorizontalJoinNode') < 0) {
+              imgHJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/><rect x="2" y="5" width="12" height="4" fill="#6366f1"/><circle cx="4" cy="7" r="1" fill="#1e293b"/><circle cx="12" cy="7" r="1" fill="#1e293b"/></svg>');
+              imgHJ.alt = 'HorizontalJoinNode'; it.setAttribute('data-hj-icon', '1');
+            }
+          }
+          // VerticalJoinNode tree icon
+          if (it.getAttribute('data-vj-icon') !== '1' && label.textContent.indexOf('VerticalJoinNode') >= 0) {
+            var imgVJ = it.querySelector('img');
+            if (imgVJ && imgVJ.src.indexOf('VerticalJoinNode') < 0) {
+              imgVJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a21caf" stroke-width="1.5"/><rect x="5" y="2" width="4" height="12" fill="#a21caf"/><circle cx="7" cy="4" r="1" fill="#1e293b"/><circle cx="7" cy="12" r="1" fill="#1e293b"/></svg>');
+              imgVJ.alt = 'VerticalJoinNode'; it.setAttribute('data-vj-icon', '1');
+            }
+          }
+          // ActivityFinalNode tree icon
+          if (it.getAttribute('data-af-icon') !== '1' && label.textContent.indexOf('ActivityFinalNode') >= 0) {
+            var imgAF = it.querySelector('img');
+            if (imgAF && imgAF.src.indexOf('ActivityFinalNode') < 0) {
+              imgAF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#dc2626" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#dc2626"/><path d="M6 6l4 4M10 6l-4 4" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgAF.alt = 'ActivityFinalNode'; it.setAttribute('data-af-icon', '1');
+            }
+          }
+          // FlowFinalNode tree icon
+          if (it.getAttribute('data-ff-icon') !== '1' && label.textContent.indexOf('FlowFinalNode') >= 0) {
+            var imgFF = it.querySelector('img');
+            if (imgFF && imgFF.src.indexOf('FlowFinalNode') < 0) {
+              imgFF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#dc2626" stroke-width="1.5"/><circle cx="8" cy="8" r="5" fill="none" stroke="#dc2626" stroke-width="1.5"/><path d="M6 6l4 4M10 6l-4 4" stroke="#dc2626" stroke-width="1.5"/></svg>');
+              imgFF.alt = 'FlowFinalNode'; it.setAttribute('data-ff-icon', '1');
+            }
+          }
+          // OpaqueAction tree icon
+          if (it.getAttribute('data-oa-icon') !== '1' && label.textContent.indexOf('OpaqueAction') >= 0) {
+            var imgOA = it.querySelector('img');
+            if (imgOA && imgOA.src.indexOf('OpaqueAction') < 0) {
+              imgOA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6b7280" stroke-width="1.5"/><rect x="3" y="4" width="10" height="8" rx="1" fill="#6b7280"/><path d="M5 7h6M5 9h4" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgOA.alt = 'OpaqueAction'; it.setAttribute('data-oa-icon', '1');
+            }
+          }
+          // Signal tree icon
+          if (it.getAttribute('data-sg-icon') !== '1' && label.textContent.indexOf('Signal') >= 0) {
+            var imgSG = it.querySelector('img');
+            if (imgSG && imgSG.src.indexOf('Signal') < 0) {
+              imgSG.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 14,13 2,13" fill="#eab308"/></svg>');
+              imgSG.alt = 'Signal'; it.setAttribute('data-sg-icon', '1');
+            }
+          }
+          // VerticalPartition tree icon
+          if (it.getAttribute('data-vp-icon') !== '1' && label.textContent.indexOf('VerticalPartition') >= 0) {
+            var imgVP = it.querySelector('img');
+            if (imgVP && imgVP.src.indexOf('VerticalPartition') < 0) {
+              imgVP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#84cc16" stroke-width="1.5"/><line x1="8" y1="2" x2="8" y2="14" stroke="#84cc16" stroke-width="1" stroke-dasharray="2 1"/></svg>');
+              imgVP.alt = 'VerticalPartition'; it.setAttribute('data-vp-icon', '1');
+            }
+          }
+          // HorizontalPartition tree icon
+          if (it.getAttribute('data-hp-icon') !== '1' && label.textContent.indexOf('HorizontalPartition') >= 0) {
+            var imgHP = it.querySelector('img');
+            if (imgHP && imgHP.src.indexOf('HorizontalPartition') < 0) {
+              imgHP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#84cc16" stroke-width="1.5"/><line x1="2" y1="8" x2="14" y2="8" stroke="#84cc16" stroke-width="1" stroke-dasharray="2 1"/></svg>');
+              imgHP.alt = 'HorizontalPartition'; it.setAttribute('data-hp-icon', '1');
+            }
+          }
+          // PatrolActivity tree icon
+          if (it.getAttribute('data-pa-icon') !== '1' && label.textContent.indexOf('PatrolActivity') >= 0) {
+            var imgPA = it.querySelector('img');
+            if (imgPA && imgPA.src.indexOf('PatrolActivity') < 0) {
+              imgPA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="6" cy="6" r="3" fill="#22c55e"/><circle cx="6" cy="6" r="1" fill="#1e293b"/><circle cx="12" cy="12" r="3" fill="#22c55e"/><circle cx="12" cy="12" r="1" fill="#1e293b"/></svg>');
+              imgPA.alt = 'PatrolActivity'; it.setAttribute('data-pa-icon', '1');
+            }
+          }
+          // TimeConstraint tree icon
+          if (it.getAttribute('data-tc-icon') !== '1' && label.textContent.indexOf('TimeConstraint') >= 0) {
+            var imgTC = it.querySelector('img');
+            if (imgTC && imgTC.src.indexOf('TimeConstraint') < 0) {
+              imgTC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#0ea5e9" stroke-width="1.5"/><line x1="8" y1="5" x2="8" y2="8" stroke="#0ea5e9" stroke-width="1.5"/><line x1="8" y1="8" x2="11" y2="8" stroke="#0ea5e9" stroke-width="1.5"/></svg>');
+              imgTC.alt = 'TimeConstraint'; it.setAttribute('data-tc-icon', '1');
+            }
+          }
+          // DurationConstraint tree icon
+          if (it.getAttribute('data-dc-icon') !== '1' && label.textContent.indexOf('DurationConstraint') >= 0) {
+            var imgDC = it.querySelector('img');
+            if (imgDC && imgDC.src.indexOf('DurationConstraint') < 0) {
+              imgDC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><rect x="4" y="3" width="8" height="10" rx="1" fill="#f97316"/><line x1="6" y1="8" x2="10" y2="8" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgDC.alt = 'DurationConstraint'; it.setAttribute('data-dc-icon', '1');
+            }
+          }
+          // System tree icon
+          if (it.getAttribute('data-sys-icon') !== '1' && label.textContent.indexOf('System') >= 0 && label.textContent.indexOf('SystemNode') < 0) {
+            var imgSYS = it.querySelector('img');
+            if (imgSYS && imgSYS.src.indexOf('SystemSVG') < 0) {
+              imgSYS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><polygon points="8,2 14,5.5 14,10.5 8,14 2,10.5 2,5.5" fill="#3b82f6"/></svg>');
+              imgSYS.alt = 'System'; it.setAttribute('data-sys-icon', '1');
+            }
+          }
+          // Software tree icon
+          if (it.getAttribute('data-sw-icon') !== '1' && label.textContent.indexOf('Software') >= 0) {
+            var imgSW = it.querySelector('img');
+            if (imgSW && imgSW.src.indexOf('Software') < 0) {
+              imgSW.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#60a5fa" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#60a5fa"/><line x1="5" y1="6" x2="11" y2="6" stroke="#1e293b" stroke-width="1"/><line x1="5" y1="8" x2="9" y2="8" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgSW.alt = 'Software'; it.setAttribute('data-sw-icon', '1');
+            }
+          }
+          // PersonType tree icon
+          if (it.getAttribute('data-pt-icon') !== '1' && label.textContent.indexOf('PersonType') >= 0) {
+            var imgPT = it.querySelector('img');
+            if (imgPT && imgPT.src.indexOf('PersonType') < 0) {
+              imgPT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><circle cx="8" cy="4.5" r="2" fill="#14b8a6"/><ellipse cx="8" cy="11" rx="4" ry="3" fill="#14b8a6"/><line x1="6" y1="11" x2="10" y2="11" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgPT.alt = 'PersonType'; it.setAttribute('data-pt-icon', '1');
+            }
+          }
+          // OrganizationType tree icon
+          if (it.getAttribute('data-ot-icon') !== '1' && label.textContent.indexOf('OrganizationType') >= 0) {
+            var imgOT = it.querySelector('img');
+            if (imgOT && imgOT.src.indexOf('OrganizationType') < 0) {
+              imgOT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="2" width="10" height="4" fill="#14b8a6"/><rect x="3" y="8" width="10" height="6" fill="none" stroke="#14b8a6" stroke-width="1.5"/></svg>');
+              imgOT.alt = 'OrganizationType'; it.setAttribute('data-ot-icon', '1');
+            }
+          }
+          // ResourcePort tree icon
+          if (it.getAttribute('data-rp-icon') !== '1' && label.textContent.indexOf('ResourcePort') >= 0) {
+            var imgRP = it.querySelector('img');
+            if (imgRP && imgRP.src.indexOf('ResourcePort') < 0) {
+              imgRP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#8b5cf6"/><polygon points="8,4 12,8 8,12 4,8" fill="none" stroke="#8b5cf6" stroke-width="1"/></svg>');
+              imgRP.alt = 'ResourcePort'; it.setAttribute('data-rp-icon', '1');
+            }
+          }
+          // CapabilityConfiguration tree icon
+          if (it.getAttribute('data-cc-icon') !== '1' && label.textContent.indexOf('CapabilityConfiguration') >= 0) {
+            var imgCC = it.querySelector('img');
+            if (imgCC && imgCC.src.indexOf('CapabilityConfiguration') < 0) {
+              imgCC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="6" cy="6" r="3" fill="#f59e0b"/><circle cx="10" cy="10" r="3" fill="#f59e0b"/><line x1="8" y1="5" x2="8" y2="8" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgCC.alt = 'CapabilityConfiguration'; it.setAttribute('data-cc-icon', '1');
+            }
+          }
+          // TechnicalStandard tree icon
+          if (it.getAttribute('data-ts-icon') !== '1' && label.textContent.indexOf('TechnicalStandard') >= 0) {
+            var imgTS = it.querySelector('img');
+            if (imgTS && imgTS.src.indexOf('TechnicalStandard') < 0) {
+              imgTS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6b7280" stroke-width="1.5"/><rect x="3" y="2" width="10" height="12" rx="1" fill="#6b7280"/><path d="M5 7l2 2 4-4" stroke="#1e293b" stroke-width="1.5" fill="none"/></svg>');
+              imgTS.alt = 'TechnicalStandard'; it.setAttribute('data-ts-icon', '1');
+            }
+          }
+          // FunctionStandard tree icon
+          if (it.getAttribute('data-fs-icon') !== '1' && label.textContent.indexOf('FunctionStandard') >= 0) {
+            var imgFS = it.querySelector('img');
+            if (imgFS && imgFS.src.indexOf('FunctionStandard') < 0) {
+              imgFS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><rect x="3" y="2" width="10" height="12" rx="1" fill="#f97316"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="8" font-weight="bold">F</text></svg>');
+              imgFS.alt = 'FunctionStandard'; it.setAttribute('data-fs-icon', '1');
+            }
+          }
+          // Protocol tree icon
+          if (it.getAttribute('data-pr-icon') !== '1' && label.textContent.indexOf('Protocol') >= 0) {
+            var imgPR = it.querySelector('img');
+            if (imgPR && imgPR.src.indexOf('Protocol') < 0) {
+              imgPR.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="4" cy="8" r="2" fill="#22c55e"/><circle cx="12" cy="8" r="2" fill="#22c55e"/><line x1="6" y1="8" x2="10" y2="8" stroke="#22c55e" stroke-width="1.5"/></svg>');
+              imgPR.alt = 'Protocol'; it.setAttribute('data-pr-icon', '1');
+            }
+          }
+          // StandardConfiguration tree icon
+          if (it.getAttribute('data-sc-icon') !== '1' && label.textContent.indexOf('StandardConfiguration') >= 0) {
+            var imgSC = it.querySelector('img');
+            if (imgSC && imgSC.src.indexOf('StandardConfiguration') < 0) {
+              imgSC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#3b82f6"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
+              imgSC.alt = 'StandardConfiguration'; it.setAttribute('data-sc-icon', '1');
+            }
+          }
+          // Function tree icon
+          if (it.getAttribute('data-fn-icon') !== '1' && label.textContent.indexOf('Function') >= 0 && label.textContent.indexOf('FunctionStandard') < 0) {
+            var imgFN = it.querySelector('img');
+            if (imgFN && imgFN.src.indexOf('FunctionSVG') < 0) {
+              imgFN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="5" cy="5" r="3" fill="#22c55e"/><line x1="8" y1="5" x2="13" y2="5" stroke="#22c55e" stroke-width="1.5"/><line x1="3" y1="11" x2="13" y2="11" stroke="#22c55e" stroke-width="1.5"/></svg>');
+              imgFN.alt = 'Function'; it.setAttribute('data-fn-icon', '1');
+            }
+          }
+          // ServiceAccess tree icon
+          if (it.getAttribute('data-sac-icon') !== '1' && label.textContent.indexOf('ServiceAccess') >= 0) {
+            var imgSAc = it.querySelector('img');
+            if (imgSAc && imgSAc.src.indexOf('ServiceAccess') < 0) {
+              imgSAc.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="3" y="4" width="10" height="8" rx="2" fill="#3b82f6"/><line x1="6" y1="4" x2="6" y2="12" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgSAc.alt = 'ServiceAccess'; it.setAttribute('data-sac-icon', '1');
+            }
+          }
+          // ServiceInterface tree icon
+          if (it.getAttribute('data-si-icon') !== '1' && label.textContent.indexOf('ServiceInterface') >= 0) {
+            var imgSI = it.querySelector('img');
+            if (imgSI && imgSI.src.indexOf('ServiceInterface') < 0) {
+              imgSI.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="4" y="3" width="8" height="10" rx="1" fill="#3b82f6"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
+              imgSI.alt = 'ServiceInterface'; it.setAttribute('data-si-icon', '1');
+            }
+          }
+          // LocationType tree icon
+          if (it.getAttribute('data-lt-icon') !== '1' && label.textContent.indexOf('LocationType') >= 0) {
+            var imgLT = it.querySelector('img');
+            if (imgLT && imgLT.src.indexOf('LocationType') < 0) {
+              imgLT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="5" r="3" fill="#f97316"/><polygon points="5,7 11,7 13,14 3,14" fill="none" stroke="#f97316" stroke-width="1"/></svg>');
+              imgLT.alt = 'LocationType'; it.setAttribute('data-lt-icon', '1');
+            }
+          }
+          // Interface tree icon
+          if (it.getAttribute('data-if-icon') !== '1' && label.textContent.indexOf('Interface') >= 0) {
+            var imgIF = it.querySelector('img');
+            if (imgIF && imgIF.src.indexOf('InterfaceSVG') < 0) {
+              imgIF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/><rect x="9" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/></svg>');
+              imgIF.alt = 'Interface'; it.setAttribute('data-if-icon', '1');
+            }
+          }
+          // Project tree icon
+          if (it.getAttribute('data-pj-icon') !== '1' && label.textContent.indexOf('Project') >= 0 && label.textContent.indexOf('ProjectActivity') < 0 && label.textContent.indexOf('ProjectMilestone') < 0 && label.textContent.indexOf('ProjectType') < 0) {
+            var imgPJ = it.querySelector('img');
+            if (imgPJ && imgPJ.src.indexOf('ProjectSVG') < 0) {
+              imgPJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M3 3h10v10H3z" fill="#3b82f6"/><path d="M3 6h10" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgPJ.alt = 'Project'; it.setAttribute('data-pj-icon', '1');
+            }
+          }
+          // ProjectType tree icon
+          if (it.getAttribute('data-pty-icon') !== '1' && label.textContent.indexOf('ProjectType') >= 0) {
+            var imgPTy = it.querySelector('img');
+            if (imgPTy && imgPTy.src.indexOf('ProjectType') < 0) {
+              imgPTy.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="2" width="10" height="12" rx="1" fill="#14b8a6"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="8" font-weight="bold">P</text></svg>');
+              imgPTy.alt = 'ProjectType'; it.setAttribute('data-pty-icon', '1');
+            }
+          }
+          // ProjectActivity tree icon
+          if (it.getAttribute('data-pac-icon') !== '1' && label.textContent.indexOf('ProjectActivity') >= 0) {
+            var imgPAc = it.querySelector('img');
+            if (imgPAc && imgPAc.src.indexOf('ProjectActivity') < 0) {
+              imgPAc.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#22c55e"/><polygon points="7,6 7,10 11,8" fill="#1e293b"/></svg>');
+              imgPAc.alt = 'ProjectActivity'; it.setAttribute('data-pac-icon', '1');
+            }
+          }
+          // StateIndicator tree icon
+          if (it.getAttribute('data-sic-icon') !== '1' && label.textContent.indexOf('StateIndicator') >= 0) {
+            var imgSIc = it.querySelector('img');
+            if (imgSIc && imgSIc.src.indexOf('StateIndicator') < 0) {
+              imgSIc.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#f59e0b"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
+              imgSIc.alt = 'StateIndicator'; it.setAttribute('data-sic-icon', '1');
+            }
+          }
+          // ProjectMilestone tree icon
+          if (it.getAttribute('data-pm-icon') !== '1' && label.textContent.indexOf('ProjectMilestone') >= 0) {
+            var imgPM = it.querySelector('img');
+            if (imgPM && imgPM.src.indexOf('ProjectMilestone') < 0) {
+              imgPM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><polygon points="4,2 12,2 12,10 8,13 4,10" fill="#8b5cf6"/></svg>');
+              imgPM.alt = 'ProjectMilestone'; it.setAttribute('data-pm-icon', '1');
+            }
+          }
+          // ActualProjectMilestone tree icon
+          if (it.getAttribute('data-apm-icon') !== '1' && label.textContent.indexOf('ActualProjectMilestone') >= 0) {
+            var imgAPM = it.querySelector('img');
+            if (imgAPM && imgAPM.src.indexOf('ActualProjectMilestone') < 0) {
+              imgAPM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><polygon points="4,2 12,2 12,10 8,13 4,10" fill="#f97316"/><circle cx="8" cy="6" r="1.5" fill="#1e293b"/></svg>');
+              imgAPM.alt = 'ActualProjectMilestone'; it.setAttribute('data-apm-icon', '1');
+            }
+          }
+          // ConceptEntity tree icon
+          if (it.getAttribute('data-ce-icon') !== '1' && label.textContent.indexOf('ConceptEntity') >= 0) {
+            var imgCE = it.querySelector('img');
+            if (imgCE && imgCE.src.indexOf('ConceptEnt') < 0) {
+              imgCE.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#06b6d4"/><circle cx="8" cy="8" r="1.5" fill="#1e293b"/></svg>');
+              imgCE.alt = 'ConceptEntity'; it.setAttribute('data-ce-icon', '1');
+            }
+          }
+          // ConceptObservable tree icon
+          if (it.getAttribute('data-co-icon') !== '1' && label.textContent.indexOf('ConceptObservable') >= 0) {
+            var imgCO = it.querySelector('img');
+            if (imgCO && imgCO.src.indexOf('ConceptObs') < 0) {
+              imgCO.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#06b6d4" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#06b6d4"/></svg>');
+              imgCO.alt = 'ConceptObservable'; it.setAttribute('data-co-icon', '1');
+            }
+          }
+          // ExchangeElement tree icon
+          if (it.getAttribute('data-ee-icon') !== '1' && label.textContent.indexOf('ExchangeElement') >= 0) {
+            var imgEE = it.querySelector('img');
+            if (imgEE && imgEE.src.indexOf('Exchange') < 0) {
+              imgEE.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><path d="M3 8h10M7 4l-4 4 4 4" fill="none" stroke="#8b5cf6" stroke-width="1.5"/></svg>');
+              imgEE.alt = 'ExchangeElement'; it.setAttribute('data-ee-icon', '1');
+            }
+          }
+          // Information tree icon
+          if (it.getAttribute('data-ifo-icon') !== '1' && label.textContent.indexOf('Information') >= 0 && label.textContent.indexOf('InformationElement') < 0 && label.textContent.indexOf('InformationTransmissionPattern') < 0) {
+            var imgIFO = it.querySelector('img');
+            if (imgIFO && imgIFO.src.indexOf('InfoSVG') < 0) {
+              imgIFO.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><circle cx="8" cy="5" r="1.5" fill="#3b82f6"/><rect x="6" y="8" width="4" height="5" fill="#3b82f6"/></svg>');
+              imgIFO.alt = 'Information'; it.setAttribute('data-ifo-icon', '1');
+            }
+          }
+          // InformationElement tree icon
+          if (it.getAttribute('data-ie-icon') !== '1' && label.textContent.indexOf('InformationElement') >= 0) {
+            var imgIE = it.querySelector('img');
+            if (imgIE && imgIE.src.indexOf('InfoEl') < 0) {
+              imgIE.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#3b82f6"/><circle cx="8" cy="6" r="1" fill="#1e293b"/><rect x="6" y="8" width="4" height="4" fill="#1e293b"/></svg>');
+              imgIE.alt = 'InformationElement'; it.setAttribute('data-ie-icon', '1');
+            }
+          }
+          // InformationTransmissionPattern tree icon
+          if (it.getAttribute('data-itp-icon') !== '1' && label.textContent.indexOf('InformationTransmissionPattern') >= 0) {
+            var imgITP = it.querySelector('img');
+            if (imgITP && imgITP.src.indexOf('InfoTrans') < 0) {
+              imgITP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="2" y="3" width="12" height="10" rx="1" fill="none" stroke="#3b82f6" stroke-width="1"/><path d="M4 6h8M4 9h5" stroke="#3b82f6" stroke-width="1.5"/></svg>');
+              imgITP.alt = 'InfoTransPattern'; it.setAttribute('data-itp-icon', '1');
+            }
+          }
+          // EffectivenessIndicator tree icon
+          if (it.getAttribute('data-ei2-icon') !== '1' && label.textContent.indexOf('EffectivenessIndicator') >= 0 && label.textContent.indexOf('EffectivenessIndicatorParameter') < 0) {
+            var imgEI2 = it.querySelector('img');
+            if (imgEI2 && imgEI2.src.indexOf('EffInd') < 0) {
+              imgEI2.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#f59e0b"/><path d="M6 7l2 2 3-4" fill="none" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgEI2.alt = 'EffectivenessIndicator'; it.setAttribute('data-ei2-icon', '1');
+            }
+          }
+          // EffectivenessIndicatorParameter tree icon
+          if (it.getAttribute('data-eip-icon') !== '1' && label.textContent.indexOf('EffectivenessIndicatorParameter') >= 0) {
+            var imgEIP = it.querySelector('img');
+            if (imgEIP && imgEIP.src.indexOf('EffIndPar') < 0) {
+              imgEIP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="1.5" fill="#f59e0b"/></svg>');
+              imgEIP.alt = 'EffIndParameter'; it.setAttribute('data-eip-icon', '1');
+            }
+          }
+          // Command tree icon
+          if (it.getAttribute('data-cmd2-icon') !== '1' && label.textContent.indexOf('Command') >= 0 && label.textContent.indexOf('CommandControlActivity') < 0) {
+            var imgCMD2 = it.querySelector('img');
+            if (imgCMD2 && imgCMD2.src.indexOf('CmdSVG') < 0) {
+              imgCMD2.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><polygon points="6,3 14,8 6,13" fill="#ef4444"/></svg>');
+              imgCMD2.alt = 'Command'; it.setAttribute('data-cmd2-icon', '1');
+            }
+          }
+          // LogicalEntity tree icon
+          if (it.getAttribute('data-le-icon') !== '1' && label.textContent.indexOf('LogicalEntity') >= 0) {
+            var imgLE = it.querySelector('img');
+            if (imgLE && imgLE.src.indexOf('LogicalEnt') < 0) {
+              imgLE.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><ellipse cx="8" cy="5" rx="5" ry="2" fill="#06b6d4"/><rect x="3" y="5" width="10" height="6" fill="#06b6d4"/><ellipse cx="8" cy="11" rx="5" ry="2" fill="#06b6d4"/></svg>');
+              imgLE.alt = 'LogicalEntity'; it.setAttribute('data-le-icon', '1');
+            }
+          }
+          // LogicalMeasure tree icon
+          if (it.getAttribute('data-lm-icon') !== '1' && label.textContent.indexOf('LogicalMeasure') >= 0) {
+            var imgLM = it.querySelector('img');
+            if (imgLM && imgLM.src.indexOf('LogicalMeas') < 0) {
+              imgLM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><rect x="3" y="2" width="10" height="12" fill="#f59e0b"/><line x1="5" y1="5" x2="11" y2="5" stroke="#1e293b" stroke-width="1"/><line x1="5" y1="8" x2="9" y2="8" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgLM.alt = 'LogicalMeasure'; it.setAttribute('data-lm-icon', '1');
+            }
+          }
+          // LogicalDataModel tree icon
+          if (it.getAttribute('data-ldm-icon') !== '1' && label.textContent.indexOf('LogicalDataModel') >= 0) {
+            var imgLDM = it.querySelector('img');
+            if (imgLDM && imgLDM.src.indexOf('LogicalDM') < 0) {
+              imgLDM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><ellipse cx="8" cy="4" rx="5" ry="2" fill="#3b82f6"/><rect x="3" y="4" width="10" height="8" fill="#3b82f6"/><ellipse cx="8" cy="12" rx="5" ry="2" fill="#3b82f6"/></svg>');
+              imgLDM.alt = 'LogicalDataModel'; it.setAttribute('data-ldm-icon', '1');
+            }
+          }
+          // LogicalMeasurementSystem tree icon
+          if (it.getAttribute('data-lms-icon') !== '1' && label.textContent.indexOf('LogicalMeasurementSystem') >= 0) {
+            var imgLMS = it.querySelector('img');
+            if (imgLMS && imgLMS.src.indexOf('LogicalMS') < 0) {
+              imgLMS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><circle cx="5" cy="5" r="2" fill="#14b8a6"/><circle cx="11" cy="5" r="2" fill="#14b8a6"/><circle cx="8" cy="11" r="2" fill="#14b8a6"/><line x1="7" y1="5" x2="9" y2="5" stroke="#14b8a6" stroke-width="1"/><line x1="6" y1="7" x2="7" y2="10" stroke="#14b8a6" stroke-width="1"/><line x1="10" y1="7" x2="9" y2="10" stroke="#14b8a6" stroke-width="1"/></svg>');
+              imgLMS.alt = 'LogicalMeasSys'; it.setAttribute('data-lms-icon', '1');
+            }
+          }
+          // Entity tree icon
+          if (it.getAttribute('data-ent2-icon') !== '1' && label.textContent.indexOf('Entity') >= 0 && label.textContent.indexOf('ConceptEntity') < 0 && label.textContent.indexOf('LogicalEntity') < 0) {
+            var imgENT2 = it.querySelector('img');
+            if (imgENT2 && imgENT2.src.indexOf('EntSVG') < 0) {
+              imgENT2.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#8b5cf6"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
+              imgENT2.alt = 'Entity'; it.setAttribute('data-ent2-icon', '1');
+            }
+          }
+          // ArchitectureDescription tree icon
+          if (it.getAttribute('data-ad-icon') !== '1' && label.textContent.indexOf('ArchitectureDescription') >= 0) {
+            var imgAD = it.querySelector('img');
+            if (imgAD && imgAD.src.indexOf('ArchDesc') < 0) {
+              imgAD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M3 3h10v3H3zM3 8h10v5H3z" fill="#3b82f6"/></svg>');
+              imgAD.alt = 'ArchitectureDescription'; it.setAttribute('data-ad-icon', '1');
+            }
+          }
+          // ArchitectureMetadataDescription tree icon
+          if (it.getAttribute('data-amd-icon') !== '1' && label.textContent.indexOf('ArchitectureMetadataDescription') >= 0) {
+            var imgAMD = it.querySelector('img');
+            if (imgAMD && imgAMD.src.indexOf('ArchMeta') < 0) {
+              imgAMD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M3 3h10v3H3zM3 8h10v5H3z" fill="#3b82f6"/><circle cx="8" cy="4.5" r="0.8" fill="#1e293b"/></svg>');
+              imgAMD.alt = 'ArchMetaDesc'; it.setAttribute('data-amd-icon', '1');
+            }
+          }
+          // TopLevelOperationalConcept tree icon
+          if (it.getAttribute('data-tloc-icon') !== '1' && label.textContent.indexOf('TopLevelOperationalConcept') >= 0) {
+            var imgTLOC = it.querySelector('img');
+            if (imgTLOC && imgTLOC.src.indexOf('TopLevel') < 0) {
+              imgTLOC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><polygon points="8,2 14,14 2,14" fill="#f59e0b"/></svg>');
+              imgTLOC.alt = 'TopLevelOC'; it.setAttribute('data-tloc-icon', '1');
+            }
+          }
+          // MissionIntent tree icon
+          if (it.getAttribute('data-mi-icon') !== '1' && label.textContent.indexOf('MissionIntent') >= 0) {
+            var imgMI = it.querySelector('img');
+            if (imgMI && imgMI.src.indexOf('MissIntent') < 0) {
+              imgMI.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#22c55e"/><path d="M5 8h6M8 5v6" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgMI.alt = 'MissionIntent'; it.setAttribute('data-mi-icon', '1');
+            }
+          }
+          // MissionBackground tree icon
+          if (it.getAttribute('data-mb-icon') !== '1' && label.textContent.indexOf('MissionBackground') >= 0) {
+            var imgMB = it.querySelector('img');
+            if (imgMB && imgMB.src.indexOf('MissBg') < 0) {
+              imgMB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="none" stroke="#22c55e" stroke-width="1.5"/></svg>');
+              imgMB.alt = 'MissionBackground'; it.setAttribute('data-mb-icon', '1');
+            }
+          }
+          // Objective tree icon
+          if (it.getAttribute('data-ob-icon') !== '1' && label.textContent.indexOf('Objective') >= 0) {
+            var imgOB = it.querySelector('img');
+            if (imgOB && imgOB.src.indexOf('ObjSVG') < 0) {
+              imgOB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#ef4444"/><polygon points="8,5 11,11 5,11" fill="#1e293b"/></svg>');
+              imgOB.alt = 'Objective'; it.setAttribute('data-ob-icon', '1');
+            }
+          }
+          // Environment tree icon
+          if (it.getAttribute('data-env-icon') !== '1' && label.textContent.indexOf('Environment') >= 0) {
+            var imgENV = it.querySelector('img');
+            if (imgENV && imgENV.src.indexOf('EnvSVG') < 0) {
+              imgENV.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><path d="M3 3l5 5 5-5M3 13l5-5 5 5" stroke="#0ea5e9" stroke-width="1.5" fill="none"/></svg>');
+              imgENV.alt = 'Environment'; it.setAttribute('data-env-icon', '1');
+            }
+          }
+          // Interface tree icon
+          if (it.getAttribute('data-ifc-icon') !== '1' && label.textContent.indexOf('Interface') >= 0) {
+            var imgIFC = it.querySelector('img');
+            if (imgIFC && imgIFC.src.indexOf('IfcSVG') < 0) {
+              imgIFC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/><rect x="9" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/></svg>');
+              imgIFC.alt = 'Interface'; it.setAttribute('data-ifc-icon', '1');
+            }
+          }
+          // NodePort tree icon
+          if (it.getAttribute('data-np-icon') !== '1' && label.textContent.indexOf('NodePort') >= 0) {
+            var imgNP = it.querySelector('img');
+            if (imgNP && imgNP.src.indexOf('NodePort') < 0) {
+              imgNP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="3" fill="#22c55e"/><rect x="7" y="1" width="2" height="5" fill="#22c55e"/></svg>');
+              imgNP.alt = 'NodePort'; it.setAttribute('data-np-icon', '1');
+            }
+          }
+          // ExecutionSpecification tree icon
+          if (it.getAttribute('data-es-icon') !== '1' && label.textContent.indexOf('ExecutionSpecification') >= 0) {
+            var imgES = it.querySelector('img');
+            if (imgES && imgES.src.indexOf('ExecSpec') < 0) {
+              imgES.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="5" y="2" width="6" height="12" rx="1" fill="#3b82f6"/></svg>');
+              imgES.alt = 'ExecutionSpec'; it.setAttribute('data-es-icon', '1');
+            }
+          }
+          // Interaction tree icon
+          if (it.getAttribute('data-int-icon') !== '1' && label.textContent.indexOf('Interaction') >= 0) {
+            var imgINT = it.querySelector('img');
+            if (imgINT && imgINT.src.indexOf('Interact') < 0) {
+              imgINT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><ellipse cx="8" cy="8" rx="5" ry="3" fill="#f59e0b"/><path d="M5 5l6 6M11 5l-6 6" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgINT.alt = 'Interaction'; it.setAttribute('data-int-icon', '1');
+            }
+          }
+          // PhysicalDataModel tree icon
+          if (it.getAttribute('data-pdm-icon') !== '1' && label.textContent.indexOf('PhysicalDataModel') >= 0) {
+            var imgPDM = it.querySelector('img');
+            if (imgPDM && imgPDM.src.indexOf('PhysDM') < 0) {
+              imgPDM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><ellipse cx="8" cy="4" rx="5" ry="2" fill="#14b8a6"/><rect x="3" y="4" width="10" height="8" fill="#14b8a6"/><rect x="5" y="8" width="6" height="2" fill="#1e293b"/></svg>');
+              imgPDM.alt = 'PhysDataModel'; it.setAttribute('data-pdm-icon', '1');
+            }
+          }
+          // PlatformEntity tree icon
+          if (it.getAttribute('data-pe-icon') !== '1' && label.textContent.indexOf('PlatformEntity') >= 0) {
+            var imgPE = it.querySelector('img');
+            if (imgPE && imgPE.src.indexOf('PlatEnt') < 0) {
+              imgPE.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#8b5cf6"/><rect x="5" y="5" width="6" height="6" fill="#1e293b"/></svg>');
+              imgPE.alt = 'PlatformEntity'; it.setAttribute('data-pe-icon', '1');
+            }
+          }
+          // StrikeActivity tree icon
+          if (it.getAttribute('data-sa-icon') !== '1' && label.textContent.indexOf('StrikeActivity') >= 0) {
+            var imgAC = it.querySelector('img');
+            if (imgAC && imgAC.src.indexOf('StrikeActivity') < 0) {
+              imgAC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><circle cx="8" cy="8" r="1" fill="#ef4444"/><line x1="8" y1="2" x2="8" y2="6" stroke="#ef4444" stroke-width="1"/><line x1="8" y1="10" x2="8" y2="14" stroke="#ef4444" stroke-width="1"/><line x1="2" y1="8" x2="6" y2="8" stroke="#ef4444" stroke-width="1"/><line x1="10" y1="8" x2="14" y2="8" stroke="#ef4444" stroke-width="1"/></svg>');
+              it.setAttribute('data-sa-icon', '1');
+            }
+          }
+          // DetectionActivity tree icon
+          if (it.getAttribute('data-da-icon') !== '1' && label.textContent.indexOf('DetectionActivity') >= 0) {
+            var imgAB = it.querySelector('img');
+            if (imgAB && imgAB.src.indexOf('DetectionActivity') < 0) {
+              imgAB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><circle cx="8" cy="8" r="1.5" fill="#10b981"/><circle cx="8" cy="8" r="4" fill="none" stroke="#10b981" stroke-width="0.8"/><circle cx="8" cy="8" r="6" fill="none" stroke="#10b981" stroke-width="0.4"/></svg>');
+              it.setAttribute('data-da-icon', '1');
+            }
+          }
+          // CommandControlActivity tree icon
+          if (it.getAttribute('data-cc-icon') !== '1' && label.textContent.indexOf('CommandControlActivity') >= 0) {
+            var imgAA = it.querySelector('img');
+            if (imgAA && imgAA.src.indexOf('CommandControlActivity') < 0) {
+              imgAA.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#dc2626" stroke-width="1.5"/><path d="M3 11l3-6 2 4 2-2 3 4" fill="none" stroke="#dc2626" stroke-width="1.2"/></svg>');
+              it.setAttribute('data-cc-icon', '1');
+            }
+          }
+          // PlanManeuver tree icon
+          if (it.getAttribute('data-pm-icon') !== '1' && label.textContent.indexOf('PlanManeuver') >= 0) {
+            var imgY = it.querySelector('img');
+            if (imgY && imgY.src.indexOf('PlanManeuver') < 0) {
+              imgY.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><rect x="4" y="4" width="3" height="3" fill="#10b981"/><rect x="9" y="4" width="3" height="3" fill="#10b981"/><rect x="4" y="10" width="8" height="2" rx="1" fill="#6ee7b7"/></svg>');
+              it.setAttribute('data-pm-icon', '1');
+            }
+          }
+          // TransferManeuver tree icon
+          if (it.getAttribute('data-tm-icon') !== '1' && label.textContent.indexOf('TransferManeuver') >= 0) {
+            var imgX = it.querySelector('img');
+            if (imgX && imgX.src.indexOf('TransferManeuver') < 0) {
+              imgX.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M4 8l4-4v3h6v2H8v3z" fill="#3b82f6"/></svg>');
+              it.setAttribute('data-tm-icon', '1');
+            }
+          }
+          // HoverManeuver tree icon
+          if (it.getAttribute('data-hm-icon') !== '1' && label.textContent.indexOf('HoverManeuver') >= 0) {
+            var imgW = it.querySelector('img');
+            if (imgW && imgW.src.indexOf('HoverManeuver') < 0) {
+              imgW.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/><path d="M8 2v4M5 6h6l-1 5H6z" fill="#a855f7"/></svg>');
+              it.setAttribute('data-hm-icon', '1');
+            }
+          }
+          // ManeuverActivity tree icon
+          if (it.getAttribute('data-ma-icon') !== '1' && label.textContent.indexOf('ManeuverActivity') >= 0) {
+            var imgV = it.querySelector('img');
+            if (imgV && imgV.src.indexOf('ManeuverActivity') < 0) {
+              imgV.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="7" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="none" stroke="#f97316" stroke-width="1.5"/><path d="M8 3v2M8 11v2" stroke="#f97316" stroke-width="1"/></svg>');
+              it.setAttribute('data-ma-icon', '1');
+            }
+          }
+          // ReceiveActivity tree icon
+          if (it.getAttribute('data-ra-icon') !== '1' && label.textContent.indexOf('ReceiveActivity') >= 0) {
+            var imgU = it.querySelector('img');
+            if (imgU && imgU.src.indexOf('ReceiveActivity') < 0) {
+              imgU.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/><path d="M13 8l-5 4v-3H1V7h7V4z" fill="#6366f1"/></svg>');
+              it.setAttribute('data-ra-icon', '1');
+            }
+          }
+          // TransmitActivity tree icon
+          if (it.getAttribute('data-ta-icon') !== '1' && label.textContent.indexOf('TransmitActivity') >= 0) {
+            var imgT = it.querySelector('img');
+            if (imgT && imgT.src.indexOf('TransmitActivity') < 0) {
+              imgT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><path d="M3 8l5-4v3h7v2H8v3z" fill="#14b8a6"/></svg>');
+              it.setAttribute('data-ta-icon', '1');
+            }
+          }
+          // CommunicationActivity tree icon
+          if (it.getAttribute('data-ca-icon') !== '1' && label.textContent.indexOf('CommunicationActivity') >= 0) {
+            var imgS = it.querySelector('img');
+            if (imgS && imgS.src.indexOf('CommunicationActivity') < 0) {
+              imgS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><path d="M4 5h8M4 8h6M4 11h4" fill="none" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round"/></svg>');
+              it.setAttribute('data-ca-icon', '1');
+            }
+          }
+          // OperationalModel tree icon
+          if (it.getAttribute('data-om-icon') !== '1' && label.textContent.indexOf('OperationalModel') >= 0) {
+            var imgR = it.querySelector('img');
+            if (imgR && imgR.src.indexOf('OperationalModel') < 0) {
+              imgR.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#d97706" stroke-width="1.5"/><rect x="4" y="4" width="3" height="3" fill="#d97706"/><rect x="9" y="4" width="3" height="3" fill="#d97706"/><rect x="4" y="9" width="3" height="3" fill="#d97706"/><rect x="9" y="9" width="3" height="3" fill="#d97706"/></svg>');
+              it.setAttribute('data-om-icon', '1');
+            }
+          }
+          // OperationalTask tree icon (before Task)
+          if (it.getAttribute('data-otk-icon') === '1' || it.getAttribute('data-tk-icon') === '1') {
+            // already handled
+          } else if (label.textContent.indexOf('OperationalTask') >= 0) {
+            var imgQ = it.querySelector('img');
+            if (imgQ && imgQ.src.indexOf('OperationalTask') < 0) {
+              imgQ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><path d="M4 8l2 2 3-3M10 5l3 3-3 3" fill="none" stroke="#ef4444" stroke-width="1.2"/></svg>');
+              it.setAttribute('data-otk-icon', '1');
+            }
+          } else // Task tree icon
+          if (it.getAttribute('data-tk-icon') !== '1' && label.textContent.indexOf('Task') >= 0) {
+            var imgE = it.querySelector('img');
+            if (imgE && imgE.src.indexOf('Task') < 0) {
+              imgE.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/><rect x="4" y="4" width="3" height="3" rx="0.5" fill="#64748b"/><line x1="8" y1="5.5" x2="13" y2="5.5" stroke="#64748b" stroke-width="1"/><rect x="4" y="9" width="3" height="3" rx="0.5" fill="#64748b"/><line x1="8" y1="10.5" x2="11" y2="10.5" stroke="#64748b" stroke-width="1"/></svg>');
+              it.setAttribute('data-tk-icon', '1');
+            }
+          }
+          // Force tree icon
+          if (it.getAttribute('data-fc-icon') !== '1' && label.textContent.indexOf('Force') >= 0) {
+            var imgF = it.querySelector('img');
+            if (imgF && imgF.src.indexOf('Force') < 0) {
+              imgF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><path d="M3 14V3l4 3 2-1 4 4-2 2-2-1-4 4z" fill="#ef4444"/></svg>');
+              it.setAttribute('data-fc-icon', '1');
+            }
+          }
+          // Role tree icon
+          if (it.getAttribute('data-rl-icon') !== '1' && label.textContent.indexOf('Role') >= 0) {
+            var imgG = it.querySelector('img');
+            if (imgG && imgG.src.indexOf('Role') < 0) {
+              imgG.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/><circle cx="8" cy="5.5" r="2.5" fill="#a855f7"/><path d="M3 13.5c0-2 2.2-3.5 5-3.5s5 1.5 5 3.5" fill="#a855f7"/></svg>');
+              it.setAttribute('data-rl-icon', '1');
+            }
+          }
+          // Equipment tree icon
+          if (it.getAttribute('data-eq-icon') !== '1' && label.textContent.indexOf('Equipment') >= 0) {
+            var imgH = it.querySelector('img');
+            if (imgH && imgH.src.indexOf('Equipment') < 0) {
+              imgH.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#84cc16" stroke-width="1.5"/><path d="M3 12V5l5-3 5 3v7l-5 3-5-3z" fill="#84cc16"/><line x1="3" y1="12" x2="13" y2="7" stroke="#1e293b" stroke-width="0.8"/></svg>');
+              it.setAttribute('data-eq-icon', '1');
+            }
+          }
+          // OperationalAction tree icon
+          if (it.getAttribute('data-oa-icon') !== '1' && label.textContent.indexOf('OperationalAction') >= 0) {
+            var imgI = it.querySelector('img');
+            if (imgI && imgI.src.indexOf('OperationalAction') < 0) {
+              imgI.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22d3ee" stroke-width="1.5"/><polygon points="3,13 8,2 13,13 8,10" fill="#22d3ee"/></svg>');
+              it.setAttribute('data-oa-icon', '1');
+            }
+          }
+          // Duty tree icon
+          if (it.getAttribute('data-dy-icon') !== '1' && label.textContent.indexOf('Duty') >= 0) {
+            var imgM = it.querySelector('img');
+            if (imgM && imgM.src.indexOf('Duty') < 0) {
+              imgM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#78716c" stroke-width="1.5"/><path d="M5 5h6l-3 7z" fill="#78716c"/><circle cx="4" cy="4" r="1" fill="#a8a29e"/><circle cx="12" cy="4" r="1" fill="#a8a29e"/></svg>');
+              it.setAttribute('data-dy-icon', '1');
+            }
+          }
+          // MissionPhase tree icon
+          if (it.getAttribute('data-mp-icon') !== '1' && label.textContent.indexOf('MissionPhase') >= 0) {
+            var imgN = it.querySelector('img');
+            if (imgN && imgN.src.indexOf('MissionPhase') < 0) {
+              imgN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><rect x="3" y="3" width="10" height="3" rx="0.5" fill="#0ea5e9"/><rect x="3" y="8" width="6" height="3" rx="0.5" fill="#38bdf8"/><rect x="3" y="13" width="4" height="2" rx="0.5" fill="#7dd3fc"/></svg>');
+              it.setAttribute('data-mp-icon', '1');
+            }
+          }
+          // OperationalActivity tree icon
+          if (it.getAttribute('data-oa2-icon') !== '1' && label.textContent.indexOf('OperationalActivity') >= 0) {
+            var imgP = it.querySelector('img');
+            if (imgP && imgP.src.indexOf('OperationalActivity') < 0) {
+              imgP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#db2777" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#db2777" stroke-width="1"/><circle cx="5.5" cy="6.5" r="1" fill="#db2777"/><circle cx="10.5" cy="6.5" r="1" fill="#db2777"/><circle cx="8" cy="9.5" r="1" fill="#db2777"/></svg>');
+              it.setAttribute('data-oa2-icon', '1');
+            }
+          }
+          // OperationalProblem tree icon
+          if (it.getAttribute('data-opr-icon') !== '1' && label.textContent.indexOf('OperationalProblem') >= 0) {
+            var imgO = it.querySelector('img');
+            if (imgO && imgO.src.indexOf('OperationalProblem') < 0) {
+              imgO.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#9ca3af" stroke-width="1.5"/><path d="M4 4h3v3H4zM9 4h3v3H9zM4 9h3v3H4zM9 9h3v3H9z" fill="#9ca3af"/></svg>');
+              it.setAttribute('data-opr-icon', '1');
+            }
+          }
+          // ActualOrganization tree icon
+          if (it.getAttribute('data-ao-icon') !== '1' && label.textContent.indexOf('ActualOrganization') >= 0) {
+            var imgJ = it.querySelector('img');
+            if (imgJ && imgJ.src.indexOf('ActualOrganization') < 0) {
+              imgJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="8" width="4" height="6" rx="0.5" fill="#14b8a6"/><rect x="9" y="5" width="4" height="9" rx="0.5" fill="#14b8a6"/><rect x="5" y="2" width="3" height="3" rx="0.5" fill="#5eead4"/></svg>');
+              it.setAttribute('data-ao-icon', '1');
+            }
+          }
+          // ActualPerson / Person tree icon
+          if (it.getAttribute('data-ap-icon') === '1' || it.getAttribute('data-ps-icon') === '1') {
+            // already handled
+          } else if (label.textContent.indexOf('ActualPerson') >= 0) {
+            var imgL = it.querySelector('img');
+            if (imgL && imgL.src.indexOf('ActualPerson') < 0) {
+              imgL.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="4.5" r="2" fill="#f97316"/><ellipse cx="8" cy="11" rx="4" ry="3" fill="#f97316"/><path d="M4 8l2 2 5-5" fill="none" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              it.setAttribute('data-ap-icon', '1');
+            }
+          } else if (label.textContent.indexOf('Person') >= 0) {
+            var imgK = it.querySelector('img');
+            if (imgK && imgK.src.indexOf('Person') < 0) {
+              imgK.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ec4899" stroke-width="1.5"/><circle cx="8" cy="4.5" r="2" fill="#ec4899"/><ellipse cx="8" cy="11" rx="4" ry="3" fill="#ec4899"/></svg>');
+              it.setAttribute('data-ps-icon', '1');
+            }
+          }
+          // Vision tree icon
+          if (it.getAttribute('data-vi-icon') !== '1' && label.textContent.indexOf('Vision') >= 0) {
+            var img8 = it.querySelector('img');
+            if (img8 && img8.src.indexOf('Vision') < 0) {
+              img8.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#eab308" stroke-width="1.5"/><polygon points="8,2 10,6 14,7 11,10 12,14 8,12 4,14 5,10 2,7 6,6" fill="#eab308"/></svg>');
+              it.setAttribute('data-vi-icon', '1');
+            }
+          }
+          // OperationalCapability tree icon
+          if (it.getAttribute('data-oc-icon') !== '1' && (label.textContent.indexOf('OperationalCapability') >= 0 || label.textContent.indexOf('OperationalCapability') >= 0)) {
+            var img2 = it.querySelector('img');
+            if (img2 && img2.src.indexOf('OperationalCapability') < 0) {
+              img2.src = 'http://localhost:8080/icons/full/obj16/OperationalCapability.svg';
+              it.setAttribute('data-oc-icon', '1');
             }
           }
         }

@@ -99,6 +99,214 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
     private String getDodafStereotype(Element element) {
         if (element.getAliasIds().contains("dodaf:capability")) {
             return "Capability";
+        } else if (element.getAliasIds().contains("dodaf:OperationalCapability")) {
+            return "OperationalCapability";
+        } else if (element.getAliasIds().contains("dodaf:TaskStage")) {
+            return "TaskStage";
+        } else if (element.getAliasIds().contains("dodaf:TaskIntent")) {
+            return "TaskIntent";
+        } else if (element.getAliasIds().contains("dodaf:ImplementationPhase")) {
+            return "ImplementationPhase";
+        } else if (element.getAliasIds().contains("dodaf:Vision")) {
+            return "Vision";
+        } else if (element.getAliasIds().contains("dodaf:VisionDescription")) {
+            return "VisionDescription";
+        } else if (element.getAliasIds().contains("dodaf:Target")) {
+            return "Target";
+        } else if (element.getAliasIds().contains("dodaf:Performer")) {
+            return "Performer";
+        } else if (element.getAliasIds().contains("dodaf:Location")) {
+            return "Location";
+        } else if (element.getAliasIds().contains("dodaf:Condition")) {
+            return "Condition";
+        } else if (element.getAliasIds().contains("dodaf:Task")) {
+            return "Task";
+        } else if (element.getAliasIds().contains("dodaf:Force")) {
+            return "Force";
+        } else if (element.getAliasIds().contains("dodaf:Role")) {
+            return "Role";
+        } else if (element.getAliasIds().contains("dodaf:Equipment")) {
+            return "Equipment";
+        } else if (element.getAliasIds().contains("dodaf:OperationalAction")) {
+            return "OperationalAction";
+        } else if (element.getAliasIds().contains("dodaf:ActualOrganization")) {
+            return "ActualOrganization";
+        } else if (element.getAliasIds().contains("dodaf:Person")) {
+            return "Person";
+        } else if (element.getAliasIds().contains("dodaf:ActualPerson")) {
+            return "ActualPerson";
+        } else if (element.getAliasIds().contains("dodaf:Duty")) {
+            return "Duty";
+        } else if (element.getAliasIds().contains("dodaf:MissionPhase")) {
+            return "MissionPhase";
+        } else if (element.getAliasIds().contains("dodaf:OperationalProblem")) {
+            return "OperationalProblem";
+        } else if (element.getAliasIds().contains("dodaf:OperationalActivity")) {
+            return "OperationalActivity";
+        } else if (element.getAliasIds().contains("dodaf:OperationalTask")) {
+            return "OperationalTask";
+        } else if (element.getAliasIds().contains("dodaf:OperationalModel")) {
+            return "OperationalModel";
+        } else if (element.getAliasIds().contains("dodaf:CommunicationActivity")) {
+            return "CommunicationActivity";
+        } else if (element.getAliasIds().contains("dodaf:TransmitActivity")) {
+            return "TransmitActivity";
+        } else if (element.getAliasIds().contains("dodaf:ReceiveActivity")) {
+            return "ReceiveActivity";
+        } else if (element.getAliasIds().contains("dodaf:ManeuverActivity")) {
+            return "ManeuverActivity";
+        } else if (element.getAliasIds().contains("dodaf:HoverManeuver")) {
+            return "HoverManeuver";
+        } else if (element.getAliasIds().contains("dodaf:TransferManeuver")) {
+            return "TransferManeuver";
+        } else if (element.getAliasIds().contains("dodaf:PlanManeuver")) {
+            return "PlanManeuver";
+        } else if (element.getAliasIds().contains("dodaf:AnalysisActivity")) {
+            return "AnalysisActivity";
+        } else if (element.getAliasIds().contains("dodaf:CommandControlActivity")) {
+            return "CommandControlActivity";
+        } else if (element.getAliasIds().contains("dodaf:DetectionActivity")) {
+            return "DetectionActivity";
+        } else if (element.getAliasIds().contains("dodaf:StrikeActivity")) {
+            return "StrikeActivity";
+        } else if (element.getAliasIds().contains("dodaf:DefenseActivity")) {
+            return "DefenseActivity";
+        } else if (element.getAliasIds().contains("dodaf:SupportActivity")) {
+            return "SupportActivity";
+        } else if (element.getAliasIds().contains("dodaf:ActivityParameterNode")) {
+            return "ActivityParameterNode";
+        } else if (element.getAliasIds().contains("dodaf:InitialNode")) {
+            return "InitialNode";
+        } else if (element.getAliasIds().contains("dodaf:DecisionNode")) {
+            return "DecisionNode";
+        } else if (element.getAliasIds().contains("dodaf:MergeNode")) {
+            return "MergeNode";
+        } else if (element.getAliasIds().contains("dodaf:HorizontalForkNode")) {
+            return "HorizontalForkNode";
+        } else if (element.getAliasIds().contains("dodaf:VerticalForkNode")) {
+            return "VerticalForkNode";
+        } else if (element.getAliasIds().contains("dodaf:HorizontalJoinNode")) {
+            return "HorizontalJoinNode";
+        } else if (element.getAliasIds().contains("dodaf:VerticalJoinNode")) {
+            return "VerticalJoinNode";
+        } else if (element.getAliasIds().contains("dodaf:ActivityFinalNode")) {
+            return "ActivityFinalNode";
+        } else if (element.getAliasIds().contains("dodaf:FlowFinalNode")) {
+            return "FlowFinalNode";
+        } else if (element.getAliasIds().contains("dodaf:OpaqueAction")) {
+            return "OpaqueAction";
+        } else if (element.getAliasIds().contains("dodaf:Signal")) {
+            return "Signal";
+        } else if (element.getAliasIds().contains("dodaf:VerticalPartition")) {
+            return "VerticalPartition";
+        } else if (element.getAliasIds().contains("dodaf:HorizontalPartition")) {
+            return "HorizontalPartition";
+        } else if (element.getAliasIds().contains("dodaf:PatrolActivity")) {
+            return "PatrolActivity";
+        } else if (element.getAliasIds().contains("dodaf:TimeConstraint")) {
+            return "TimeConstraint";
+        } else if (element.getAliasIds().contains("dodaf:DurationConstraint")) {
+            return "DurationConstraint";
+        } else if (element.getAliasIds().contains("dodaf:System")) {
+            return "System";
+        } else if (element.getAliasIds().contains("dodaf:Software")) {
+            return "Software";
+        } else if (element.getAliasIds().contains("dodaf:PersonType")) {
+            return "PersonType";
+        } else if (element.getAliasIds().contains("dodaf:OrganizationType")) {
+            return "OrganizationType";
+        } else if (element.getAliasIds().contains("dodaf:ResourcePort")) {
+            return "ResourcePort";
+        } else if (element.getAliasIds().contains("dodaf:CapabilityConfiguration")) {
+            return "CapabilityConfiguration";
+        } else if (element.getAliasIds().contains("dodaf:TechnicalStandard")) {
+            return "TechnicalStandard";
+        } else if (element.getAliasIds().contains("dodaf:FunctionStandard")) {
+            return "FunctionStandard";
+        } else if (element.getAliasIds().contains("dodaf:Protocol")) {
+            return "Protocol";
+        } else if (element.getAliasIds().contains("dodaf:StandardConfiguration")) {
+            return "StandardConfiguration";
+        } else if (element.getAliasIds().contains("dodaf:Function")) {
+            return "Function";
+        } else if (element.getAliasIds().contains("dodaf:ServiceAccess")) {
+            return "ServiceAccess";
+        } else if (element.getAliasIds().contains("dodaf:ServiceInterface")) {
+            return "ServiceInterface";
+        } else if (element.getAliasIds().contains("dodaf:LocationType")) {
+            return "LocationType";
+        } else if (element.getAliasIds().contains("dodaf:Interface")) {
+            return "Interface";
+        } else if (element.getAliasIds().contains("dodaf:ActualProjectMilestone")) {
+            return "ActualProjectMilestone";
+        } else if (element.getAliasIds().contains("dodaf:ProjectActivity")) {
+            return "ProjectActivity";
+        } else if (element.getAliasIds().contains("dodaf:ProjectMilestone")) {
+            return "ProjectMilestone";
+        } else if (element.getAliasIds().contains("dodaf:ProjectType")) {
+            return "ProjectType";
+        } else if (element.getAliasIds().contains("dodaf:Project")) {
+            return "Project";
+        } else if (element.getAliasIds().contains("dodaf:StateIndicator")) {
+            return "StateIndicator";
+        } else if (element.getAliasIds().contains("dodaf:ConceptEntity")) {
+            return "ConceptEntity";
+        } else if (element.getAliasIds().contains("dodaf:LogicalEntity")) {
+            return "LogicalEntity";
+        } else if (element.getAliasIds().contains("dodaf:LogicalMeasure")) {
+            return "LogicalMeasure";
+        } else if (element.getAliasIds().contains("dodaf:LogicalDataModel")) {
+            return "LogicalDataModel";
+        } else if (element.getAliasIds().contains("dodaf:LogicalMeasurementSystem")) {
+            return "LogicalMeasurementSystem";
+        } else if (element.getAliasIds().contains("dodaf:Entity")) {
+            return "Entity";
+        } else if (element.getAliasIds().contains("dodaf:ArchitectureMetadataDescription")) {
+            return "ArchitectureMetadataDescription";
+        } else if (element.getAliasIds().contains("dodaf:ArchitectureDescription")) {
+            return "ArchitectureDescription";
+        } else if (element.getAliasIds().contains("dodaf:TopLevelOperationalConcept")) {
+            return "TopLevelOperationalConcept";
+        } else if (element.getAliasIds().contains("dodaf:MissionIntent")) {
+            return "MissionIntent";
+        } else if (element.getAliasIds().contains("dodaf:MissionBackground")) {
+            return "MissionBackground";
+        } else if (element.getAliasIds().contains("dodaf:Objective")) {
+            return "Objective";
+        } else if (element.getAliasIds().contains("dodaf:Environment")) {
+            return "Environment";
+        } else if (element.getAliasIds().contains("dodaf:Interface")) {
+            return "Interface";
+        } else if (element.getAliasIds().contains("dodaf:NodePort")) {
+            return "NodePort";
+        } else if (element.getAliasIds().contains("dodaf:ExecutionSpecification")) {
+            return "ExecutionSpecification";
+        } else if (element.getAliasIds().contains("dodaf:Interaction")) {
+            return "Interaction";
+        } else if (element.getAliasIds().contains("dodaf:PhysicalDataModel")) {
+            return "PhysicalDataModel";
+        } else if (element.getAliasIds().contains("dodaf:PlatformEntity")) {
+            return "PlatformEntity";
+        } else if (element.getAliasIds().contains("dodaf:ConceptObservable")) {
+            return "ConceptObservable";
+        } else if (element.getAliasIds().contains("dodaf:ExchangeElement")) {
+            return "ExchangeElement";
+        } else if (element.getAliasIds().contains("dodaf:InformationTransmissionPattern")) {
+            return "InformationTransmissionPattern";
+        } else if (element.getAliasIds().contains("dodaf:InformationElement")) {
+            return "InformationElement";
+        } else if (element.getAliasIds().contains("dodaf:Information")) {
+            return "Information";
+        } else if (element.getAliasIds().contains("dodaf:EffectivenessIndicatorParameter")) {
+            return "EffectivenessIndicatorParameter";
+        } else if (element.getAliasIds().contains("dodaf:EffectivenessIndicator")) {
+            return "EffectivenessIndicator";
+        } else if (element.getAliasIds().contains("dodaf:Command")) {
+            return "Command";
+        } else if (element.getAliasIds().contains("dodaf:TimeScale")) {
+            return "TimeScale";
+        } else if (element.getAliasIds().contains("dodaf:EquipCapability")) {
+            return "EquipCapability";
         } else if (element.getAliasIds().contains("dodaf:Lifeline")) {
             return "Lifeline";
         } else if (element.getAliasIds().contains("dodaf:CombinedFragment")) {

@@ -5,10 +5,10 @@ import ReactDOM from 'react-dom/client';
 interface PredictionRow { id: string; domain: string; skill: string; shortTerm: string; midTerm: string; longTerm: string; }
 
 const API = '/api/prediction/default-prediction';
-const DB_KEY = 'dodaf_prediction_data';
 
-function loadData(): PredictionRow[] { try { return JSON.parse(localStorage.getItem(DB_KEY) || '[]'); } catch(e) { return []; } }
-function saveData(data: PredictionRow[]) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
+function getStorageKey() { var s = new URLSearchParams(window.location.search); return 'dodaf_pred_' + (s.get('selection') || s.get('representation') || ''); }
+function loadData(): PredictionRow[] { try { var k = getStorageKey(); return k ? JSON.parse(localStorage.getItem(k) || '[]') : []; } catch(e) { return []; } }
+function saveData(data: PredictionRow[]) { var k = getStorageKey(); if (k) localStorage.setItem(k, JSON.stringify(data)); }
 
 const thStyle: React.CSSProperties = { padding: '8px 12px', background: '#19284f', fontWeight: 600, fontSize: 13, color: '#e2e8f0', borderBottom: '2px solid rgba(255,255,255,0.1)', textAlign: 'center', position: 'sticky', top: 0, zIndex: 1 };
 const tdStyle: React.CSSProperties = { padding: '6px 10px', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 13, color: '#e2e8f0', textAlign: 'center', minWidth: 100 };
@@ -49,7 +49,7 @@ const DoDAFPredictionView: React.FC = () => {
       React.createElement('table', { style: { width: '100%', borderCollapse: 'collapse' } },
         React.createElement('thead', null,
           React.createElement('tr', null,
-            React.createElement('th', { style: { ...thStyle, width: 40 } },
+            React.createElement('th', { rowSpan: 2, style: { ...thStyle, width: 40, verticalAlign: 'middle' } },
               React.createElement('input', { type: 'checkbox', checked: selected.size === data.length && data.length > 0, onChange: toggleAll, style: { accentColor: '#3b82f6', cursor: 'pointer' } })
             ),
             React.createElement('th', { rowSpan: 2, style: { ...thStyle, verticalAlign: 'middle' } }, '技术和技能领域'),

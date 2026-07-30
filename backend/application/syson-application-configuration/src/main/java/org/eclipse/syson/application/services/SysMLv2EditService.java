@@ -216,7 +216,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             }
             new ElementInitializerSwitch().doSwitch(eObject);
             // Tag DoDAF elements with appropriate aliasId
-            System.err.println("=== CREATE-CHILD: descId=" + childCreationDescriptionId + " isEl=" + (eObject instanceof Element));
+            System.err.println("=== CREATE-CHILD: descId=" + childCreationDescriptionId + " isEl=" + (eObject instanceof Element) + " isDoDAF=" + this.isDoDAFProject(container));
             if (childCreationDescriptionId.contains("Lifeline") || childCreationDescriptionId.contains("CombinedFragment") || childCreationDescriptionId.contains("StateInvariant") || childCreationDescriptionId.contains("Message")) {
                 String alias;
                 if (childCreationDescriptionId.contains("Lifeline")) alias = "dodaf:Lifeline";
@@ -225,6 +225,119 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 else alias = "dodaf:Message";
                 System.err.println("=== SEQUENCE-ELEMENT: setting alias " + alias);
                 if (eObject instanceof Element created) setAlias(created, alias);
+            } else if (childCreationDescriptionId.contains("OperationalCapability")) {
+                System.err.println("=== OP-CAP: setting alias dodaf:OperationalCapability");
+                if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalCapability");
+            } else if (childCreationDescriptionId.contains("TaskStage")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:TaskStage");
+            } else if (childCreationDescriptionId.contains("EquipCapability")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:EquipCapability");
+            } else if (childCreationDescriptionId.contains("TimeScale")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:TimeScale");
+            } else if (childCreationDescriptionId.contains("TaskIntent")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:TaskIntent");
+            } else if (childCreationDescriptionId.contains("ImplementationPhase")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:ImplementationPhase");
+            } else if (childCreationDescriptionId.contains("Vision") && !childCreationDescriptionId.contains("VisionDescription")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Vision");
+            } else if (childCreationDescriptionId.contains("VisionDescription")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:VisionDescription");
+            } else if (childCreationDescriptionId.contains("Target")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Target");
+            } else if (childCreationDescriptionId.contains("Performer")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Performer");
+            } else if (childCreationDescriptionId.contains("Location")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Location");
+            } else if (childCreationDescriptionId.contains("Condition")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Condition");
+            } else if (childCreationDescriptionId.contains("OperationalTask")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalTask");
+            } else if (childCreationDescriptionId.contains("OperationalModel")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalModel");
+            } else if (childCreationDescriptionId.contains("CommunicationActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:CommunicationActivity");
+            } else if (childCreationDescriptionId.contains("TransmitActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:TransmitActivity");
+            } else if (childCreationDescriptionId.contains("ReceiveActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:ReceiveActivity");
+            } else if (childCreationDescriptionId.contains("ManeuverActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:ManeuverActivity");
+            } else if (childCreationDescriptionId.contains("HoverManeuver")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:HoverManeuver");
+            } else if (childCreationDescriptionId.contains("TransferManeuver")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:TransferManeuver");
+            } else if (childCreationDescriptionId.contains("PlanManeuver")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:PlanManeuver");
+            } else if (childCreationDescriptionId.contains("AnalysisActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:AnalysisActivity");
+            } else if (childCreationDescriptionId.contains("CommandControlActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:CommandControlActivity");
+            } else if (childCreationDescriptionId.contains("DetectionActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:DetectionActivity");
+            } else if (childCreationDescriptionId.contains("StrikeActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:StrikeActivity");
+            } else if (childCreationDescriptionId.contains("DefenseActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:DefenseActivity");
+            } else if (childCreationDescriptionId.contains("SupportActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:SupportActivity");
+            } else if (childCreationDescriptionId.contains("ActivityParameterNode")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:ActivityParameterNode");
+            } else if (childCreationDescriptionId.contains("InitialNode")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:InitialNode");
+            } else if (childCreationDescriptionId.contains("DecisionNode")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:DecisionNode");
+            } else if (childCreationDescriptionId.contains("MergeNode")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:MergeNode");
+            } else if (childCreationDescriptionId.contains("HorizontalForkNode")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:HorizontalForkNode");
+            } else if (childCreationDescriptionId.contains("VerticalForkNode")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:VerticalForkNode");
+            } else if (childCreationDescriptionId.contains("HorizontalJoinNode")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:HorizontalJoinNode");
+            } else if (childCreationDescriptionId.contains("VerticalJoinNode")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:VerticalJoinNode");
+            } else if (childCreationDescriptionId.contains("ActivityFinalNode")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:ActivityFinalNode");
+            } else if (childCreationDescriptionId.contains("FlowFinalNode")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:FlowFinalNode");
+            } else if (childCreationDescriptionId.contains("OpaqueAction")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:OpaqueAction");
+            } else if (childCreationDescriptionId.contains("Signal")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Signal");
+            } else if (childCreationDescriptionId.contains("VerticalPartition")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:VerticalPartition");
+            } else if (childCreationDescriptionId.contains("HorizontalPartition")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:HorizontalPartition");
+            } else if (childCreationDescriptionId.contains("PatrolActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:PatrolActivity");
+            } else if (childCreationDescriptionId.contains("TimeConstraint")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:TimeConstraint");
+            } else if (childCreationDescriptionId.contains("DurationConstraint")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:DurationConstraint");
+            } else if (childCreationDescriptionId.contains("Task") && !childCreationDescriptionId.contains("TaskStage") && !childCreationDescriptionId.contains("TaskIntent")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Task");
+            } else if (childCreationDescriptionId.contains("Force")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Force");
+            } else if (childCreationDescriptionId.contains("Role")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Role");
+            } else if (childCreationDescriptionId.contains("Equipment")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Equipment");
+            } else if (childCreationDescriptionId.contains("OperationalAction")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalAction");
+            } else if (childCreationDescriptionId.contains("ActualOrganization")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:ActualOrganization");
+            } else if (childCreationDescriptionId.contains("ActualPerson")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:ActualPerson");
+            } else if (childCreationDescriptionId.contains("Duty")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Duty");
+            } else if (childCreationDescriptionId.contains("MissionPhase")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:MissionPhase");
+            } else if (childCreationDescriptionId.contains("OperationalProblem")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalProblem");
+            } else if (childCreationDescriptionId.contains("OperationalActivity")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:OperationalActivity");
+            } else if (childCreationDescriptionId.contains("Person") && !childCreationDescriptionId.contains("PersonType")) {
+                if (eObject instanceof Element created) setAlias(created, "dodaf:Person");
             } else if (eObject instanceof Element created && this.isDoDAFProject(container)) {
                 this.tagDoDAFAlias(created, childCreationDescriptionId);
             }
@@ -422,17 +535,120 @@ public class SysMLv2EditService implements IEditServiceDelegate {
     );
 
     private void tagDoDAFAlias(Element element, String childCreationDescriptionId) {
-        log.info("tagDoDAFAlias called: descId=" + childCreationDescriptionId);
+        System.err.println("=== tagDoDAFAlias: descId=" + childCreationDescriptionId);
         if (childCreationDescriptionId != null && childCreationDescriptionId.startsWith("SysMLv2EditService-PartDefinition")) {
             String n = childCreationDescriptionId.contains(":") ? childCreationDescriptionId.substring(childCreationDescriptionId.lastIndexOf(':')+1) : "";
-            // Remove ":Name" suffix before looking up
+            System.err.println("=== tagDoDAFAlias PartDef: n=" + n);
             String aliasedId = n.isEmpty() ? childCreationDescriptionId : childCreationDescriptionId.substring(0, childCreationDescriptionId.lastIndexOf(':'));
             // Map by menu item base name (strip trailing numbers from auto-numbering)
             if (n.startsWith("Capability")) setAlias(element, "dodaf:capability");
+            else if (n.startsWith("OperationalCapability")) setAlias(element, "dodaf:OperationalCapability");
+            else if (n.startsWith("Task") && !n.startsWith("TaskStage") && !n.startsWith("TaskIntent")) setAlias(element, "dodaf:Task");
+            else if (n.startsWith("Force")) setAlias(element, "dodaf:Force");
+            else if (n.startsWith("Role")) setAlias(element, "dodaf:Role");
+            else if (n.startsWith("TaskStage")) setAlias(element, "dodaf:TaskStage");
+            else if (n.startsWith("TaskIntent")) setAlias(element, "dodaf:TaskIntent");
+            else if (n.startsWith("ImplementationPhase")) setAlias(element, "dodaf:ImplementationPhase");
+            else if (n.startsWith("Vision") && !n.startsWith("VisionDescription")) setAlias(element, "dodaf:Vision");
+            else if (n.startsWith("VisionDescription")) setAlias(element, "dodaf:VisionDescription");
+            else if (n.startsWith("Target")) setAlias(element, "dodaf:Target");
+            else if (n.startsWith("Performer")) setAlias(element, "dodaf:Performer");
+            else if (n.startsWith("Location")) setAlias(element, "dodaf:Location");
+            else if (n.startsWith("Condition")) setAlias(element, "dodaf:Condition");
+            else if (n.startsWith("TimeScale")) setAlias(element, "dodaf:TimeScale");
+            else if (n.startsWith("Equipment")) setAlias(element, "dodaf:Equipment");
+            else if (n.startsWith("EquipCapability")) setAlias(element, "dodaf:EquipCapability");
+            else if (n.startsWith("OperationalAction")) setAlias(element, "dodaf:OperationalAction");
+            else if (n.startsWith("OperationalProblem")) setAlias(element, "dodaf:OperationalProblem");
+            else if (n.startsWith("OperationalActivity")) setAlias(element, "dodaf:OperationalActivity");
+            else if (n.startsWith("OperationalTask")) setAlias(element, "dodaf:OperationalTask");
+            else if (n.startsWith("OperationalModel")) setAlias(element, "dodaf:OperationalModel");
+            else if (n.startsWith("CommunicationActivity")) setAlias(element, "dodaf:CommunicationActivity");
+            else if (n.startsWith("TransmitActivity")) setAlias(element, "dodaf:TransmitActivity");
+            else if (n.startsWith("ReceiveActivity")) setAlias(element, "dodaf:ReceiveActivity");
+            else if (n.startsWith("ManeuverActivity")) setAlias(element, "dodaf:ManeuverActivity");
+            else if (n.startsWith("HoverManeuver")) setAlias(element, "dodaf:HoverManeuver");
+            else if (n.startsWith("TransferManeuver")) setAlias(element, "dodaf:TransferManeuver");
+            else if (n.startsWith("PlanManeuver")) setAlias(element, "dodaf:PlanManeuver");
+            else if (n.startsWith("AnalysisActivity")) setAlias(element, "dodaf:AnalysisActivity");
+            else if (n.startsWith("CommandControlActivity")) setAlias(element, "dodaf:CommandControlActivity");
+            else if (n.startsWith("DetectionActivity")) setAlias(element, "dodaf:DetectionActivity");
+            else if (n.startsWith("StrikeActivity")) setAlias(element, "dodaf:StrikeActivity");
+            else if (n.startsWith("DefenseActivity")) setAlias(element, "dodaf:DefenseActivity");
+            else if (n.startsWith("SupportActivity")) setAlias(element, "dodaf:SupportActivity");
+            else if (n.startsWith("ActivityParameterNode")) setAlias(element, "dodaf:ActivityParameterNode");
+            else if (n.startsWith("InitialNode")) setAlias(element, "dodaf:InitialNode");
+            else if (n.startsWith("DecisionNode")) setAlias(element, "dodaf:DecisionNode");
+            else if (n.startsWith("MergeNode")) setAlias(element, "dodaf:MergeNode");
+            else if (n.startsWith("HorizontalForkNode")) setAlias(element, "dodaf:HorizontalForkNode");
+            else if (n.startsWith("VerticalForkNode")) setAlias(element, "dodaf:VerticalForkNode");
+            else if (n.startsWith("HorizontalJoinNode")) setAlias(element, "dodaf:HorizontalJoinNode");
+            else if (n.startsWith("VerticalJoinNode")) setAlias(element, "dodaf:VerticalJoinNode");
+            else if (n.startsWith("ActivityFinalNode")) setAlias(element, "dodaf:ActivityFinalNode");
+            else if (n.startsWith("FlowFinalNode")) setAlias(element, "dodaf:FlowFinalNode");
+            else if (n.startsWith("OpaqueAction")) setAlias(element, "dodaf:OpaqueAction");
+            else if (n.startsWith("Signal")) setAlias(element, "dodaf:Signal");
+            else if (n.startsWith("VerticalPartition")) setAlias(element, "dodaf:VerticalPartition");
+            else if (n.startsWith("HorizontalPartition")) setAlias(element, "dodaf:HorizontalPartition");
+            else if (n.startsWith("PatrolActivity")) setAlias(element, "dodaf:PatrolActivity");
+            else if (n.startsWith("TimeConstraint")) setAlias(element, "dodaf:TimeConstraint");
+            else if (n.startsWith("DurationConstraint")) setAlias(element, "dodaf:DurationConstraint");
+            else if (n.startsWith("ActualOrganization")) setAlias(element, "dodaf:ActualOrganization");
+            else if (n.startsWith("ActualPerson")) setAlias(element, "dodaf:ActualPerson");
+            else if (n.startsWith("Duty")) setAlias(element, "dodaf:Duty");
+            else if (n.startsWith("MissionPhase")) setAlias(element, "dodaf:MissionPhase");
+            else if (n.startsWith("Person") && !n.startsWith("PersonType")) setAlias(element, "dodaf:Person");
             else if (n.startsWith("Lifeline")) setAlias(element, "dodaf:Lifeline");
             else if (n.startsWith("OperationalNode")) setAlias(element, "dodaf:operational");
-            else if (n.startsWith("SystemNode")) setAlias(element, "dodaf:system");
+            else if (n.startsWith("OrganizationType")) setAlias(element, "dodaf:OrganizationType");
             else if (n.startsWith("Organization")) setAlias(element, "dodaf:organization");
+            else if (n.startsWith("PersonType")) setAlias(element, "dodaf:PersonType");
+            else if (n.startsWith("System") && !n.startsWith("SystemNode")) setAlias(element, "dodaf:System");
+            else if (n.startsWith("SystemNode")) setAlias(element, "dodaf:system");
+            else if (n.startsWith("CapabilityConfiguration")) setAlias(element, "dodaf:CapabilityConfiguration");
+            else if (n.startsWith("ResourcePort")) setAlias(element, "dodaf:ResourcePort");
+            else if (n.startsWith("Software")) setAlias(element, "dodaf:Software");
+            else if (n.startsWith("TechnicalStandard")) setAlias(element, "dodaf:TechnicalStandard");
+            else if (n.startsWith("FunctionStandard")) setAlias(element, "dodaf:FunctionStandard");
+            else if (n.startsWith("Protocol")) setAlias(element, "dodaf:Protocol");
+            else if (n.startsWith("StandardConfiguration")) setAlias(element, "dodaf:StandardConfiguration");
+            else if (n.startsWith("Function") && !n.startsWith("FunctionStandard")) setAlias(element, "dodaf:Function");
+            else if (n.startsWith("ServiceAccess")) setAlias(element, "dodaf:ServiceAccess");
+            else if (n.startsWith("ServiceInterface")) setAlias(element, "dodaf:ServiceInterface");
+            else if (n.startsWith("LocationType")) setAlias(element, "dodaf:LocationType");
+            else if (n.startsWith("ActualProjectMilestone")) setAlias(element, "dodaf:ActualProjectMilestone");
+            else if (n.startsWith("ProjectActivity")) setAlias(element, "dodaf:ProjectActivity");
+            else if (n.startsWith("ProjectMilestone")) setAlias(element, "dodaf:ProjectMilestone");
+            else if (n.startsWith("ProjectType")) setAlias(element, "dodaf:ProjectType");
+            else if (n.startsWith("Project") && !n.startsWith("ProjectActivity") && !n.startsWith("ProjectMilestone") && !n.startsWith("ProjectType")) setAlias(element, "dodaf:Project");
+            else if (n.startsWith("StateIndicator")) setAlias(element, "dodaf:StateIndicator");
+            else if (n.startsWith("ConceptEntity")) setAlias(element, "dodaf:ConceptEntity");
+            else if (n.startsWith("LogicalEntity")) setAlias(element, "dodaf:LogicalEntity");
+            else if (n.startsWith("LogicalMeasure")) setAlias(element, "dodaf:LogicalMeasure");
+            else if (n.startsWith("LogicalDataModel")) setAlias(element, "dodaf:LogicalDataModel");
+            else if (n.startsWith("LogicalMeasurementSystem")) setAlias(element, "dodaf:LogicalMeasurementSystem");
+            else if (n.startsWith("Entity") && !n.startsWith("ConceptEntity")) setAlias(element, "dodaf:Entity");
+            else if (n.startsWith("ArchitectureMetadataDescription")) setAlias(element, "dodaf:ArchitectureMetadataDescription");
+            else if (n.startsWith("ArchitectureDescription")) setAlias(element, "dodaf:ArchitectureDescription");
+            else if (n.startsWith("TopLevelOperationalConcept")) setAlias(element, "dodaf:TopLevelOperationalConcept");
+            else if (n.startsWith("MissionIntent")) setAlias(element, "dodaf:MissionIntent");
+            else if (n.startsWith("MissionBackground")) setAlias(element, "dodaf:MissionBackground");
+            else if (n.startsWith("Objective")) setAlias(element, "dodaf:Objective");
+            else if (n.startsWith("Environment")) setAlias(element, "dodaf:Environment");
+            else if (n.startsWith("Interface")) setAlias(element, "dodaf:Interface");
+            else if (n.startsWith("NodePort")) setAlias(element, "dodaf:NodePort");
+            else if (n.startsWith("ExecutionSpecification")) setAlias(element, "dodaf:ExecutionSpecification");
+            else if (n.startsWith("Interaction")) setAlias(element, "dodaf:Interaction");
+            else if (n.startsWith("PhysicalDataModel")) setAlias(element, "dodaf:PhysicalDataModel");
+            else if (n.startsWith("PlatformEntity")) setAlias(element, "dodaf:PlatformEntity");
+            else if (n.startsWith("ConceptObservable")) setAlias(element, "dodaf:ConceptObservable");
+            else if (n.startsWith("ExchangeElement")) setAlias(element, "dodaf:ExchangeElement");
+            else if (n.startsWith("InformationTransmissionPattern")) setAlias(element, "dodaf:InformationTransmissionPattern");
+            else if (n.startsWith("InformationElement")) setAlias(element, "dodaf:InformationElement");
+            else if (n.startsWith("Information")) setAlias(element, "dodaf:Information");
+            else if (n.startsWith("EffectivenessIndicatorParameter")) setAlias(element, "dodaf:EffectivenessIndicatorParameter");
+            else if (n.startsWith("EffectivenessIndicator")) setAlias(element, "dodaf:EffectivenessIndicator");
+            else if (n.startsWith("Command")) setAlias(element, "dodaf:Command");
             else {
                 String alias = DODAF_TYPE_TO_ALIAS.get(aliasedId);
                 if (alias != null && !element.getAliasIds().contains(alias)) element.getAliasIds().add(alias);
@@ -453,6 +669,9 @@ public class SysMLv2EditService implements IEditServiceDelegate {
         }
     }
     private void setAlias(Element element, String alias) {
-        if (!element.getAliasIds().contains(alias)) element.getAliasIds().add(alias);
+        if (!element.getAliasIds().contains(alias)) {
+            element.getAliasIds().add(alias);
+            System.err.println("=== setAlias: ADDED " + alias + " -> " + element.getAliasIds());
+        }
     }
 }

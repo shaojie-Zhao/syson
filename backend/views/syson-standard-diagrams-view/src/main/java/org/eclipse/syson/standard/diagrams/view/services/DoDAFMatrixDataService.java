@@ -65,7 +65,15 @@ public class DoDAFMatrixDataService {
         return List.of();
     }
 
-    private org.eclipse.emf.ecore.resource.ResourceSet getRS(String pid) {
+    public org.eclipse.emf.ecore.resource.ResourceSet getRSByEcId(String ecId) {
+        var optEc = editingContextSearchService.findById(ecId);
+        if (optEc.isPresent() && optEc.get() instanceof IEMFEditingContext e) {
+            return e.getDomain().getResourceSet();
+        }
+        return null;
+    }
+
+    public org.eclipse.emf.ecore.resource.ResourceSet getRS(String pid) {
         return resourceSetCache.computeIfAbsent(pid, p -> {
             try {
                 String cid = ctxIdCache.computeIfAbsent(p, k -> projectEditingContextService.getEditingContextId(k).orElse(null));
