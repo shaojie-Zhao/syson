@@ -227,6 +227,14 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "Protocol";
         } else if (element.getAliasIds().contains("dodaf:StandardConfiguration")) {
             return "StandardConfiguration";
+        } else if (element.getAliasIds().contains("dodaf:Function")) {
+            return "Function";
+        } else if (element.getAliasIds().contains("dodaf:ServiceAccess")) {
+            return "ServiceAccess";
+        } else if (element.getAliasIds().contains("dodaf:ServiceInterface")) {
+            return "ServiceInterface";
+        } else if (element.getAliasIds().contains("dodaf:LocationType")) {
+            return "LocationType";
         } else if (element.getAliasIds().contains("dodaf:TimeScale")) {
             return "TimeScale";
         } else if (element.getAliasIds().contains("dodaf:EquipCapability")) {

@@ -1401,6 +1401,38 @@
               imgSC.alt = 'StandardConfiguration';
             }
           }
+          // --- Function ---
+          else if (txt.indexOf('Function') >= 0 && txt.indexOf('FunctionStandard') < 0) {
+            var imgFN = n.querySelector('img');
+            if (imgFN && imgFN.src.indexOf('FunctionSVG') < 0) {
+              imgFN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="5" cy="5" r="3" fill="#22c55e"/><line x1="8" y1="5" x2="13" y2="5" stroke="#22c55e" stroke-width="1.5"/><line x1="3" y1="11" x2="13" y2="11" stroke="#22c55e" stroke-width="1.5"/></svg>');
+              imgFN.alt = 'Function'; imgFN.setAttribute('data-fn-icon','1');
+            }
+          }
+          // --- ServiceAccess ---
+          else if (txt.indexOf('ServiceAccess') >= 0) {
+            var imgSAc = n.querySelector('img');
+            if (imgSAc && imgSAc.src.indexOf('ServiceAccess') < 0) {
+              imgSAc.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="3" y="4" width="10" height="8" rx="2" fill="#3b82f6"/><line x1="6" y1="4" x2="6" y2="12" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgSAc.alt = 'ServiceAccess';
+            }
+          }
+          // --- ServiceInterface ---
+          else if (txt.indexOf('ServiceInterface') >= 0) {
+            var imgSI = n.querySelector('img');
+            if (imgSI && imgSI.src.indexOf('ServiceInterface') < 0) {
+              imgSI.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="4" y="3" width="8" height="10" rx="1" fill="#3b82f6"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
+              imgSI.alt = 'ServiceInterface';
+            }
+          }
+          // --- LocationType ---
+          else if (txt.indexOf('LocationType') >= 0) {
+            var imgLT = n.querySelector('img');
+            if (imgLT && imgLT.src.indexOf('LocationType') < 0) {
+              imgLT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="5" r="3" fill="#f97316"/><polygon points="5,7 11,7 13,14 3,14" fill="none" stroke="#f97316" stroke-width="1"/></svg>');
+              imgLT.alt = 'LocationType';
+            }
+          }
           // --- StrikeActivity ---
           else if (txt.indexOf('StrikeActivity') >= 0) {
             var imgAC = n.querySelector('img');
@@ -1945,6 +1977,38 @@
             if (imgSC && imgSC.src.indexOf('StandardConfiguration') < 0) {
               imgSC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#3b82f6"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
               imgSC.alt = 'StandardConfiguration'; it.setAttribute('data-sc-icon', '1');
+            }
+          }
+          // Function tree icon
+          if (it.getAttribute('data-fn-icon') !== '1' && label.textContent.indexOf('Function') >= 0 && label.textContent.indexOf('FunctionStandard') < 0) {
+            var imgFN = it.querySelector('img');
+            if (imgFN && imgFN.src.indexOf('FunctionSVG') < 0) {
+              imgFN.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="5" cy="5" r="3" fill="#22c55e"/><line x1="8" y1="5" x2="13" y2="5" stroke="#22c55e" stroke-width="1.5"/><line x1="3" y1="11" x2="13" y2="11" stroke="#22c55e" stroke-width="1.5"/></svg>');
+              imgFN.alt = 'Function'; it.setAttribute('data-fn-icon', '1');
+            }
+          }
+          // ServiceAccess tree icon
+          if (it.getAttribute('data-sac-icon') !== '1' && label.textContent.indexOf('ServiceAccess') >= 0) {
+            var imgSAc = it.querySelector('img');
+            if (imgSAc && imgSAc.src.indexOf('ServiceAccess') < 0) {
+              imgSAc.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="3" y="4" width="10" height="8" rx="2" fill="#3b82f6"/><line x1="6" y1="4" x2="6" y2="12" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgSAc.alt = 'ServiceAccess'; it.setAttribute('data-sac-icon', '1');
+            }
+          }
+          // ServiceInterface tree icon
+          if (it.getAttribute('data-si-icon') !== '1' && label.textContent.indexOf('ServiceInterface') >= 0) {
+            var imgSI = it.querySelector('img');
+            if (imgSI && imgSI.src.indexOf('ServiceInterface') < 0) {
+              imgSI.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="4" y="3" width="8" height="10" rx="1" fill="#3b82f6"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
+              imgSI.alt = 'ServiceInterface'; it.setAttribute('data-si-icon', '1');
+            }
+          }
+          // LocationType tree icon
+          if (it.getAttribute('data-lt-icon') !== '1' && label.textContent.indexOf('LocationType') >= 0) {
+            var imgLT = it.querySelector('img');
+            if (imgLT && imgLT.src.indexOf('LocationType') < 0) {
+              imgLT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><circle cx="8" cy="5" r="3" fill="#f97316"/><polygon points="5,7 11,7 13,14 3,14" fill="none" stroke="#f97316" stroke-width="1"/></svg>');
+              imgLT.alt = 'LocationType'; it.setAttribute('data-lt-icon', '1');
             }
           }
           // StrikeActivity tree icon
