@@ -261,6 +261,20 @@ public class MultiLineLabelSwitch extends SysmlSwitch<String> {
             return "LogicalMeasurementSystem";
         } else if (element.getAliasIds().contains("dodaf:Entity")) {
             return "Entity";
+        } else if (element.getAliasIds().contains("dodaf:ArchitectureMetadataDescription")) {
+            return "ArchitectureMetadataDescription";
+        } else if (element.getAliasIds().contains("dodaf:ArchitectureDescription")) {
+            return "ArchitectureDescription";
+        } else if (element.getAliasIds().contains("dodaf:TopLevelOperationalConcept")) {
+            return "TopLevelOperationalConcept";
+        } else if (element.getAliasIds().contains("dodaf:MissionIntent")) {
+            return "MissionIntent";
+        } else if (element.getAliasIds().contains("dodaf:MissionBackground")) {
+            return "MissionBackground";
+        } else if (element.getAliasIds().contains("dodaf:Objective")) {
+            return "Objective";
+        } else if (element.getAliasIds().contains("dodaf:Environment")) {
+            return "Environment";
         } else if (element.getAliasIds().contains("dodaf:ConceptObservable")) {
             return "ConceptObservable";
         } else if (element.getAliasIds().contains("dodaf:ExchangeElement")) {
