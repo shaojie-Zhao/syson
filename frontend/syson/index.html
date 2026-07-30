@@ -1441,6 +1441,54 @@
               imgIF.alt = 'Interface'; imgIF.setAttribute('data-if-icon','1');
             }
           }
+          // --- Project ---
+          else if (txt.indexOf('Project') >= 0 && txt.indexOf('ProjectActivity') < 0 && txt.indexOf('ProjectMilestone') < 0 && txt.indexOf('ProjectType') < 0) {
+            var imgPJ = n.querySelector('img');
+            if (imgPJ && imgPJ.src.indexOf('ProjectSVG') < 0) {
+              imgPJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M3 3h10v10H3z" fill="#3b82f6"/><path d="M3 6h10" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgPJ.alt = 'Project'; imgPJ.setAttribute('data-pj-icon','1');
+            }
+          }
+          // --- ProjectType ---
+          else if (txt.indexOf('ProjectType') >= 0) {
+            var imgPTy = n.querySelector('img');
+            if (imgPTy && imgPTy.src.indexOf('ProjectType') < 0) {
+              imgPTy.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="2" width="10" height="12" rx="1" fill="#14b8a6"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="8" font-weight="bold">P</text></svg>');
+              imgPTy.alt = 'ProjectType';
+            }
+          }
+          // --- ProjectActivity ---
+          else if (txt.indexOf('ProjectActivity') >= 0) {
+            var imgPAc = n.querySelector('img');
+            if (imgPAc && imgPAc.src.indexOf('ProjectActivity') < 0) {
+              imgPAc.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#22c55e"/><polygon points="7,6 7,10 11,8" fill="#1e293b"/></svg>');
+              imgPAc.alt = 'ProjectActivity';
+            }
+          }
+          // --- StateIndicator ---
+          else if (txt.indexOf('StateIndicator') >= 0) {
+            var imgSIc = n.querySelector('img');
+            if (imgSIc && imgSIc.src.indexOf('StateIndicator') < 0) {
+              imgSIc.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#f59e0b"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
+              imgSIc.alt = 'StateIndicator';
+            }
+          }
+          // --- ProjectMilestone ---
+          else if (txt.indexOf('ProjectMilestone') >= 0) {
+            var imgPM = n.querySelector('img');
+            if (imgPM && imgPM.src.indexOf('ProjectMilestone') < 0) {
+              imgPM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><polygon points="4,2 12,2 12,10 8,13 4,10" fill="#8b5cf6"/></svg>');
+              imgPM.alt = 'ProjectMilestone';
+            }
+          }
+          // --- ActualProjectMilestone ---
+          else if (txt.indexOf('ActualProjectMilestone') >= 0) {
+            var imgAPM = n.querySelector('img');
+            if (imgAPM && imgAPM.src.indexOf('ActualProjectMilestone') < 0) {
+              imgAPM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><polygon points="4,2 12,2 12,10 8,13 4,10" fill="#f97316"/><circle cx="8" cy="6" r="1.5" fill="#1e293b"/></svg>');
+              imgAPM.alt = 'ActualProjectMilestone';
+            }
+          }
           // --- StrikeActivity ---
           else if (txt.indexOf('StrikeActivity') >= 0) {
             var imgAC = n.querySelector('img');
@@ -2025,6 +2073,54 @@
             if (imgIF && imgIF.src.indexOf('InterfaceSVG') < 0) {
               imgIF.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/><rect x="9" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/></svg>');
               imgIF.alt = 'Interface'; it.setAttribute('data-if-icon', '1');
+            }
+          }
+          // Project tree icon
+          if (it.getAttribute('data-pj-icon') !== '1' && label.textContent.indexOf('Project') >= 0 && label.textContent.indexOf('ProjectActivity') < 0 && label.textContent.indexOf('ProjectMilestone') < 0 && label.textContent.indexOf('ProjectType') < 0) {
+            var imgPJ = it.querySelector('img');
+            if (imgPJ && imgPJ.src.indexOf('ProjectSVG') < 0) {
+              imgPJ.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M3 3h10v10H3z" fill="#3b82f6"/><path d="M3 6h10" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgPJ.alt = 'Project'; it.setAttribute('data-pj-icon', '1');
+            }
+          }
+          // ProjectType tree icon
+          if (it.getAttribute('data-pty-icon') !== '1' && label.textContent.indexOf('ProjectType') >= 0) {
+            var imgPTy = it.querySelector('img');
+            if (imgPTy && imgPTy.src.indexOf('ProjectType') < 0) {
+              imgPTy.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><rect x="3" y="2" width="10" height="12" rx="1" fill="#14b8a6"/><text x="8" y="11" text-anchor="middle" fill="#1e293b" font-size="8" font-weight="bold">P</text></svg>');
+              imgPTy.alt = 'ProjectType'; it.setAttribute('data-pty-icon', '1');
+            }
+          }
+          // ProjectActivity tree icon
+          if (it.getAttribute('data-pac-icon') !== '1' && label.textContent.indexOf('ProjectActivity') >= 0) {
+            var imgPAc = it.querySelector('img');
+            if (imgPAc && imgPAc.src.indexOf('ProjectActivity') < 0) {
+              imgPAc.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#22c55e"/><polygon points="7,6 7,10 11,8" fill="#1e293b"/></svg>');
+              imgPAc.alt = 'ProjectActivity'; it.setAttribute('data-pac-icon', '1');
+            }
+          }
+          // StateIndicator tree icon
+          if (it.getAttribute('data-sic-icon') !== '1' && label.textContent.indexOf('StateIndicator') >= 0) {
+            var imgSIc = it.querySelector('img');
+            if (imgSIc && imgSIc.src.indexOf('StateIndicator') < 0) {
+              imgSIc.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#f59e0b"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
+              imgSIc.alt = 'StateIndicator'; it.setAttribute('data-sic-icon', '1');
+            }
+          }
+          // ProjectMilestone tree icon
+          if (it.getAttribute('data-pm-icon') !== '1' && label.textContent.indexOf('ProjectMilestone') >= 0) {
+            var imgPM = it.querySelector('img');
+            if (imgPM && imgPM.src.indexOf('ProjectMilestone') < 0) {
+              imgPM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><polygon points="4,2 12,2 12,10 8,13 4,10" fill="#8b5cf6"/></svg>');
+              imgPM.alt = 'ProjectMilestone'; it.setAttribute('data-pm-icon', '1');
+            }
+          }
+          // ActualProjectMilestone tree icon
+          if (it.getAttribute('data-apm-icon') !== '1' && label.textContent.indexOf('ActualProjectMilestone') >= 0) {
+            var imgAPM = it.querySelector('img');
+            if (imgAPM && imgAPM.src.indexOf('ActualProjectMilestone') < 0) {
+              imgAPM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/><polygon points="4,2 12,2 12,10 8,13 4,10" fill="#f97316"/><circle cx="8" cy="6" r="1.5" fill="#1e293b"/></svg>');
+              imgAPM.alt = 'ActualProjectMilestone'; it.setAttribute('data-apm-icon', '1');
             }
           }
           // StrikeActivity tree icon

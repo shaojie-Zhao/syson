@@ -616,7 +616,12 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             else if (n.startsWith("ServiceAccess")) setAlias(element, "dodaf:ServiceAccess");
             else if (n.startsWith("ServiceInterface")) setAlias(element, "dodaf:ServiceInterface");
             else if (n.startsWith("LocationType")) setAlias(element, "dodaf:LocationType");
-            else if (n.startsWith("Interface")) setAlias(element, "dodaf:Interface");
+            else if (n.startsWith("ActualProjectMilestone")) setAlias(element, "dodaf:ActualProjectMilestone");
+            else if (n.startsWith("ProjectActivity")) setAlias(element, "dodaf:ProjectActivity");
+            else if (n.startsWith("ProjectMilestone")) setAlias(element, "dodaf:ProjectMilestone");
+            else if (n.startsWith("ProjectType")) setAlias(element, "dodaf:ProjectType");
+            else if (n.startsWith("Project") && !n.startsWith("ProjectActivity") && !n.startsWith("ProjectMilestone") && !n.startsWith("ProjectType")) setAlias(element, "dodaf:Project");
+            else if (n.startsWith("StateIndicator")) setAlias(element, "dodaf:StateIndicator");
             else {
                 String alias = DODAF_TYPE_TO_ALIAS.get(aliasedId);
                 if (alias != null && !element.getAliasIds().contains(alias)) element.getAliasIds().add(alias);
