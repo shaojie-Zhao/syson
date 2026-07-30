@@ -2166,47 +2166,173 @@
             }
           }
           // ConceptEntity tree icon
-          if (label.textContent.indexOf('ConceptEntity') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('ConceptEnt')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#06b6d4"/><circle cx="8" cy="8" r="1.5" fill="#1e293b"/></svg>');i.alt='ConceptEntity';}}
+          if (it.getAttribute('data-ce-icon') !== '1' && label.textContent.indexOf('ConceptEntity') >= 0) {
+            var imgCE = it.querySelector('img');
+            if (imgCE && imgCE.src.indexOf('ConceptEnt') < 0) {
+              imgCE.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#06b6d4"/><circle cx="8" cy="8" r="1.5" fill="#1e293b"/></svg>');
+              imgCE.alt = 'ConceptEntity'; it.setAttribute('data-ce-icon', '1');
+            }
+          }
           // ConceptObservable tree icon
-          if (label.textContent.indexOf('ConceptObservable') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('ConceptObs')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#06b6d4" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#06b6d4"/></svg>');i.alt='ConceptObservable';}}
+          if (it.getAttribute('data-co-icon') !== '1' && label.textContent.indexOf('ConceptObservable') >= 0) {
+            var imgCO = it.querySelector('img');
+            if (imgCO && imgCO.src.indexOf('ConceptObs') < 0) {
+              imgCO.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#06b6d4" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#06b6d4"/></svg>');
+              imgCO.alt = 'ConceptObservable'; it.setAttribute('data-co-icon', '1');
+            }
+          }
           // ExchangeElement tree icon
-          if (label.textContent.indexOf('ExchangeElement') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('Exchange')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><path d="M3 8h10M7 4l-4 4 4 4" fill="none" stroke="#8b5cf6" stroke-width="1.5"/></svg>');i.alt='ExchangeElement';}}
+          if (it.getAttribute('data-ee-icon') !== '1' && label.textContent.indexOf('ExchangeElement') >= 0) {
+            var imgEE = it.querySelector('img');
+            if (imgEE && imgEE.src.indexOf('Exchange') < 0) {
+              imgEE.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><path d="M3 8h10M7 4l-4 4 4 4" fill="none" stroke="#8b5cf6" stroke-width="1.5"/></svg>');
+              imgEE.alt = 'ExchangeElement'; it.setAttribute('data-ee-icon', '1');
+            }
+          }
           // Information tree icon
-          if (label.textContent.indexOf('Information') >= 0 && label.textContent.indexOf('InformationElement') < 0 && label.textContent.indexOf('InformationTransmissionPattern') < 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('InfoSVG')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><circle cx="8" cy="5" r="1.5" fill="#3b82f6"/><rect x="6" y="8" width="4" height="5" fill="#3b82f6"/></svg>');i.alt='Information';it.setAttribute('data-info-icon','1');}}
+          if (it.getAttribute('data-ifo-icon') !== '1' && label.textContent.indexOf('Information') >= 0 && label.textContent.indexOf('InformationElement') < 0 && label.textContent.indexOf('InformationTransmissionPattern') < 0) {
+            var imgIFO = it.querySelector('img');
+            if (imgIFO && imgIFO.src.indexOf('InfoSVG') < 0) {
+              imgIFO.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><circle cx="8" cy="5" r="1.5" fill="#3b82f6"/><rect x="6" y="8" width="4" height="5" fill="#3b82f6"/></svg>');
+              imgIFO.alt = 'Information'; it.setAttribute('data-ifo-icon', '1');
+            }
+          }
           // InformationElement tree icon
-          if (label.textContent.indexOf('InformationElement') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('InfoEl')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#3b82f6"/><circle cx="8" cy="6" r="1" fill="#1e293b"/><rect x="6" y="8" width="4" height="4" fill="#1e293b"/></svg>');i.alt='InformationElement';}}
+          if (it.getAttribute('data-ie-icon') !== '1' && label.textContent.indexOf('InformationElement') >= 0) {
+            var imgIE = it.querySelector('img');
+            if (imgIE && imgIE.src.indexOf('InfoEl') < 0) {
+              imgIE.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#3b82f6"/><circle cx="8" cy="6" r="1" fill="#1e293b"/><rect x="6" y="8" width="4" height="4" fill="#1e293b"/></svg>');
+              imgIE.alt = 'InformationElement'; it.setAttribute('data-ie-icon', '1');
+            }
+          }
           // InformationTransmissionPattern tree icon
-          if (label.textContent.indexOf('InformationTransmissionPattern') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('InfoTrans')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="2" y="3" width="12" height="10" rx="1" fill="none" stroke="#3b82f6" stroke-width="1"/><path d="M4 6h8M4 9h5" stroke="#3b82f6" stroke-width="1.5"/></svg>');i.alt='InfoTransPattern';}}
+          if (it.getAttribute('data-itp-icon') !== '1' && label.textContent.indexOf('InformationTransmissionPattern') >= 0) {
+            var imgITP = it.querySelector('img');
+            if (imgITP && imgITP.src.indexOf('InfoTrans') < 0) {
+              imgITP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="2" y="3" width="12" height="10" rx="1" fill="none" stroke="#3b82f6" stroke-width="1"/><path d="M4 6h8M4 9h5" stroke="#3b82f6" stroke-width="1.5"/></svg>');
+              imgITP.alt = 'InfoTransPattern'; it.setAttribute('data-itp-icon', '1');
+            }
+          }
           // EffectivenessIndicator tree icon
-          if (label.textContent.indexOf('EffectivenessIndicator') >= 0 && label.textContent.indexOf('EffectivenessIndicatorParameter') < 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('EffInd')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#f59e0b"/><path d="M6 7l2 2 3-4" fill="none" stroke="#1e293b" stroke-width="1.5"/></svg>');i.alt='EffectivenessIndicator';it.setAttribute('data-ei-icon','1');}}
+          if (it.getAttribute('data-ei2-icon') !== '1' && label.textContent.indexOf('EffectivenessIndicator') >= 0 && label.textContent.indexOf('EffectivenessIndicatorParameter') < 0) {
+            var imgEI2 = it.querySelector('img');
+            if (imgEI2 && imgEI2.src.indexOf('EffInd') < 0) {
+              imgEI2.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#f59e0b"/><path d="M6 7l2 2 3-4" fill="none" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgEI2.alt = 'EffectivenessIndicator'; it.setAttribute('data-ei2-icon', '1');
+            }
+          }
           // EffectivenessIndicatorParameter tree icon
-          if (label.textContent.indexOf('EffectivenessIndicatorParameter') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('EffIndPar')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="1.5" fill="#f59e0b"/></svg>');i.alt='EffIndParameter';}}
+          if (it.getAttribute('data-eip-icon') !== '1' && label.textContent.indexOf('EffectivenessIndicatorParameter') >= 0) {
+            var imgEIP = it.querySelector('img');
+            if (imgEIP && imgEIP.src.indexOf('EffIndPar') < 0) {
+              imgEIP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#f59e0b" stroke-width="1.5"/><circle cx="8" cy="8" r="1.5" fill="#f59e0b"/></svg>');
+              imgEIP.alt = 'EffIndParameter'; it.setAttribute('data-eip-icon', '1');
+            }
+          }
           // Command tree icon
-          if (label.textContent.indexOf('Command') >= 0 && label.textContent.indexOf('CommandControlActivity') < 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('CmdSVG')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><polygon points="6,3 14,8 6,13" fill="#ef4444"/></svg>');i.alt='Command';it.setAttribute('data-cmd-icon','1');}}
+          if (it.getAttribute('data-cmd2-icon') !== '1' && label.textContent.indexOf('Command') >= 0 && label.textContent.indexOf('CommandControlActivity') < 0) {
+            var imgCMD2 = it.querySelector('img');
+            if (imgCMD2 && imgCMD2.src.indexOf('CmdSVG') < 0) {
+              imgCMD2.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><polygon points="6,3 14,8 6,13" fill="#ef4444"/></svg>');
+              imgCMD2.alt = 'Command'; it.setAttribute('data-cmd2-icon', '1');
+            }
+          }
           // LogicalEntity tree icon
-          if (label.textContent.indexOf('LogicalEntity') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('LogicalEnt')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><ellipse cx="8" cy="5" rx="5" ry="2" fill="#06b6d4"/><rect x="3" y="5" width="10" height="6" fill="#06b6d4"/><ellipse cx="8" cy="11" rx="5" ry="2" fill="#06b6d4"/></svg>');i.alt='LogicalEntity';it.setAttribute('data-le-icon','1');}}
+          if (it.getAttribute('data-le-icon') !== '1' && label.textContent.indexOf('LogicalEntity') >= 0) {
+            var imgLE = it.querySelector('img');
+            if (imgLE && imgLE.src.indexOf('LogicalEnt') < 0) {
+              imgLE.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/><ellipse cx="8" cy="5" rx="5" ry="2" fill="#06b6d4"/><rect x="3" y="5" width="10" height="6" fill="#06b6d4"/><ellipse cx="8" cy="11" rx="5" ry="2" fill="#06b6d4"/></svg>');
+              imgLE.alt = 'LogicalEntity'; it.setAttribute('data-le-icon', '1');
+            }
+          }
           // LogicalMeasure tree icon
-          if (label.textContent.indexOf('LogicalMeasure') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('LogicalMeas')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><rect x="3" y="2" width="10" height="12" fill="#f59e0b"/><line x1="5" y1="5" x2="11" y2="5" stroke="#1e293b" stroke-width="1"/><line x1="5" y1="8" x2="9" y2="8" stroke="#1e293b" stroke-width="1"/></svg>');i.alt='LogicalMeasure';}}
+          if (it.getAttribute('data-lm-icon') !== '1' && label.textContent.indexOf('LogicalMeasure') >= 0) {
+            var imgLM = it.querySelector('img');
+            if (imgLM && imgLM.src.indexOf('LogicalMeas') < 0) {
+              imgLM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><rect x="3" y="2" width="10" height="12" fill="#f59e0b"/><line x1="5" y1="5" x2="11" y2="5" stroke="#1e293b" stroke-width="1"/><line x1="5" y1="8" x2="9" y2="8" stroke="#1e293b" stroke-width="1"/></svg>');
+              imgLM.alt = 'LogicalMeasure'; it.setAttribute('data-lm-icon', '1');
+            }
+          }
           // LogicalDataModel tree icon
-          if (label.textContent.indexOf('LogicalDataModel') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('LogicalDM')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><ellipse cx="8" cy="4" rx="5" ry="2" fill="#3b82f6"/><rect x="3" y="4" width="10" height="8" fill="#3b82f6"/><ellipse cx="8" cy="12" rx="5" ry="2" fill="#3b82f6"/></svg>');i.alt='LogicalDataModel';}}
+          if (it.getAttribute('data-ldm-icon') !== '1' && label.textContent.indexOf('LogicalDataModel') >= 0) {
+            var imgLDM = it.querySelector('img');
+            if (imgLDM && imgLDM.src.indexOf('LogicalDM') < 0) {
+              imgLDM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><ellipse cx="8" cy="4" rx="5" ry="2" fill="#3b82f6"/><rect x="3" y="4" width="10" height="8" fill="#3b82f6"/><ellipse cx="8" cy="12" rx="5" ry="2" fill="#3b82f6"/></svg>');
+              imgLDM.alt = 'LogicalDataModel'; it.setAttribute('data-ldm-icon', '1');
+            }
+          }
           // LogicalMeasurementSystem tree icon
-          if (label.textContent.indexOf('LogicalMeasurementSystem') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('LogicalMS')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><circle cx="5" cy="5" r="2" fill="#14b8a6"/><circle cx="11" cy="5" r="2" fill="#14b8a6"/><circle cx="8" cy="11" r="2" fill="#14b8a6"/><line x1="7" y1="5" x2="9" y2="5" stroke="#14b8a6" stroke-width="1"/><line x1="6" y1="7" x2="7" y2="10" stroke="#14b8a6" stroke-width="1"/><line x1="10" y1="7" x2="9" y2="10" stroke="#14b8a6" stroke-width="1"/></svg>');i.alt='LogicalMeasSys';}}
+          if (it.getAttribute('data-lms-icon') !== '1' && label.textContent.indexOf('LogicalMeasurementSystem') >= 0) {
+            var imgLMS = it.querySelector('img');
+            if (imgLMS && imgLMS.src.indexOf('LogicalMS') < 0) {
+              imgLMS.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><circle cx="5" cy="5" r="2" fill="#14b8a6"/><circle cx="11" cy="5" r="2" fill="#14b8a6"/><circle cx="8" cy="11" r="2" fill="#14b8a6"/><line x1="7" y1="5" x2="9" y2="5" stroke="#14b8a6" stroke-width="1"/><line x1="6" y1="7" x2="7" y2="10" stroke="#14b8a6" stroke-width="1"/><line x1="10" y1="7" x2="9" y2="10" stroke="#14b8a6" stroke-width="1"/></svg>');
+              imgLMS.alt = 'LogicalMeasSys'; it.setAttribute('data-lms-icon', '1');
+            }
+          }
           // Entity tree icon
-          if (label.textContent.indexOf('Entity') >= 0 && label.textContent.indexOf('ConceptEntity') < 0 && label.textContent.indexOf('LogicalEntity') < 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('EntSVG')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#8b5cf6"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');i.alt='Entity';it.setAttribute('data-ent-icon','1');}}
+          if (it.getAttribute('data-ent2-icon') !== '1' && label.textContent.indexOf('Entity') >= 0 && label.textContent.indexOf('ConceptEntity') < 0 && label.textContent.indexOf('LogicalEntity') < 0) {
+            var imgENT2 = it.querySelector('img');
+            if (imgENT2 && imgENT2.src.indexOf('EntSVG') < 0) {
+              imgENT2.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#8b5cf6"/><circle cx="8" cy="8" r="2" fill="#1e293b"/></svg>');
+              imgENT2.alt = 'Entity'; it.setAttribute('data-ent2-icon', '1');
+            }
+          }
           // ArchitectureDescription tree icon
-          if (label.textContent.indexOf('ArchitectureDescription') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('ArchDesc')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M3 3h10v3H3zM3 8h10v5H3z" fill="#3b82f6"/></svg>');i.alt='ArchitectureDescription';it.setAttribute('data-ad-icon','1');}}
+          if (it.getAttribute('data-ad-icon') !== '1' && label.textContent.indexOf('ArchitectureDescription') >= 0) {
+            var imgAD = it.querySelector('img');
+            if (imgAD && imgAD.src.indexOf('ArchDesc') < 0) {
+              imgAD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M3 3h10v3H3zM3 8h10v5H3z" fill="#3b82f6"/></svg>');
+              imgAD.alt = 'ArchitectureDescription'; it.setAttribute('data-ad-icon', '1');
+            }
+          }
           // ArchitectureMetadataDescription tree icon
-          if (label.textContent.indexOf('ArchitectureMetadataDescription') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('ArchMeta')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M3 3h10v3H3zM3 8h10v5H3z" fill="#3b82f6"/><circle cx="8" cy="4.5" r="0.8" fill="#1e293b"/></svg>');i.alt='ArchMetaDesc';it.setAttribute('data-amd-icon','1');}}
+          if (it.getAttribute('data-amd-icon') !== '1' && label.textContent.indexOf('ArchitectureMetadataDescription') >= 0) {
+            var imgAMD = it.querySelector('img');
+            if (imgAMD && imgAMD.src.indexOf('ArchMeta') < 0) {
+              imgAMD.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><path d="M3 3h10v3H3zM3 8h10v5H3z" fill="#3b82f6"/><circle cx="8" cy="4.5" r="0.8" fill="#1e293b"/></svg>');
+              imgAMD.alt = 'ArchMetaDesc'; it.setAttribute('data-amd-icon', '1');
+            }
+          }
           // TopLevelOperationalConcept tree icon
-          if (label.textContent.indexOf('TopLevelOperationalConcept') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('TopLevel')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><polygon points="8,2 14,14 2,14" fill="#f59e0b"/></svg>');i.alt='TopLevelOC';}}
+          if (it.getAttribute('data-tloc-icon') !== '1' && label.textContent.indexOf('TopLevelOperationalConcept') >= 0) {
+            var imgTLOC = it.querySelector('img');
+            if (imgTLOC && imgTLOC.src.indexOf('TopLevel') < 0) {
+              imgTLOC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><polygon points="8,2 14,14 2,14" fill="#f59e0b"/></svg>');
+              imgTLOC.alt = 'TopLevelOC'; it.setAttribute('data-tloc-icon', '1');
+            }
+          }
           // MissionIntent tree icon
-          if (label.textContent.indexOf('MissionIntent') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('MissIntent')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#22c55e"/><path d="M5 8h6M8 5v6" stroke="#1e293b" stroke-width="1.5"/></svg>');i.alt='MissionIntent';}}
+          if (it.getAttribute('data-mi-icon') !== '1' && label.textContent.indexOf('MissionIntent') >= 0) {
+            var imgMI = it.querySelector('img');
+            if (imgMI && imgMI.src.indexOf('MissIntent') < 0) {
+              imgMI.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#22c55e"/><path d="M5 8h6M8 5v6" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgMI.alt = 'MissionIntent'; it.setAttribute('data-mi-icon', '1');
+            }
+          }
           // MissionBackground tree icon
-          if (label.textContent.indexOf('MissionBackground') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('MissBg')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="none" stroke="#22c55e" stroke-width="1.5"/></svg>');i.alt='MissionBackground';}}
+          if (it.getAttribute('data-mb-icon') !== '1' && label.textContent.indexOf('MissionBackground') >= 0) {
+            var imgMB = it.querySelector('img');
+            if (imgMB && imgMB.src.indexOf('MissBg') < 0) {
+              imgMB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="none" stroke="#22c55e" stroke-width="1.5"/></svg>');
+              imgMB.alt = 'MissionBackground'; it.setAttribute('data-mb-icon', '1');
+            }
+          }
           // Objective tree icon
-          if (label.textContent.indexOf('Objective') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('ObjSVG')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#ef4444"/><polygon points="8,5 11,11 5,11" fill="#1e293b"/></svg>');i.alt='Objective';}}
+          if (it.getAttribute('data-ob-icon') !== '1' && label.textContent.indexOf('Objective') >= 0) {
+            var imgOB = it.querySelector('img');
+            if (imgOB && imgOB.src.indexOf('ObjSVG') < 0) {
+              imgOB.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#ef4444"/><polygon points="8,5 11,11 5,11" fill="#1e293b"/></svg>');
+              imgOB.alt = 'Objective'; it.setAttribute('data-ob-icon', '1');
+            }
+          }
           // Environment tree icon
-          if (label.textContent.indexOf('Environment') >= 0) { var i=it.querySelector('img');if(i&&i.src.indexOf('EnvSVG')<0){i.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><path d="M3 3l5 5 5-5M3 13l5-5 5 5" stroke="#0ea5e9" stroke-width="1.5" fill="none"/></svg>');i.alt='Environment';}}
+          if (it.getAttribute('data-env-icon') !== '1' && label.textContent.indexOf('Environment') >= 0) {
+            var imgENV = it.querySelector('img');
+            if (imgENV && imgENV.src.indexOf('EnvSVG') < 0) {
+              imgENV.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><path d="M3 3l5 5 5-5M3 13l5-5 5 5" stroke="#0ea5e9" stroke-width="1.5" fill="none"/></svg>');
+              imgENV.alt = 'Environment'; it.setAttribute('data-env-icon', '1');
+            }
+          }
           // StrikeActivity tree icon
           if (it.getAttribute('data-sa-icon') !== '1' && label.textContent.indexOf('StrikeActivity') >= 0) {
             var imgAC = it.querySelector('img');
