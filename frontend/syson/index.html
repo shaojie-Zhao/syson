@@ -1564,6 +1564,18 @@
           else if (txt.indexOf('Objective') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="#ef4444"/><polygon points="8,5 11,11 5,11" fill="#1e293b"/></svg>'); }
           // --- Environment ---
           else if (txt.indexOf('Environment') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><path d="M3 3l5 5 5-5M3 13l5-5 5 5" stroke="#0ea5e9" stroke-width="1.5" fill="none"/></svg>'); }
+          // --- Interface ---
+          else if (txt.indexOf('Interface') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/><rect x="9" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/></svg>'); n.querySelector('img').setAttribute('data-if-icon','1'); }
+          // --- NodePort ---
+          else if (txt.indexOf('NodePort') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="3" fill="#22c55e"/><rect x="7" y="1" width="2" height="5" fill="#22c55e"/></svg>'); }
+          // --- ExecutionSpecification ---
+          else if (txt.indexOf('ExecutionSpecification') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="5" y="2" width="6" height="12" rx="1" fill="#3b82f6"/></svg>'); }
+          // --- Interaction ---
+          else if (txt.indexOf('Interaction') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><ellipse cx="8" cy="8" rx="5" ry="3" fill="#f59e0b"/><path d="M5 5l6 6M11 5l-6 6" stroke="#1e293b" stroke-width="1.5"/></svg>'); }
+          // --- PhysicalDataModel ---
+          else if (txt.indexOf('PhysicalDataModel') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><ellipse cx="8" cy="4" rx="5" ry="2" fill="#14b8a6"/><rect x="3" y="4" width="10" height="8" fill="#14b8a6"/><rect x="5" y="8" width="6" height="2" fill="#1e293b"/></svg>'); }
+          // --- PlatformEntity ---
+          else if (txt.indexOf('PlatformEntity') >= 0) { n.querySelector('img').src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#8b5cf6"/><rect x="5" y="5" width="6" height="6" fill="#1e293b"/></svg>'); }
           // --- StrikeActivity ---
           else if (txt.indexOf('StrikeActivity') >= 0) {
             var imgAC = n.querySelector('img');
@@ -2374,6 +2386,54 @@
             if (imgENV && imgENV.src.indexOf('EnvSVG') < 0) {
               imgENV.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/><path d="M3 3l5 5 5-5M3 13l5-5 5 5" stroke="#0ea5e9" stroke-width="1.5" fill="none"/></svg>');
               imgENV.alt = 'Environment'; it.setAttribute('data-env-icon', '1');
+            }
+          }
+          // Interface tree icon
+          if (it.getAttribute('data-ifc-icon') !== '1' && label.textContent.indexOf('Interface') >= 0) {
+            var imgIFC = it.querySelector('img');
+            if (imgIFC && imgIFC.src.indexOf('IfcSVG') < 0) {
+              imgIFC.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/><rect x="9" y="3" width="4" height="10" rx="1" fill="#8b5cf6"/></svg>');
+              imgIFC.alt = 'Interface'; it.setAttribute('data-ifc-icon', '1');
+            }
+          }
+          // NodePort tree icon
+          if (it.getAttribute('data-np-icon') !== '1' && label.textContent.indexOf('NodePort') >= 0) {
+            var imgNP = it.querySelector('img');
+            if (imgNP && imgNP.src.indexOf('NodePort') < 0) {
+              imgNP.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/><circle cx="8" cy="8" r="3" fill="#22c55e"/><rect x="7" y="1" width="2" height="5" fill="#22c55e"/></svg>');
+              imgNP.alt = 'NodePort'; it.setAttribute('data-np-icon', '1');
+            }
+          }
+          // ExecutionSpecification tree icon
+          if (it.getAttribute('data-es-icon') !== '1' && label.textContent.indexOf('ExecutionSpecification') >= 0) {
+            var imgES = it.querySelector('img');
+            if (imgES && imgES.src.indexOf('ExecSpec') < 0) {
+              imgES.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/><rect x="5" y="2" width="6" height="12" rx="1" fill="#3b82f6"/></svg>');
+              imgES.alt = 'ExecutionSpec'; it.setAttribute('data-es-icon', '1');
+            }
+          }
+          // Interaction tree icon
+          if (it.getAttribute('data-int-icon') !== '1' && label.textContent.indexOf('Interaction') >= 0) {
+            var imgINT = it.querySelector('img');
+            if (imgINT && imgINT.src.indexOf('Interact') < 0) {
+              imgINT.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/><ellipse cx="8" cy="8" rx="5" ry="3" fill="#f59e0b"/><path d="M5 5l6 6M11 5l-6 6" stroke="#1e293b" stroke-width="1.5"/></svg>');
+              imgINT.alt = 'Interaction'; it.setAttribute('data-int-icon', '1');
+            }
+          }
+          // PhysicalDataModel tree icon
+          if (it.getAttribute('data-pdm-icon') !== '1' && label.textContent.indexOf('PhysicalDataModel') >= 0) {
+            var imgPDM = it.querySelector('img');
+            if (imgPDM && imgPDM.src.indexOf('PhysDM') < 0) {
+              imgPDM.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5"/><ellipse cx="8" cy="4" rx="5" ry="2" fill="#14b8a6"/><rect x="3" y="4" width="10" height="8" fill="#14b8a6"/><rect x="5" y="8" width="6" height="2" fill="#1e293b"/></svg>');
+              imgPDM.alt = 'PhysDataModel'; it.setAttribute('data-pdm-icon', '1');
+            }
+          }
+          // PlatformEntity tree icon
+          if (it.getAttribute('data-pe-icon') !== '1' && label.textContent.indexOf('PlatformEntity') >= 0) {
+            var imgPE = it.querySelector('img');
+            if (imgPE && imgPE.src.indexOf('PlatEnt') < 0) {
+              imgPE.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><rect x="3" y="3" width="10" height="10" rx="1" fill="#8b5cf6"/><rect x="5" y="5" width="6" height="6" fill="#1e293b"/></svg>');
+              imgPE.alt = 'PlatformEntity'; it.setAttribute('data-pe-icon', '1');
             }
           }
           // StrikeActivity tree icon

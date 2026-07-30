@@ -635,6 +635,12 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             else if (n.startsWith("MissionBackground")) setAlias(element, "dodaf:MissionBackground");
             else if (n.startsWith("Objective")) setAlias(element, "dodaf:Objective");
             else if (n.startsWith("Environment")) setAlias(element, "dodaf:Environment");
+            else if (n.startsWith("Interface")) setAlias(element, "dodaf:Interface");
+            else if (n.startsWith("NodePort")) setAlias(element, "dodaf:NodePort");
+            else if (n.startsWith("ExecutionSpecification")) setAlias(element, "dodaf:ExecutionSpecification");
+            else if (n.startsWith("Interaction")) setAlias(element, "dodaf:Interaction");
+            else if (n.startsWith("PhysicalDataModel")) setAlias(element, "dodaf:PhysicalDataModel");
+            else if (n.startsWith("PlatformEntity")) setAlias(element, "dodaf:PlatformEntity");
             else if (n.startsWith("ConceptObservable")) setAlias(element, "dodaf:ConceptObservable");
             else if (n.startsWith("ExchangeElement")) setAlias(element, "dodaf:ExchangeElement");
             else if (n.startsWith("InformationTransmissionPattern")) setAlias(element, "dodaf:InformationTransmissionPattern");
