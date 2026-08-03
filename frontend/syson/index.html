@@ -1790,14 +1790,22 @@
               img8.alt = 'Vision';
             }
           }
-          // Auto-expand node width for long labels
+          // Auto-expand node width for long labels (skip if user manually resized)
           var lblEl = n.querySelector('[data-testid*="Label content"]');
           if (lblEl) {
             var txtLen = (lblEl.textContent || '').length;
             var parent = n.closest('[data-id]');
             if (parent && txtLen > 10) {
-              var extra = (txtLen - 10) * 5;
-              parent.style.width = (120 + extra) + 'px';
+              var autoW = 120 + (txtLen - 10) * 5;
+              var lastW = parent.getAttribute('data-autow');
+              if (lastW === null) {
+                parent.style.width = autoW + 'px';
+                parent.setAttribute('data-autow', autoW);
+              } else if (parseInt(lastW) === parseInt(parent.style.width || '0')) {
+                // User hasn't resized since last auto-set; keep enforcing (React may reset it)
+                parent.style.width = autoW + 'px';
+              }
+              // else: user resized manually — respect their width, don't override
             }
           }
         }
