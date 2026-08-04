@@ -541,7 +541,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             System.err.println("=== tagDoDAFAlias PartDef: n=" + n);
             String aliasedId = n.isEmpty() ? childCreationDescriptionId : childCreationDescriptionId.substring(0, childCreationDescriptionId.lastIndexOf(':'));
             // Map by menu item base name (strip trailing numbers from auto-numbering)
-            if (n.startsWith("Capability")) setAlias(element, "dodaf:capability");
+            if (n.startsWith("Capability") && !n.startsWith("CapabilityConfiguration")) setAlias(element, "dodaf:capability");
             else if (n.startsWith("OperationalCapability")) setAlias(element, "dodaf:OperationalCapability");
             else if (n.startsWith("Task") && !n.startsWith("TaskStage") && !n.startsWith("TaskIntent")) setAlias(element, "dodaf:Task");
             else if (n.startsWith("Force")) setAlias(element, "dodaf:Force");
@@ -553,7 +553,7 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             else if (n.startsWith("VisionDescription")) setAlias(element, "dodaf:VisionDescription");
             else if (n.startsWith("Target")) setAlias(element, "dodaf:Target");
             else if (n.startsWith("Performer")) setAlias(element, "dodaf:Performer");
-            else if (n.startsWith("Location")) setAlias(element, "dodaf:Location");
+            else if (n.startsWith("Location") && !n.startsWith("LocationType")) setAlias(element, "dodaf:Location");
             else if (n.startsWith("Condition")) setAlias(element, "dodaf:Condition");
             else if (n.startsWith("TimeScale")) setAlias(element, "dodaf:TimeScale");
             else if (n.startsWith("Equipment")) setAlias(element, "dodaf:Equipment");
@@ -624,9 +624,9 @@ public class SysMLv2EditService implements IEditServiceDelegate {
             else if (n.startsWith("StateIndicator")) setAlias(element, "dodaf:StateIndicator");
             else if (n.startsWith("ConceptEntity")) setAlias(element, "dodaf:ConceptEntity");
             else if (n.startsWith("LogicalEntity")) setAlias(element, "dodaf:LogicalEntity");
+            else if (n.startsWith("LogicalMeasurementSystem")) setAlias(element, "dodaf:LogicalMeasurementSystem");
             else if (n.startsWith("LogicalMeasure")) setAlias(element, "dodaf:LogicalMeasure");
             else if (n.startsWith("LogicalDataModel")) setAlias(element, "dodaf:LogicalDataModel");
-            else if (n.startsWith("LogicalMeasurementSystem")) setAlias(element, "dodaf:LogicalMeasurementSystem");
             else if (n.startsWith("Entity") && !n.startsWith("ConceptEntity")) setAlias(element, "dodaf:Entity");
             else if (n.startsWith("ArchitectureMetadataDescription")) setAlias(element, "dodaf:ArchitectureMetadataDescription");
             else if (n.startsWith("ArchitectureDescription")) setAlias(element, "dodaf:ArchitectureDescription");
