@@ -111,3 +111,7 @@ CLAUDE.md
 .codex
 AGENTS.md
 START.md
+
+# Local DB config (do not commit)
+backend/application/syson-application/src/main/resources/application.properties
+backend/application/syson-application/src/main/resources/application-dev.properties
