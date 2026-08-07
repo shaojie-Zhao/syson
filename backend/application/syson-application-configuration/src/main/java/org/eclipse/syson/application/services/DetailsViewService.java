@@ -503,6 +503,11 @@ public class DetailsViewService {
         return prop.type() == DoDAFProperties.PropType.ENUM;
     }
 
+    /** Whether the property is a date (date-time picker). */
+    public boolean isDodafDateProp(Element self, DoDAFProperties.DodafProp prop) {
+        return prop.type() == DoDAFProperties.PropType.DATE;
+    }
+
     /** Enum candidates for a DoDAF enum property. */
     public List<String> getDodafEnumCandidates(Element self, DoDAFProperties.DodafProp prop) {
         return prop.options();

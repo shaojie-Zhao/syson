@@ -40,6 +40,8 @@ import org.eclipse.sirius.components.view.ViewFactory;
 import org.eclipse.sirius.components.view.emf.ViewConverterResult;
 import org.eclipse.sirius.components.view.emf.form.ViewFormDescriptionConverter;
 import org.eclipse.sirius.components.view.form.CheckboxDescription;
+import org.eclipse.sirius.components.view.form.DateTimeDescription;
+import org.eclipse.sirius.components.view.form.DateTimeType;
 import org.eclipse.sirius.components.view.form.FormDescription;
 import org.eclipse.sirius.components.view.form.FormElementDescription;
 import org.eclipse.sirius.components.view.form.FormElementFor;
@@ -330,6 +332,23 @@ public class SysMLv2PropertiesConfigurer implements IPropertiesDescriptionRegist
         rd.getBody().add(setRd);
         radio.getChildren().add(rd);
         widgets.add(radio);
+
+        // Date properties -> date-time picker
+        FormElementIf datePicker = FormFactory.eINSTANCE.createFormElementIf();
+        datePicker.setName("DoDAF Date Properties");
+        datePicker.setPredicateExpression(ServiceMethod.of1(DetailsViewService::isDodafDateProp).aqlSelf("prop"));
+        DateTimeDescription dt = FormFactory.eINSTANCE.createDateTimeDescription();
+        dt.setName("DoDAFDateTimeWidget");
+        dt.setLabelExpression(ServiceMethod.of1(DetailsViewService::getDodafPropLabel).aqlSelf("prop"));
+        dt.setStringValueExpression(ServiceMethod.of1(DetailsViewService.class, DetailsViewService::getDodafPropValue, Element.class, DoDAFProperties.DodafProp.class).aqlSelf("prop"));
+        dt.setType(DateTimeType.DATE);
+        dt.setIsEnabledExpression(AQLConstants.AQL_TRUE);
+        ChangeContext setDt = ViewFactory.eINSTANCE.createChangeContext();
+        setDt.setExpression(ServiceMethod.of2(DetailsViewService.class, DetailsViewService::setDodafPropValue, Element.class, DoDAFProperties.DodafProp.class, Object.class)
+                .aqlSelf("prop", ViewFormDescriptionConverter.NEW_VALUE));
+        dt.getBody().add(setDt);
+        datePicker.getChildren().add(dt);
+        widgets.add(datePicker);
 
         return widgets;
     }

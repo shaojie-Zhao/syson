@@ -16,7 +16,7 @@ public final class DoDAFProperties {
 
     /** Widget type of a DoDAF property. */
     public enum PropType {
-        STRING, BOOLEAN, INTEGER, FLOAT, ENUM
+        STRING, BOOLEAN, INTEGER, FLOAT, ENUM, DATE
     }
 
     /** A single DoDAF property definition. */
@@ -42,14 +42,14 @@ public final class DoDAFProperties {
                     new DodafProp("recommendations", "推荐", PropType.STRING, List.of()),
                     new DodafProp("approvalAuthority", "审批权限", PropType.STRING, List.of()),
                     new DodafProp("creatingOrganization", "创建组织", PropType.STRING, List.of()),
-                    new DodafProp("dateCompleted", "完成日期", PropType.STRING, List.of()),
+                    new DodafProp("dateCompleted", "完成日期", PropType.DATE, List.of()),
                     new DodafProp("assumptionAndConstraint", "假想和约束", PropType.STRING, List.of()),
                     new DodafProp("architecturalElements", "架构元素", PropType.STRING, List.of()),
                     new DodafProp("architectureFramework", "架构框架", PropType.STRING, List.of()),
                     new DodafProp("architect", "架构", PropType.STRING, List.of()),
                     new DodafProp("concerns", "关注者", PropType.STRING, List.of()),
                     new DodafProp("methods", "方法", PropType.STRING, List.of()),
-                    new DodafProp("date", "日期", PropType.STRING, List.of())),
+                    new DodafProp("date", "日期", PropType.DATE, List.of())),
             entry("ArchitectureMetadata",
                     new DodafProp("metaData", "元数据", PropType.STRING, List.of()),
                     new DodafProp("dublinCoreElement", "都柏林核心元素", PropType.STRING, List.of()),
@@ -60,8 +60,8 @@ public final class DoDAFProperties {
                     new DodafProp("goal", "目的", PropType.STRING, List.of()),
                     new DodafProp("benefits", "利益", PropType.STRING, List.of())),
             entry("EnterprisePhase",
-                    new DodafProp("startDate", "开始时间", PropType.STRING, List.of()),
-                    new DodafProp("endDate", "结束时间", PropType.STRING, List.of())),
+                    new DodafProp("startDate", "开始时间", PropType.DATE, List.of()),
+                    new DodafProp("endDate", "结束时间", PropType.DATE, List.of())),
             entry("Vision",
                     new DodafProp("vision", "愿景", PropType.STRING, List.of()),
                     new DodafProp("statement", "声明", PropType.STRING, List.of())),
@@ -97,8 +97,8 @@ public final class DoDAFProperties {
             entry("Standard",
                     new DodafProp("ITStandardCategory", "IT标准类别", PropType.STRING, List.of()),
                     new DodafProp("ratifiedBy", "批准", PropType.STRING, List.of()),
-                    new DodafProp("mandatedDate", "法定日期", PropType.STRING, List.of()),
-                    new DodafProp("retiredDate", "退役时间", PropType.STRING, List.of()),
+                    new DodafProp("mandatedDate", "法定日期", PropType.DATE, List.of()),
+                    new DodafProp("retiredDate", "退役时间", PropType.DATE, List.of()),
                     new DodafProp("shortName", "简称", PropType.STRING, List.of()),
                     new DodafProp("versionNum", "版本", PropType.STRING, List.of()),
                     new DodafProp("currentStatus", "当前状态", PropType.STRING, List.of())),
@@ -146,12 +146,12 @@ public final class DoDAFProperties {
                     new DodafProp("classifiedBy", "通过分类", PropType.STRING, List.of()),
                     new DodafProp("releasableTo", "与之相关", PropType.STRING, List.of()),
                     new DodafProp("ownerProducer", "所有者生产者", PropType.STRING, List.of()),
-                    new DodafProp("dateOfExemptedSource", "豁免来源日期", PropType.STRING, List.of()),
+                    new DodafProp("dateOfExemptedSource", "豁免来源日期", PropType.DATE, List.of()),
                     new DodafProp("typeOfExemptedSource", "豁免来源类型", PropType.STRING, List.of()),
                     new DodafProp("nonICmarkings", "非IC标记", PropType.STRING, List.of()),
                     new DodafProp("declassException", "解密异常", PropType.STRING, List.of()),
                     new DodafProp("declassEvent", "解密事件", PropType.STRING, List.of()),
-                    new DodafProp("declassDate", "解密日期", PropType.STRING, List.of()),
+                    new DodafProp("declassDate", "解密日期", PropType.DATE, List.of()),
                     new DodafProp("derivedFrom", "派生自", PropType.STRING, List.of())),
             entry("InformationElementProperties",
                     new DodafProp("scope", "范围", PropType.STRING, List.of()),
