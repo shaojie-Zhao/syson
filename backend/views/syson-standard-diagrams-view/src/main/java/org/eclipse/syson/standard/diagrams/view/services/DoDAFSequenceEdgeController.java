@@ -66,14 +66,43 @@ public class DoDAFSequenceEdgeController {
             Dependency dep = SysmlFactory.eINSTANCE.createDependency();
             dep.getClient().add(src);
             dep.getSupplier().add(tgt);
-            EObject container = src.eContainer();
-            if (container instanceof Element ce) {
-                ce.getOwnedRelationship().add(dep);
+            // Mount on the topmost Element container (Package/Namespace) of src so the
+            // General View's getAllReachable(self,'sysml::Dependency') can find it.
+            EObject top = src;
+            EObject parent = src.eContainer();
+            while (parent != null) {
+                top = parent;
+                parent = parent.eContainer();
+            }
+            if (top instanceof Element topElement) {
+                topElement.getOwnedRelationship().add(dep);
+            } else {
+                // Fallback: mount under src's direct Element container
+                EObject container = src.eContainer();
+                if (container instanceof Element ce) {
+                    ce.getOwnedRelationship().add(dep);
+                }
             }
             String depId = dep.eResource() != null ? dep.eResource().getURIFragment(dep) : "";
             result.put("id", depId);
             result.put("success", true);
-            log.info("Dependency created: id={}", depId);
+            log.info("Dependency created: id={} src={} tgt={}", depId, src.getName(), tgt.getName());
+            // Diagnostic: is the SysONEContentAdapter cache updated with this new Dependency?
+            try {
+                var adapter = org.eclipse.emf.ecore.util.EcoreUtil.getAdapter(src.eAdapters(), org.eclipse.syson.util.SysONEContentAdapter.class);
+                log.info("DIAG src has content adapter: {}", adapter != null);
+                if (adapter instanceof org.eclipse.syson.util.SysONEContentAdapter ca) {
+                    var cached = ca.getCache().get(org.eclipse.syson.sysml.SysmlPackage.eINSTANCE.getDependency());
+                    log.info("DIAG cached Dependency count: {}", cached == null ? -1 : cached.size());
+                }
+                var rs2 = src.eResource().getResourceSet();
+                var it2 = rs2.getAllContents();
+                long allDeps = 0;
+                while (it2.hasNext()) { if (it2.next() instanceof Dependency) allDeps++; }
+                log.info("DIAG all Dependency in RS: {}", allDeps);
+            } catch (Exception ex) {
+                log.warn("DIAG error: {}", ex.getMessage());
+            }
         } catch (Exception e) {
             log.error("Edge create failed: {}", e.getMessage(), e);
             result.put("error", e.getMessage());

@@ -30,6 +30,9 @@ import { SysMLViewFrameNodeLayoutHandler } from '../../nodes/view_frame/SysMLVie
 import { Ov1Node } from '../../nodes/dodaf_ov1_node/Ov1Node';
 import { Ov1NodeConverter } from '../../nodes/dodaf_ov1_node/Ov1NodeConverter';
 import { Ov1NodeLayoutHandler } from '../../nodes/dodaf_ov1_node/Ov1NodeLayoutHandler';
+import { SysMLLifelineNode } from '../../nodes/dodaf_lifeline/SysMLLifelineNode';
+import { SysMLLifelineNodeConverter } from '../../nodes/dodaf_lifeline/SysMLLifelineNodeConverter';
+import { SysMLLifelineNodeLayoutHandler } from '../../nodes/dodaf_lifeline/SysMLLifelineNodeLayoutHandler';
 
 /*******************************************************************************
  *
@@ -43,6 +46,7 @@ const sysONNodeTypeRegistry: NodeTypeRegistry = {
     new SysMLImportedPackageNodeLayoutHandler(),
     new SysMLViewFrameNodeLayoutHandler(),
     new Ov1NodeLayoutHandler(),
+    new SysMLLifelineNodeLayoutHandler(),
   ],
   nodeConverters: [
     new SysMLPackageNodeConverter(),
@@ -50,6 +54,7 @@ const sysONNodeTypeRegistry: NodeTypeRegistry = {
     new SysMLImportedPackageNodeConverter(),
     new SysMLViewFrameNodeConverter(),
     new Ov1NodeConverter(),
+    new SysMLLifelineNodeConverter(),
   ],
   nodeTypeContributions: [
     <NodeTypeContribution key="sysMLPackageNode" component={SysMLPackageNode as unknown as React.FC<NodeProps>} type={'sysMLPackageNode'} />,
@@ -68,6 +73,11 @@ const sysONNodeTypeRegistry: NodeTypeRegistry = {
       key="dodafOv1Node"
       component={Ov1Node as unknown as React.FC<NodeProps>}
       type={'dodafOv1Node'}
+    />,
+    <NodeTypeContribution
+      key="dodafLifelineNode"
+      component={SysMLLifelineNode as unknown as React.FC<NodeProps>}
+      type={'dodafLifelineNode'}
     />,
   ],
 };

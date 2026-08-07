@@ -56,6 +56,7 @@ import org.eclipse.sirius.components.view.form.WidgetDescription;
 import org.eclipse.sirius.components.view.widget.reference.ReferenceFactory;
 import org.eclipse.sirius.components.view.widget.reference.ReferenceWidgetDescription;
 import org.eclipse.syson.application.services.DetailsViewService;
+import org.eclipse.syson.application.services.DoDAFProperties;
 import org.eclipse.syson.form.services.api.IDetailsViewHelpTextProvider;
 import org.eclipse.syson.form.services.aql.FormMutationAQLService;
 import org.eclipse.syson.form.services.aql.FormQueryAQLService;
@@ -180,6 +181,10 @@ public class SysMLv2PropertiesConfigurer implements IPropertiesDescriptionRegist
         pageCore.setPreconditionExpression("");
         pageCore.setLabelExpression("核心");
         pageCore.getGroups().add(this.createCorePropertiesGroup());
+        pageCore.getGroups().add(this.createDoDAFCapabilityPropertiesGroup());
+        pageCore.getGroups().add(this.createDoDAFOperationalCapabilityPropertiesGroup());
+        pageCore.getGroups().add(this.createDoDAFTaskStagePropertiesGroup());
+        pageCore.getGroups().add(this.createDoDAFGenericPropertiesGroup());
         pageCore.getGroups().add(this.createVisibilityPropertyGroup());
         pageCore.getGroups().add(this.createExtraReferenceSubsettingPropertiesGroup());
         pageCore.getGroups().add(this.createExtraRedefinitionPropertiesGroup());
@@ -252,8 +257,183 @@ public class SysMLv2PropertiesConfigurer implements IPropertiesDescriptionRegist
         return group;
     }
 
-    private GroupDescription createCorePropertiesGroup() {
+    /**
+     * Creates the generic DoDAF properties group: visible for every element carrying a
+     * {@code dodaf:} alias that does not own a dedicated group. The property list comes
+     * from the OWL-derived configuration table ({@link DoDAFProperties}).
+     *
+     * @return a {@link GroupDescription}
+     */
+    private GroupDescription createDoDAFGenericPropertiesGroup() {
         GroupDescription group = FormFactory.eINSTANCE.createGroupDescription();
+        group.setDisplayMode(GroupDisplayMode.LIST);
+        group.setName("DoDAF 属性");
+        group.setLabelExpression("DoDAF 属性");
+        group.setSemanticCandidatesExpression(ServiceMethod.of0(DetailsViewService::getDoDAFElement).aqlSelf());
+
+        FormElementFor forElt = FormFactory.eINSTANCE.createFormElementFor();
+        forElt.setName("Widgets for DoDAF Generic Group");
+        forElt.setIterator("prop");
+        forElt.setIterableExpression(ServiceMethod.of0(DetailsViewService::getDoDAFProps).aqlSelf());
+        forElt.getChildren().addAll(this.createDoDAFPropWidgets());
+        group.getChildren().add(forElt);
+
+        return group;
+    }
+
+    private List<FormElementIf> createDoDAFPropWidgets() {
+        List<FormElementIf> widgets = new ArrayList<>();
+
+        // String / number properties -> textfield
+        FormElementIf textfield = FormFactory.eINSTANCE.createFormElementIf();
+        textfield.setName("DoDAF String Properties");
+        textfield.setPredicateExpression(ServiceMethod.of1(DetailsViewService::isDodafStringProp).aqlSelf("prop"));
+        TextfieldDescription tf = FormFactory.eINSTANCE.createTextfieldDescription();
+        tf.setName("DoDAFTextfieldWidget");
+        tf.setLabelExpression(ServiceMethod.of1(DetailsViewService::getDodafPropLabel).aqlSelf("prop"));
+        tf.setValueExpression(ServiceMethod.of1(DetailsViewService.class, DetailsViewService::getDodafPropValue, Element.class, DoDAFProperties.DodafProp.class).aqlSelf("prop"));
+        ChangeContext setTf = ViewFactory.eINSTANCE.createChangeContext();
+        setTf.setExpression(ServiceMethod.of2(DetailsViewService.class, DetailsViewService::setDodafPropValue, Element.class, DoDAFProperties.DodafProp.class, Object.class)
+                .aqlSelf("prop", ViewFormDescriptionConverter.NEW_VALUE));
+        tf.getBody().add(setTf);
+        textfield.getChildren().add(tf);
+        widgets.add(textfield);
+
+        // Boolean properties -> checkbox
+        FormElementIf checkbox = FormFactory.eINSTANCE.createFormElementIf();
+        checkbox.setName("DoDAF Boolean Properties");
+        checkbox.setPredicateExpression(ServiceMethod.of1(DetailsViewService::isDodafBooleanProp).aqlSelf("prop"));
+        CheckboxDescription cb = FormFactory.eINSTANCE.createCheckboxDescription();
+        cb.setName("DoDAFCheckboxWidget");
+        cb.setLabelExpression(ServiceMethod.of1(DetailsViewService::getDodafPropLabel).aqlSelf("prop"));
+        cb.setValueExpression(ServiceMethod.of1(DetailsViewService::isDodafBoolValue).aqlSelf("prop"));
+        ChangeContext setCb = ViewFactory.eINSTANCE.createChangeContext();
+        setCb.setExpression(ServiceMethod.of2(DetailsViewService.class, DetailsViewService::setDodafPropValue, Element.class, DoDAFProperties.DodafProp.class, Object.class)
+                .aqlSelf("prop", ViewFormDescriptionConverter.NEW_VALUE));
+        cb.getBody().add(setCb);
+        checkbox.getChildren().add(cb);
+        widgets.add(checkbox);
+
+        // Enum properties -> radio
+        FormElementIf radio = FormFactory.eINSTANCE.createFormElementIf();
+        radio.setName("DoDAF Enum Properties");
+        radio.setPredicateExpression(ServiceMethod.of1(DetailsViewService::isDodafEnumProp).aqlSelf("prop"));
+        RadioDescription rd = FormFactory.eINSTANCE.createRadioDescription();
+        rd.setName("DoDAFRadioWidget");
+        rd.setLabelExpression(ServiceMethod.of1(DetailsViewService::getDodafPropLabel).aqlSelf("prop"));
+        rd.setCandidatesExpression(ServiceMethod.of1(DetailsViewService::getDodafEnumCandidates).aqlSelf("prop"));
+        rd.setCandidateLabelExpression("aql:candidate");
+        rd.setValueExpression(ServiceMethod.of1(DetailsViewService.class, DetailsViewService::getDodafPropValue, Element.class, DoDAFProperties.DodafProp.class).aqlSelf("prop"));
+        ChangeContext setRd = ViewFactory.eINSTANCE.createChangeContext();
+        setRd.setExpression(ServiceMethod.of2(DetailsViewService.class, DetailsViewService::setDodafPropValue, Element.class, DoDAFProperties.DodafProp.class, Object.class)
+                .aqlSelf("prop", ViewFormDescriptionConverter.NEW_VALUE));
+        rd.getBody().add(setRd);
+        radio.getChildren().add(rd);
+        widgets.add(radio);
+
+        return widgets;
+    }
+
+    /**
+     * Creates the DoDAF TaskStage properties group: only visible for elements whose
+     * aliasIds contain {@code dodaf:TaskStage}. Inherits the generic Classifier property
+     * set (name, isAbstract) plus the DoDAF-specific booleans stored in the
+     * {@code dodaf} EAnnotation.
+     *
+     * @return a {@link GroupDescription}
+     */
+    private GroupDescription createDoDAFTaskStagePropertiesGroup() {
+        GroupDescription group = FormFactory.eINSTANCE.createGroupDescription();
+        group.setDisplayMode(GroupDisplayMode.LIST);
+        group.setName("DoDAF 任务阶段属性");
+        group.setLabelExpression("任务阶段属性");
+        group.setSemanticCandidatesExpression(ServiceMethod.of0(DetailsViewService::getDoDAFTaskStage).aqlSelf());
+
+        FormElementFor forElt = FormFactory.eINSTANCE.createFormElementFor();
+        forElt.setName("Widgets for DoDAF TaskStage Group");
+        forElt.setIterator(E_STRUCTURAL_FEATURE);
+        forElt.setIterableExpression(ServiceMethod.of0(DetailsViewService::getDoDAFCapabilityFeatures).aqlSelf());
+        forElt.getChildren().addAll(this.createWidgets());
+        group.getChildren().add(forElt);
+
+        group.getChildren().add(this.createDodafBooleanCheckbox("isLeaf", "是否叶属性"));
+        group.getChildren().add(this.createDodafBooleanCheckbox("isActive", "是否为活动对象"));
+        group.getChildren().add(this.createDodafBooleanCheckbox("isFinalSpecialization", "是否为final类"));
+
+        return group;
+    }
+
+    /**
+     * Creates the DoDAF OperationalCapability properties group: only visible for elements
+     * whose aliasIds contain {@code dodaf:OperationalCapability}. Inherits the Capability
+     * property set per the DoDAF ontology (OperationalCapability subClassOf Capability).
+     *
+     * @return a {@link GroupDescription}
+     */
+    private GroupDescription createDoDAFOperationalCapabilityPropertiesGroup() {
+        GroupDescription group = FormFactory.eINSTANCE.createGroupDescription();
+        group.setDisplayMode(GroupDisplayMode.LIST);
+        group.setName("DoDAF 作战能力属性");
+        group.setLabelExpression("作战能力属性");
+        group.setSemanticCandidatesExpression(ServiceMethod.of0(DetailsViewService::getDoDAFOperationalCapability).aqlSelf());
+
+        FormElementFor forElt = FormFactory.eINSTANCE.createFormElementFor();
+        forElt.setName("Widgets for DoDAF OperationalCapability Group");
+        forElt.setIterator(E_STRUCTURAL_FEATURE);
+        forElt.setIterableExpression(ServiceMethod.of0(DetailsViewService::getDoDAFCapabilityFeatures).aqlSelf());
+        forElt.getChildren().addAll(this.createWidgets());
+        group.getChildren().add(forElt);
+
+        group.getChildren().add(this.createDodafBooleanCheckbox("isLeaf", "是否叶属性"));
+        group.getChildren().add(this.createDodafBooleanCheckbox("isActive", "是否为活动对象"));
+        group.getChildren().add(this.createDodafBooleanCheckbox("isFinalSpecialization", "是否为final类"));
+
+        return group;
+    }
+
+    /**
+     * Creates the DoDAF Capability properties group: only visible for elements whose
+     * aliasIds contain {@code dodaf:capability}. Displays the SysML-backed features
+     * (name, visibility, isAbstract) plus the DoDAF-specific booleans stored in the
+     * {@code dodaf} EAnnotation (isLeaf, isActive, isFinalSpecialization).
+     *
+     * @return a {@link GroupDescription}
+     */
+    private GroupDescription createDoDAFCapabilityPropertiesGroup() {
+        GroupDescription group = FormFactory.eINSTANCE.createGroupDescription();
+        group.setDisplayMode(GroupDisplayMode.LIST);
+        group.setName("DoDAF 能力属性");
+        group.setLabelExpression("能力属性");
+        group.setSemanticCandidatesExpression(ServiceMethod.of0(DetailsViewService::getDoDAFCapability).aqlSelf());
+
+        FormElementFor forElt = FormFactory.eINSTANCE.createFormElementFor();
+        forElt.setName("Widgets for DoDAF Capability Group");
+        forElt.setIterator(E_STRUCTURAL_FEATURE);
+        forElt.setIterableExpression(ServiceMethod.of0(DetailsViewService::getDoDAFCapabilityFeatures).aqlSelf());
+        forElt.getChildren().addAll(this.createWidgets());
+        group.getChildren().add(forElt);
+
+        group.getChildren().add(this.createDodafBooleanCheckbox("isLeaf", "是否叶属性"));
+        group.getChildren().add(this.createDodafBooleanCheckbox("isActive", "是否为活动对象"));
+        group.getChildren().add(this.createDodafBooleanCheckbox("isFinalSpecialization", "是否为final类"));
+
+        return group;
+    }
+
+    private CheckboxDescription createDodafBooleanCheckbox(String key, String label) {
+        CheckboxDescription checkbox = FormFactory.eINSTANCE.createCheckboxDescription();
+        checkbox.setName("DoDAF_" + key);
+        checkbox.setLabelExpression(label);
+        checkbox.setValueExpression(ServiceMethod.of1(DetailsViewService.class, DetailsViewService::getDodafBooleanProperty, Element.class, String.class).aqlSelf("'" + key + "'"));
+        checkbox.setIsEnabledExpression(AQLConstants.AQL_TRUE);
+        ChangeContext setNewValueOperation = ViewFactory.eINSTANCE.createChangeContext();
+        setNewValueOperation.setExpression(ServiceMethod.of2(DetailsViewService.class, DetailsViewService::setDodafBooleanProperty, Element.class, String.class, boolean.class)
+                .aqlSelf("'" + key + "'", ViewFormDescriptionConverter.NEW_VALUE));
+        checkbox.getBody().add(setNewValueOperation);
+        return checkbox;
+    }
+
+    private GroupDescription createCorePropertiesGroup() {        GroupDescription group = FormFactory.eINSTANCE.createGroupDescription();
         group.setDisplayMode(GroupDisplayMode.LIST);
         group.setName(CORE_PROPERTIES);
         group.setLabelExpression("aql:self.eClass().getStyledLabel() + ' 属性'");

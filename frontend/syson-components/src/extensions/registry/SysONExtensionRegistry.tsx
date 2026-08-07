@@ -131,39 +131,6 @@ const zhLocaleConfigurer: ApolloClientOptionsConfigurer = (currentOptions) => {
   };
 };
 
-const toolInLeftSidebarConfigurer: ApolloClientOptionsConfigurer = (currentOptions) => {
-  // Apollo Link that intercepts getWorkbenchConfiguration and adds the Tool sidebar to the left panel.
-  // Uses JSON round-trip to reliably clone the Apollo response object (which may be frozen).
-  const toolSidebarLink = new ApolloLink((operation, forward) => {
-    return forward(operation).map((response: any) => {
-      if (operation.operationName === 'getWorkbenchConfiguration') {
-        const config = response?.data?.viewer?.editingContext?.workbenchConfiguration;
-        if (config?.workbenchPanels) {
-          const leftPanel = config.workbenchPanels.find((p: any) => p.id === 'left');
-          if (leftPanel?.views && Array.isArray(leftPanel.views) && !leftPanel.views.some((v: any) => v.id === 'syson-tool-sidebar')) {
-            // Deep-clone via JSON to avoid Apollo frozen-object issues
-            const cloned = JSON.parse(JSON.stringify(response));
-            const clonedPanels = cloned.data.viewer.editingContext.workbenchConfiguration.workbenchPanels;
-            const clonedLeft = clonedPanels.find((p: any) => p.id === 'left');
-            clonedLeft.views.push({
-              id: 'syson-tool-sidebar',
-              isActive: false,
-              __typename: 'DefaultViewConfiguration',
-            });
-            return cloned;
-          }
-        }
-      }
-      return response;
-    });
-  });
-
-  return {
-    ...currentOptions,
-    link: currentOptions.link ? toolSidebarLink.concat(currentOptions.link) : toolSidebarLink,
-  };
-};
-
 sysONExtensionRegistry.putData(apolloClientOptionsConfigurersExtensionPoint, {
   identifier: `syson_${apolloClientOptionsConfigurersExtensionPoint.identifier}`,
   data: [zhLocaleConfigurer, apolloClientOptionsConfigurer],

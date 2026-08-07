@@ -47,6 +47,7 @@ import org.eclipse.sirius.components.representations.VariableManager;
 import org.eclipse.syson.services.DeleteService;
 import org.eclipse.syson.services.UtilService;
 import org.eclipse.syson.services.api.ISysONResourceService;
+import org.eclipse.syson.sysml.Dependency;
 import org.eclipse.syson.sysml.Element;
 import org.eclipse.syson.sysml.Membership;
 import org.eclipse.syson.sysml.Namespace;
@@ -340,6 +341,43 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 if (eObject instanceof Element created) setAlias(created, "dodaf:Person");
             } else if (eObject instanceof Element created && this.isDoDAFProject(container)) {
                 this.tagDoDAFAlias(created, childCreationDescriptionId);
+            }
+            if (initName != null && !initName.isEmpty() && eObject instanceof Dependency dep && initName.contains("@")) {
+                // OV-6c message edge: "MessageName@SourceLifeline@TargetLifeline"
+                String[] parts = initName.split("@");
+                if (parts.length >= 3) {
+                    String depName = parts[0];
+                    String srcName = parts[1];
+                    String tgtName = parts[2];
+                    Element srcEl = null;
+                    Element tgtEl = null;
+                    if (dep.eResource() != null) {
+                        var it = dep.eResource().getAllContents();
+                        while (it.hasNext()) {
+                            Object o = it.next();
+                            if (o instanceof Element e) {
+                                if (srcName.equals(e.getName())) srcEl = e;
+                                if (tgtName.equals(e.getName())) tgtEl = e;
+                            }
+                        }
+                    }
+                    if (srcEl != null && tgtEl != null) {
+                        dep.getClient().add(srcEl);
+                        dep.getSupplier().add(tgtEl);
+                        initName = depName;
+                        System.err.println("=== CREATE-CHILD Dependency edge: " + depName + " " + srcName + "->" + tgtName);
+                        try {
+                            var adapter = org.eclipse.emf.ecore.util.EcoreUtil.getAdapter(srcEl.eAdapters(), org.eclipse.syson.util.SysONEContentAdapter.class);
+                            System.err.println("=== DIAG2 srcEl has adapter: " + (adapter != null));
+                            if (adapter instanceof org.eclipse.syson.util.SysONEContentAdapter ca) {
+                                var cached = ca.getCache().get(org.eclipse.syson.sysml.SysmlPackage.eINSTANCE.getDependency());
+                                System.err.println("=== DIAG2 cached Dependency count: " + (cached == null ? -1 : cached.size()));
+                            }
+                        } catch (Exception ex) {
+                            System.err.println("=== DIAG2 error: " + ex.getMessage());
+                        }
+                    }
+                }
             }
             if (initName != null && !initName.isEmpty() && eObject instanceof Element newElement) {
                 newElement.setDeclaredName(initName);

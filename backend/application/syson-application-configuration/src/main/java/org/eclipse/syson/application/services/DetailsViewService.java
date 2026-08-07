@@ -392,6 +392,197 @@ public class DetailsViewService {
         return null;
     }
 
+    /**
+     * Candidate method for the DoDAF Capability properties group: returns the element
+     * only when it carries the {@code dodaf:capability} alias.
+     *
+     * @param self the inspected element
+     * @return the element itself, or {@code null} when it is not a DoDAF Capability
+     */
+    public Element getDoDAFCapability(Element self) {
+        if (self.getAliasIds().contains("dodaf:capability")) {
+            return self;
+        }
+        return null;
+    }
+
+    /**
+     * Candidate method for the generic DoDAF properties group: returns the element when it
+     * carries any {@code dodaf:} alias, except the ones that own a dedicated properties
+     * group (Capability, OperationalCapability, TaskStage).
+     *
+     * @param self the inspected element
+     * @return the element itself, or {@code null} when it is not a generic DoDAF element
+     */
+    public Element getDoDAFElement(Element self) {
+        var aliasIds = self.getAliasIds();
+        boolean dodaf = aliasIds.stream().anyMatch(alias -> alias != null && alias.startsWith("dodaf:"));
+        if (!dodaf) {
+            return null;
+        }
+        boolean dedicated = aliasIds.stream().anyMatch(alias -> alias != null
+                && (alias.equals("dodaf:capability") || alias.equals("dodaf:OperationalCapability") || alias.equals("dodaf:TaskStage")));
+        if (dedicated) {
+            return null;
+        }
+        return self;
+    }
+
+    /**
+     * Returns the configured DoDAF property list for the element (matched on its alias).
+     *
+     * @param self the DoDAF element
+     * @return the ordered property list
+     */
+    public List<DoDAFProperties.DodafProp> getDoDAFProps(Element self) {
+        return DoDAFProperties.propsFor(self.getAliasIds());
+    }
+
+    /**
+     * Reads a DoDAF property value from the {@code dodaf} EAnnotation.
+     *
+     * @param self the element
+     * @param prop the property definition
+     * @return the stored value, or {@code null} when absent
+     */
+    public Object getDodafPropValue(Element self, DoDAFProperties.DodafProp prop) {
+        var annotation = self.getEAnnotation("dodaf");
+        if (annotation != null) {
+            return annotation.getDetails().get(prop.key());
+        }
+        return null;
+    }
+
+    /**
+     * Stores a DoDAF property value in the {@code dodaf} EAnnotation (created on demand).
+     *
+     * @param self the element
+     * @param prop the property definition
+     * @param value the value to store
+     * @return the stored value
+     */
+    public Object setDodafPropValue(Element self, DoDAFProperties.DodafProp prop, Object value) {
+        var annotation = self.getEAnnotation("dodaf");
+        if (annotation == null) {
+            annotation = EcoreFactory.eINSTANCE.createEAnnotation();
+            annotation.setSource("dodaf");
+            self.getEAnnotations().add(annotation);
+        }
+        annotation.getDetails().put(prop.key(), String.valueOf(value));
+        return value;
+    }
+
+    /** Display label of a DoDAF property. */
+    public String getDodafPropLabel(Element self, DoDAFProperties.DodafProp prop) {
+        return prop.label();
+    }
+
+    /** Boolean value of a DoDAF boolean property (checkbox support). */
+    public boolean isDodafBoolValue(Element self, DoDAFProperties.DodafProp prop) {
+        var annotation = self.getEAnnotation("dodaf");
+        if (annotation != null) {
+            return Boolean.parseBoolean(annotation.getDetails().get(prop.key()));
+        }
+        return false;
+    }
+
+    /** Whether the property is a plain string (textfield). */
+    public boolean isDodafStringProp(Element self, DoDAFProperties.DodafProp prop) {
+        return prop.type() == DoDAFProperties.PropType.STRING
+                || prop.type() == DoDAFProperties.PropType.INTEGER
+                || prop.type() == DoDAFProperties.PropType.FLOAT;
+    }
+
+    /** Whether the property is a boolean (checkbox). */
+    public boolean isDodafBooleanProp(Element self, DoDAFProperties.DodafProp prop) {
+        return prop.type() == DoDAFProperties.PropType.BOOLEAN;
+    }
+
+    /** Whether the property is an enum (radio). */
+    public boolean isDodafEnumProp(Element self, DoDAFProperties.DodafProp prop) {
+        return prop.type() == DoDAFProperties.PropType.ENUM;
+    }
+
+    /** Enum candidates for a DoDAF enum property. */
+    public List<String> getDodafEnumCandidates(Element self, DoDAFProperties.DodafProp prop) {
+        return prop.options();
+    }
+
+    /**
+     * Candidate method for the DoDAF TaskStage properties group: returns the element only
+     * when it carries the {@code dodaf:TaskStage} alias. Per the DoDAF ontology the
+     * TaskStage maps to UPDM_MissionPhase (task stage), inheriting the generic Classifier
+     * property set.
+     *
+     * @param self the inspected element
+     * @return the element itself, or {@code null} when it is not a DoDAF TaskStage
+     */
+    public Element getDoDAFTaskStage(Element self) {
+        if (self.getAliasIds().contains("dodaf:TaskStage")) {
+            return self;
+        }
+        return null;
+    }
+
+    /**
+     * Candidate method for the DoDAF OperationalCapability properties group: returns the
+     * element only when it carries the {@code dodaf:OperationalCapability} alias.
+     *
+     * @param self the inspected element
+     * @return the element itself, or {@code null} when it is not a DoDAF OperationalCapability
+     */
+    public Element getDoDAFOperationalCapability(Element self) {
+        if (self.getAliasIds().contains("dodaf:OperationalCapability")) {
+            return self;
+        }
+        return null;
+    }
+
+    /**
+     * SysML features exposed in the DoDAF Capability properties group.
+     *
+     * @param self the DoDAF Capability element
+     * @return the ordered list of features to display
+     */
+    public List<EStructuralFeature> getDoDAFCapabilityFeatures(Element self) {
+        return List.of(
+                SysmlPackage.eINSTANCE.getElement_Name(),
+                SysmlPackage.eINSTANCE.getType_IsAbstract());
+    }
+
+    /**
+     * Reads a DoDAF boolean property stored in the {@code dodaf} EAnnotation.
+     *
+     * @param self the element
+     * @param key the property key (e.g. {@code isLeaf})
+     * @return the stored boolean value, {@code false} when absent
+     */
+    public boolean getDodafBooleanProperty(Element self, String key) {
+        var annotation = self.getEAnnotation("dodaf");
+        if (annotation != null) {
+            return Boolean.parseBoolean(annotation.getDetails().get(key));
+        }
+        return false;
+    }
+
+    /**
+     * Stores a DoDAF boolean property in the {@code dodaf} EAnnotation (created on demand).
+     *
+     * @param self the element
+     * @param key the property key
+     * @param value the value to store
+     */
+    public Object setDodafBooleanProperty(Element self, String key, boolean value) {
+        var annotation = self.getEAnnotation("dodaf");
+        if (annotation == null) {
+            annotation = EcoreFactory.eINSTANCE.createEAnnotation();
+            annotation.setSource("dodaf");
+            self.getEAnnotations().add(annotation);
+        }
+        annotation.getDetails().put(key, String.valueOf(value));
+        return value;
+    }
+
     public Element getAcceptActionUsagePayloadFeatureTyping(AcceptActionUsage acceptActionUsage) {
         this.checkAndRepairAcceptActionUsageStructure(acceptActionUsage);
         ReferenceUsage payloadParameter = acceptActionUsage.getPayloadParameter();

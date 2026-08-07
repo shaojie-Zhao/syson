@@ -869,7 +869,12 @@
           if (old) old.remove();
           var lifelines = [];
           document.querySelectorAll('[data-testid*="Label content"]').forEach(function(l) {
-            if (l.textContent.indexOf('Lifeline') >= 0) lifelines.push(l.textContent.trim().split('\\n').pop().trim());
+            var t = l.textContent;
+            if (t.indexOf('Lifeline') >= 0) {
+              var parts = t.trim().split('\n');
+              var nm = parts[parts.length - 1].trim();
+              if (nm) lifelines.push(nm);
+            }
           });
           if (lifelines.length < 2) { alert('Need at least 2 Lifeline elements'); return; }
           var dlg = document.createElement('div');
@@ -904,42 +909,18 @@
               _lastMenuY = (sr.bottom + tr.top) / 2;
             }
             var repId = getRepId();
-            console.log('[RelDialog] src='+src+' tgt='+tgt+' srcId='+srcId+' tgtId='+tgtId);
-            if (srcId && tgtId) {
-              var fullName = nextName(name);
-              var desc = (descId||'SysMLv2EditService-PartUsage')+':'+fullName;
-              var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);});
-              var pid = targetObjId || editingCtxId;
-              var body = JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:pid,childCreationDescriptionId:desc}}});
-              fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] edge create:',JSON.stringify(d));var s=d&&d.data&&d.data.createChild&&d.data.createChild.object;if(s&&s.id){
-                var body2=JSON.stringify({query:'mutation d($i:DropOnDiagramInput!){dropOnDiagram(input:$i){__typename ... on DropOnDiagramSuccessPayload{id}... on ErrorPayload{message}}}',variables:{i:{id:crypto.randomUUID(),editingContextId:editingCtxId,representationId:repId,objectIds:[s.id],startingPositionX:0,startingPositionY:0,diagramTargetElementId:''}}});
-                fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body2}).then(function(r2){return r2.json()}).then(function(d2){console.log('[DoDAF] edge drop:',JSON.stringify(d2))});
-                // Draw DOM overlay dashed line between source and target
-                setTimeout(function() {
-                  if (srcNode && tgtNode) {
-                    var oldOverlay = document.querySelector('[data-rel-msg="'+name+'"]');
-                    if (oldOverlay) oldOverlay.remove();
-                    var overlay = document.createElement('div');
-                    overlay.setAttribute('data-rel-msg', name);
-                    overlay.style.cssText = 'position:fixed;pointer-events:none;z-index:9000;border-left:2px dashed #3b82f6;transform-origin:top left';
-                    var sr2 = srcNode.getBoundingClientRect();
-                    var tr2 = tgtNode.getBoundingClientRect();
-                    var x1 = sr2.left + sr2.width / 2;
-                    var y1 = sr2.bottom;
-                    var x2 = tr2.left + tr2.width / 2;
-                    var y2 = tr2.top;
-                    var dx = x2 - x1, dy = y2 - y1;
-                    var len = Math.sqrt(dx*dx + dy*dy);
-                    var angle = Math.atan2(dy, dx) * 180 / Math.PI;
-                    overlay.style.left = x1 + 'px';
-                    overlay.style.top = y1 + 'px';
-                    overlay.style.height = len + 'px';
-                    overlay.style.transform = 'rotate(' + (angle - 90) + 'deg)';
-                    document.body.appendChild(overlay);
-                  }
-                }, 200);
-              }});
-            }
+            console.log('[RelDialog] src='+src+' tgt='+tgt);
+            // Create a real Dependency edge via createChild (collaborative mutation).
+            // Format: "MessageName@SourceLifeline@TargetLifeline" — the backend parses it
+            // and sets Dependency.client/supplier. Being a collaborative mutation, it
+            // persists the change AND triggers the diagram semantic refresh, so the
+            // synchronized Dependency edge appears between the two Lifelines.
+            var fullName = nextName(name) + '@' + src + '@' + tgt;
+            var desc = 'SysMLv2EditService-Dependency:' + fullName;
+            var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);});
+            var pid = targetObjId || editingCtxId;
+            var body = JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:pid,childCreationDescriptionId:desc}}});
+            fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] edge createChild:',JSON.stringify(d))});
           };
           dlg.onclick = function(e) { if (e.target === dlg) dlg.remove(); };
         }
@@ -1096,19 +1077,11 @@
               img.src = 'http://localhost:8080/images/lifeline.svg';
               img.alt = '«Lifeline»';
             }
-            // Dashed tail
-            var tail = n.querySelector('[data-lifeline-tail]');
-            if (!tail) {
-              tail = document.createElement('div');
-              tail.setAttribute('data-lifeline-tail', '1');
-              tail.style.cssText = 'position:absolute;top:100%;left:50%;width:0;border-left:2px dashed #666;transform:translateX(-50%);pointer-events:none';
-              n.style.position = 'relative';
-              n.appendChild(tail);
-            }
-            var rect = n.getBoundingClientRect();
-            var paneRect = fp2.getBoundingClientRect();
-            var h = paneRect.bottom - rect.bottom;
-            if (h > 0) tail.style.height = h + 'px';
+            // Dashed tail is now rendered by the custom Lifeline node itself
+            // (it fills the whole node height, see SysMLLifelineNode). Remove any
+            // previously injected DOM tail so it no longer overlaps the node's line.
+            var oldTail = n.querySelector('[data-lifeline-tail]');
+            if (oldTail) oldTail.remove();
           }
           // --- OperationalCapability style ---
           else if (txt.indexOf('OperationalCapability') >= 0) {
