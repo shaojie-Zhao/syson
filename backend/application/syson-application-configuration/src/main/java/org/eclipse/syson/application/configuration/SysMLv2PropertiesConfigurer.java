@@ -42,6 +42,7 @@ import org.eclipse.sirius.components.view.emf.form.ViewFormDescriptionConverter;
 import org.eclipse.sirius.components.view.form.CheckboxDescription;
 import org.eclipse.sirius.components.view.form.DateTimeDescription;
 import org.eclipse.sirius.components.view.form.DateTimeType;
+import org.eclipse.sirius.components.view.form.MultiSelectDescription;
 import org.eclipse.sirius.components.view.form.FormDescription;
 import org.eclipse.sirius.components.view.form.FormElementDescription;
 import org.eclipse.sirius.components.view.form.FormElementFor;
@@ -350,6 +351,24 @@ public class SysMLv2PropertiesConfigurer implements IPropertiesDescriptionRegist
         datePicker.getChildren().add(dt);
         widgets.add(datePicker);
 
+        // Reference properties -> multi-select of model elements
+        FormElementIf ref = FormFactory.eINSTANCE.createFormElementIf();
+        ref.setName("DoDAF Reference Properties");
+        ref.setPredicateExpression(ServiceMethod.of1(DetailsViewService::isDodafRefProp).aqlSelf("prop"));
+        MultiSelectDescription ms = FormFactory.eINSTANCE.createMultiSelectDescription();
+        ms.setName("DoDAFMultiSelectWidget");
+        ms.setLabelExpression(ServiceMethod.of1(DetailsViewService::getDodafPropLabel).aqlSelf("prop"));
+        ms.setCandidatesExpression(ServiceMethod.of0(DetailsViewService::getDoDAFReferenceCandidates).aqlSelf());
+        ms.setCandidateLabelExpression(ServiceMethod.of1(DetailsViewService::getDoDAFRefCandidateLabel).aqlSelf("candidate"));
+        ms.setValueExpression(ServiceMethod.of1(DetailsViewService.class, DetailsViewService::getDoDAFRefValue, Element.class, DoDAFProperties.DodafProp.class).aqlSelf("prop"));
+        ms.setIsEnabledExpression(AQLConstants.AQL_TRUE);
+        ChangeContext setMs = ViewFactory.eINSTANCE.createChangeContext();
+        setMs.setExpression(ServiceMethod.of2(DetailsViewService.class, DetailsViewService::setDoDAFRefValue, Element.class, DoDAFProperties.DodafProp.class, Object.class)
+                .aqlSelf("prop", ViewFormDescriptionConverter.NEW_VALUE));
+        ms.getBody().add(setMs);
+        ref.getChildren().add(ms);
+        widgets.add(ref);
+
         return widgets;
     }
 
@@ -375,9 +394,13 @@ public class SysMLv2PropertiesConfigurer implements IPropertiesDescriptionRegist
         forElt.getChildren().addAll(this.createWidgets());
         group.getChildren().add(forElt);
 
-        group.getChildren().add(this.createDodafBooleanCheckbox("isLeaf", "是否叶属性"));
-        group.getChildren().add(this.createDodafBooleanCheckbox("isActive", "是否为活动对象"));
-        group.getChildren().add(this.createDodafBooleanCheckbox("isFinalSpecialization", "是否为final类"));
+        // OWL-configured properties (data + reference + generic) for the task stage element
+        FormElementFor forProps = FormFactory.eINSTANCE.createFormElementFor();
+        forProps.setName("Widgets for DoDAF TaskStage OWL Props");
+        forProps.setIterator("prop");
+        forProps.setIterableExpression(ServiceMethod.of0(DetailsViewService::getDoDAFProps).aqlSelf());
+        forProps.getChildren().addAll(this.createDoDAFPropWidgets());
+        group.getChildren().add(forProps);
 
         return group;
     }
@@ -403,6 +426,7 @@ public class SysMLv2PropertiesConfigurer implements IPropertiesDescriptionRegist
         forElt.getChildren().addAll(this.createWidgets());
         group.getChildren().add(forElt);
 
+        group.getChildren().add(this.createDodafTextField("aCapabilityDescription", "能力描述"));
         group.getChildren().add(this.createDodafBooleanCheckbox("isLeaf", "是否叶属性"));
         group.getChildren().add(this.createDodafBooleanCheckbox("isActive", "是否为活动对象"));
         group.getChildren().add(this.createDodafBooleanCheckbox("isFinalSpecialization", "是否为final类"));
@@ -432,6 +456,7 @@ public class SysMLv2PropertiesConfigurer implements IPropertiesDescriptionRegist
         forElt.getChildren().addAll(this.createWidgets());
         group.getChildren().add(forElt);
 
+        group.getChildren().add(this.createDodafTextField("aCapabilityDescription", "能力描述"));
         group.getChildren().add(this.createDodafBooleanCheckbox("isLeaf", "是否叶属性"));
         group.getChildren().add(this.createDodafBooleanCheckbox("isActive", "是否为活动对象"));
         group.getChildren().add(this.createDodafBooleanCheckbox("isFinalSpecialization", "是否为final类"));
@@ -439,8 +464,20 @@ public class SysMLv2PropertiesConfigurer implements IPropertiesDescriptionRegist
         return group;
     }
 
-    private CheckboxDescription createDodafBooleanCheckbox(String key, String label) {
-        CheckboxDescription checkbox = FormFactory.eINSTANCE.createCheckboxDescription();
+    private TextfieldDescription createDodafTextField(String key, String label) {
+        TextfieldDescription textfield = FormFactory.eINSTANCE.createTextfieldDescription();
+        textfield.setName("DoDAF_" + key);
+        textfield.setLabelExpression(label);
+        textfield.setValueExpression(ServiceMethod.of1(DetailsViewService.class, DetailsViewService::getDodafPropValueByKey, Element.class, String.class).aqlSelf("'" + key + "'"));
+        textfield.setIsEnabledExpression(AQLConstants.AQL_TRUE);
+        ChangeContext setNewValueOperation = ViewFactory.eINSTANCE.createChangeContext();
+        setNewValueOperation.setExpression(ServiceMethod.of2(DetailsViewService.class, DetailsViewService::setDodafPropValueByKey, Element.class, String.class, Object.class)
+                .aqlSelf("'" + key + "'", ViewFormDescriptionConverter.NEW_VALUE));
+        textfield.getBody().add(setNewValueOperation);
+        return textfield;
+    }
+
+    private CheckboxDescription createDodafBooleanCheckbox(String key, String label) {        CheckboxDescription checkbox = FormFactory.eINSTANCE.createCheckboxDescription();
         checkbox.setName("DoDAF_" + key);
         checkbox.setLabelExpression(label);
         checkbox.setValueExpression(ServiceMethod.of1(DetailsViewService.class, DetailsViewService::getDodafBooleanProperty, Element.class, String.class).aqlSelf("'" + key + "'"));

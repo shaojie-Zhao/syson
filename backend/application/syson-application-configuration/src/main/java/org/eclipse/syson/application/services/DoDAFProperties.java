@@ -5,6 +5,7 @@
  *******************************************************************************/
 package org.eclipse.syson.application.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,7 +17,7 @@ public final class DoDAFProperties {
 
     /** Widget type of a DoDAF property. */
     public enum PropType {
-        STRING, BOOLEAN, INTEGER, FLOAT, ENUM, DATE
+        STRING, BOOLEAN, INTEGER, FLOAT, ENUM, DATE, REF
     }
 
     /** A single DoDAF property definition. */
@@ -24,12 +25,19 @@ public final class DoDAFProperties {
     }
 
     private static final List<DodafProp> GENERIC_PROPS = List.of(
+            new DodafProp("ownedComment", "注释", PropType.REF, List.of()),
+            new DodafProp("ownedAttribute", "属性", PropType.REF, List.of()),
+            new DodafProp("ownedOperation", "操作", PropType.REF, List.of()),
             new DodafProp("isLeaf", "是否叶属性", PropType.BOOLEAN, List.of()),
             new DodafProp("isActive", "是否为活动对象", PropType.BOOLEAN, List.of()),
             new DodafProp("isFinalSpecialization", "是否为final类", PropType.BOOLEAN, List.of()),
             new DodafProp("visibility", "可见性", PropType.ENUM, List.of("公有", "私有", "受保护的", "包")));
 
-    /** Element type (matched on the alias, case-insensitive) -> its properties. */
+    /**
+     * Element alias (matched on the alias without the {@code dodaf:} prefix, using
+     * startsWith — longer keys MUST be declared before shorter ones to avoid shadowing,
+     * e.g. InformationElement / InformationTransmissionPattern before Information).
+     */
     private static final Map<String, List<DodafProp>> DODAF_PROPS = Map.ofEntries(
             // === AV-1 概述和摘要信息 ===
             entry("ArchitectureDescription",
@@ -49,24 +57,61 @@ public final class DoDAFProperties {
                     new DodafProp("architect", "架构", PropType.STRING, List.of()),
                     new DodafProp("concerns", "关注者", PropType.STRING, List.of()),
                     new DodafProp("methods", "方法", PropType.STRING, List.of()),
-                    new DodafProp("date", "日期", PropType.DATE, List.of())),
+                    new DodafProp("date", "日期", PropType.DATE, List.of()),
+                    new DodafProp("toBe", "将来", PropType.BOOLEAN, List.of())),
             entry("ArchitectureMetadata",
                     new DodafProp("metaData", "元数据", PropType.STRING, List.of()),
                     new DodafProp("dublinCoreElement", "都柏林核心元素", PropType.STRING, List.of()),
                     new DodafProp("modMetaDataElement", "mod元数据元素", PropType.STRING, List.of()),
                     new DodafProp("ontologyReference", "本体引用", PropType.STRING, List.of())),
+            entry("HighLevelOperationalConcept",
+                    new DodafProp("mission", "任务", PropType.STRING, List.of()),
+                    new DodafProp("mission_ref", "任务引用", PropType.REF, List.of())),
             // === CV-1 能力构想 ===
+            entry("OperationalMissionIntension",
+                    new DodafProp("aCampaignIntention", "战役意图", PropType.STRING, List.of()),
+                    new DodafProp("aIntensionDescription", "意图描述", PropType.STRING, List.of()),
+                    new DodafProp("aTacticIntension", "战术意图", PropType.STRING, List.of())),
+            entry("TaskIntent",
+                    new DodafProp("aCampaignIntention", "战役意图", PropType.STRING, List.of()),
+                    new DodafProp("aIntensionDescription", "意图描述", PropType.STRING, List.of()),
+                    new DodafProp("aTacticIntension", "战术意图", PropType.STRING, List.of())),
             entry("EnterpriseGoal",
                     new DodafProp("goal", "目的", PropType.STRING, List.of()),
-                    new DodafProp("benefits", "利益", PropType.STRING, List.of())),
+                    new DodafProp("benefits", "利益", PropType.STRING, List.of()),
+                    new DodafProp("enterprisePhase", "企业阶段", PropType.REF, List.of())),
             entry("EnterprisePhase",
                     new DodafProp("startDate", "开始时间", PropType.DATE, List.of()),
-                    new DodafProp("endDate", "结束时间", PropType.DATE, List.of())),
+                    new DodafProp("endDate", "结束时间", PropType.DATE, List.of()),
+                    new DodafProp("extra_content", "内容", PropType.STRING, List.of()),
+                    new DodafProp("extra_demand", "要求", PropType.STRING, List.of()),
+                    new DodafProp("extra_MOE", "效能指标", PropType.STRING, List.of()),
+                    new DodafProp("extra_premise", "前提", PropType.STRING, List.of()),
+                    new DodafProp("desribedBy", "被描述", PropType.REF, List.of()),
+                    new DodafProp("fulfills", "实现", PropType.REF, List.of()),
+                    new DodafProp("statementTask", "声明任务", PropType.REF, List.of()),
+                    new DodafProp("informationProcess", "信息处理", PropType.REF, List.of())),
+            entry("TaskStage",
+                    new DodafProp("startDate", "开始时间", PropType.DATE, List.of()),
+                    new DodafProp("endDate", "结束时间", PropType.DATE, List.of()),
+                    new DodafProp("extra_content", "内容", PropType.STRING, List.of()),
+                    new DodafProp("extra_demand", "要求", PropType.STRING, List.of()),
+                    new DodafProp("extra_MOE", "效能指标", PropType.STRING, List.of()),
+                    new DodafProp("extra_premise", "前提", PropType.STRING, List.of()),
+                    new DodafProp("desribedBy", "被描述", PropType.REF, List.of()),
+                    new DodafProp("fulfills", "实现", PropType.REF, List.of()),
+                    new DodafProp("statementTask", "声明任务", PropType.REF, List.of()),
+                    new DodafProp("informationProcess", "信息处理", PropType.REF, List.of())),
             entry("Vision",
                     new DodafProp("vision", "愿景", PropType.STRING, List.of()),
                     new DodafProp("statement", "声明", PropType.STRING, List.of())),
             entry("TimeScale",
                     new DodafProp("timeValue", "时间值", PropType.STRING, List.of())),
+            entry("Mission",
+                    new DodafProp("MissionArea", "任务区域", PropType.STRING, List.of()),
+                    new DodafProp("MissionTarget", "任务目标", PropType.STRING, List.of())),
+            entry("TaskTarget",
+                    new DodafProp("body", "主体", PropType.STRING, List.of())),
             // === OV 特有属性 ===
             entry("ActualOrganization",
                     new DodafProp("codeOrSymbol", "代码/符号", PropType.STRING, List.of()),
@@ -84,28 +129,45 @@ public final class DoDAFProperties {
                     new DodafProp("altitude", "高度", PropType.FLOAT, List.of())),
             entry("Condition",
                     new DodafProp("conditionKind", "条件种类", PropType.STRING, List.of())),
-            // === SV 特有属性 ===
+            entry("OperationalConstraint",
+                    new DodafProp("ruleKind", "规则类型", PropType.STRING, List.of())),
+            entry("ExchangeElement",
+                    new DodafProp("exchangeElementKind", "交换元素种类", PropType.STRING, List.of()),
+                    new DodafProp("definedBy", "被定义", PropType.REF, List.of())),
+            // === SV / SvcV / StdV 特有属性 ===
             entry("Function",
-                    new DodafProp("aFunctionDescription", "功能描述", PropType.STRING, List.of())),
+                    new DodafProp("aFunctionDescription", "功能描述", PropType.STRING, List.of()),
+                    new DodafProp("referenceSystem", "所属系统", PropType.REF, List.of()),
+                    new DodafProp("supportActivity", "支撑活动", PropType.REF, List.of())),
             entry("System",
                     new DodafProp("aSystemDescription", "系统描述", PropType.STRING, List.of()),
                     new DodafProp("externalInterface", "外部接口", PropType.STRING, List.of()),
-                    new DodafProp("internalInterface", "内部接口", PropType.STRING, List.of())),
+                    new DodafProp("internalInterface", "内部接口", PropType.STRING, List.of()),
+                    new DodafProp("supportZZActivity", "支撑作战活动", PropType.REF, List.of()),
+                    new DodafProp("supportZZCapability", "支撑能力", PropType.REF, List.of())),
             entry("ResourceRole",
-                    new DodafProp("performsInContext", "在上下文中执行", PropType.BOOLEAN, List.of())),
-            // === StdV 特有属性 ===
+                    new DodafProp("performsInContext", "在上下文中执行", PropType.BOOLEAN, List.of()),
+                    new DodafProp("MODAFRoleKind", "MODAF角色种类", PropType.STRING, List.of())),
             entry("Standard",
                     new DodafProp("ITStandardCategory", "IT标准类别", PropType.STRING, List.of()),
+                    new DodafProp("InformationTechnologyStandardCategory", "信息技术标准分类", PropType.STRING, List.of()),
                     new DodafProp("ratifiedBy", "批准", PropType.STRING, List.of()),
                     new DodafProp("mandatedDate", "法定日期", PropType.DATE, List.of()),
                     new DodafProp("retiredDate", "退役时间", PropType.DATE, List.of()),
                     new DodafProp("shortName", "简称", PropType.STRING, List.of()),
                     new DodafProp("versionNum", "版本", PropType.STRING, List.of()),
+                    new DodafProp("version", "版本", PropType.STRING, List.of()),
                     new DodafProp("currentStatus", "当前状态", PropType.STRING, List.of())),
             entry("CapabilityConfiguration",
                     new DodafProp("doctrine", "原则", PropType.STRING, List.of())),
             entry("DesignRule",
-                    new DodafProp("identifier", "标识符", PropType.STRING, List.of())),
+                    new DodafProp("identifier", "标识符", PropType.STRING, List.of()),
+                    new DodafProp("consequence", "结论", PropType.STRING, List.of()),
+                    new DodafProp("context", "文本", PropType.STRING, List.of()),
+                    new DodafProp("principles", "原则", PropType.STRING, List.of()),
+                    new DodafProp("problem", "问题", PropType.STRING, List.of()),
+                    new DodafProp("status", "状态", PropType.STRING, List.of()),
+                    new DodafProp("solution", "解决", PropType.REF, List.of())),
             entry("ResourceConnector",
                     new DodafProp("realizedInterface", "接口实现", PropType.STRING, List.of())),
             // === OV-5b 作战活动模型 ===
@@ -117,27 +179,185 @@ public final class DoDAFProperties {
                     new DodafProp("operationalPosition", "作战执行位置", PropType.STRING, List.of()),
                     new DodafProp("intelligenceSupport", "外部情报支援状态", PropType.STRING, List.of()),
                     new DodafProp("communicationSupport", "外部通信支援状态", PropType.STRING, List.of()),
-                    new DodafProp("invokeDLL", "执行脚本", PropType.STRING, List.of())),
+                    new DodafProp("invokeDLL", "执行脚本", PropType.STRING, List.of()),
+                    new DodafProp("operationalActivityActionType", "作战活动类型", PropType.STRING, List.of()),
+                    new DodafProp("a_a_activityOperationalProblem", "相关作战问题", PropType.REF, List.of()),
+                    new DodafProp("a_a_activityRelateMission", "所属作战任务", PropType.REF, List.of()),
+                    new DodafProp("a_e_activityFunction", "相关系统功能", PropType.REF, List.of()),
+                    new DodafProp("extra_MOP", "性能指标", PropType.REF, List.of()),
+                    new DodafProp("a_b_activityCapability", "相关能力", PropType.REF, List.of())),
             entry("OperationalActivityEdge",
                     new DodafProp("k_sendMessageInformation", "发送信息", PropType.STRING, List.of())),
             entry("OperationalProblem",
                     new DodafProp("a_problemType", "问题类型", PropType.STRING, List.of()),
-                    new DodafProp("b_problemDescription", "问题描述", PropType.STRING, List.of())),
+                    new DodafProp("b_problemDescription", "问题描述", PropType.STRING, List.of()),
+                    new DodafProp("c_problemRelateActivity", "相关活动", PropType.REF, List.of())),
+            entry("OperationalTask",
+                    new DodafProp("executiveCondition", "执行条件", PropType.REF, List.of()),
+                    new DodafProp("executiveRequirement", "执行要求", PropType.REF, List.of()),
+                    new DodafProp("executiveTarget", "执行目标", PropType.REF, List.of()),
+                    new DodafProp("intension", "作战意图", PropType.REF, List.of()),
+                    new DodafProp("location", "位置", PropType.REF, List.of()),
+                    new DodafProp("suggest", "作战建议", PropType.REF, List.of()),
+                    new DodafProp("time", "时间", PropType.REF, List.of())),
+            entry("CommunicationActivity",
+                    new DodafProp("communicationFrequency", "通信频段", PropType.STRING, List.of()),
+                    new DodafProp("communicationTime", "通信时间", PropType.INTEGER, List.of()),
+                    new DodafProp("informationContent", "信息内容", PropType.STRING, List.of()),
+                    new DodafProp("informationFormat", "信息格式", PropType.STRING, List.of()),
+                    new DodafProp("sendInformationNoise", "发信噪声", PropType.STRING, List.of()),
+                    new DodafProp("receiveNode", "收信节点", PropType.REF, List.of()),
+                    new DodafProp("sendNode", "发信节点", PropType.REF, List.of())),
+            entry("Maneuver",
+                    new DodafProp("maneuverType", "机动样式", PropType.STRING, List.of()),
+                    new DodafProp("maneuverDepth", "机动高度", PropType.INTEGER, List.of()),
+                    new DodafProp("maneuverDistance", "机动距离", PropType.INTEGER, List.of()),
+                    new DodafProp("maneuverSpeed", "机动速度", PropType.INTEGER, List.of()),
+                    new DodafProp("maneuverTime", "机动耗时", PropType.INTEGER, List.of()),
+                    new DodafProp("deepeningSpeed", "变深速度", PropType.INTEGER, List.of())),
+            entry("DetectionActivity",
+                    new DodafProp("detectDistance", "探测距离", PropType.INTEGER, List.of()),
+                    new DodafProp("detectTime", "探测时间", PropType.INTEGER, List.of()),
+                    new DodafProp("directionAngle", "探测角度", PropType.STRING, List.of()),
+                    new DodafProp("informationUpdateFrequency", "探测信息更新频率", PropType.STRING, List.of()),
+                    new DodafProp("targetRecognitionTime", "目标识别时间", PropType.STRING, List.of())),
+            entry("StrikeActivity",
+                    new DodafProp("weaponNumber", "发射武器数量", PropType.INTEGER, List.of()),
+                    new DodafProp("weaponTime", "发射武器时间", PropType.INTEGER, List.of()),
+                    new DodafProp("weaponType", "发射武器类型", PropType.STRING, List.of()),
+                    new DodafProp("weaponCondition", "武器发射条件", PropType.REF, List.of())),
+            entry("DefenseActivity",
+                    new DodafProp("defenseEquipmentNumber", "防御武器数量", PropType.INTEGER, List.of()),
+                    new DodafProp("defenseEquipmentType", "防御武器类型", PropType.STRING, List.of())),
+            entry("SupportActivity",
+                    new DodafProp("energyInputPlatform", "能量输入平台", PropType.STRING, List.of()),
+                    new DodafProp("energyOutputPlatform", "能量输出平台", PropType.STRING, List.of()),
+                    new DodafProp("energyTransferCondition", "能量传输环境条件", PropType.STRING, List.of()),
+                    new DodafProp("energyTransferSpeed", "能量传输速度", PropType.INTEGER, List.of()),
+                    new DodafProp("energyTransferTime", "能量传输时间", PropType.INTEGER, List.of())),
+            entry("JudgmentActivity",
+                    new DodafProp("judgmentCotent", "研判内容", PropType.STRING, List.of()),
+                    new DodafProp("judgmentRule", "研判规则", PropType.STRING, List.of()),
+                    new DodafProp("judgmentTime", "研判时长", PropType.INTEGER, List.of()),
+                    new DodafProp("triggerCondition", "触发条件", PropType.STRING, List.of())),
+            entry("CommandControlActivity",
+                    new DodafProp("commandMethod", "指挥控制方式", PropType.STRING, List.of())),
+            entry("Command",
+                    new DodafProp("aMilitaryOrderCode", "命令代码", PropType.STRING, List.of()),
+                    new DodafProp("bMilitaryOrderMeaning", "命令含义", PropType.STRING, List.of()),
+                    new DodafProp("cElementInformation", "须包含要素信息", PropType.STRING, List.of())),
+            // === 装备（含子类型） ===
+            entry("Equipment",
+                    new DodafProp("depth_height", "深度/高度", PropType.INTEGER, List.of()),
+                    new DodafProp("electricityLevel", "电量", PropType.INTEGER, List.of()),
+                    new DodafProp("sailingSpeed", "航速", PropType.INTEGER, List.of()),
+                    new DodafProp("platformLatitude", "平台纬度", PropType.FLOAT, List.of()),
+                    new DodafProp("platformLongitude", "平台经度", PropType.FLOAT, List.of()),
+                    new DodafProp("loadNumber", "载荷数量", PropType.INTEGER, List.of()),
+                    new DodafProp("loadType", "载荷类型", PropType.STRING, List.of()),
+                    new DodafProp("load_sTorpedoAcousticGuidanceRange", "鱼雷声制导距离范围", PropType.STRING, List.of()),
+                    new DodafProp("load_sTorpedoDamageRange", "鱼雷毁伤范围", PropType.STRING, List.of()),
+                    new DodafProp("load_sTorpedoWireGuidanceRange", "鱼雷线导距离范围", PropType.STRING, List.of()),
+                    new DodafProp("pla_communicationAngleRange", "通信角度范围", PropType.STRING, List.of()),
+                    new DodafProp("pla_communicationBER", "通信误码率", PropType.STRING, List.of()),
+                    new DodafProp("pla_communicationDistanceRange", "通信距离范围", PropType.STRING, List.of()),
+                    new DodafProp("pla_communicationeFrequency", "可通信频段", PropType.STRING, List.of()),
+                    new DodafProp("pla_communicationTransmissionRate", "通信传输速率", PropType.STRING, List.of()),
+                    new DodafProp("pla_detectionAccuracy", "探测精度", PropType.STRING, List.of()),
+                    new DodafProp("pla_detectionAngleRange", "探测角度范围", PropType.STRING, List.of()),
+                    new DodafProp("pla_detectionDistanceRange", "探测距离范围", PropType.STRING, List.of()),
+                    new DodafProp("pla_detectionNoiseRange", "探测噪声范围", PropType.STRING, List.of()),
+                    new DodafProp("pla_detectionUpdateFrequency", "探测更新频率", PropType.STRING, List.of()),
+                    new DodafProp("pla_dTargetRecognitionNumber", "目标识别数量", PropType.STRING, List.of()),
+                    new DodafProp("pla_dTargetRecognitionType", "目标识别类型", PropType.STRING, List.of()),
+                    new DodafProp("pla_maneuverNoiseRange", "平台机动噪音范围", PropType.STRING, List.of()),
+                    new DodafProp("pla_maneuverSpeedRange", "机动航速范围", PropType.STRING, List.of()),
+                    new DodafProp("pla_mTurningRadius", "转弯半径", PropType.STRING, List.of()),
+                    new DodafProp("pla_mWorkDepthRange", "平台工作深度范围", PropType.STRING, List.of()),
+                    new DodafProp("pla_sEmergencyProtection", "应急保障", PropType.STRING, List.of()),
+                    new DodafProp("pla_sLoadReleaseRecovery", "载荷释放与回收", PropType.STRING, List.of()),
+                    new DodafProp("pla_sPlatformEnergy", "平台能量", PropType.STRING, List.of()),
+                    new DodafProp("a_energy", "能量", PropType.STRING, List.of()),
+                    new DodafProp("a_healthState", "健康状态", PropType.STRING, List.of()),
+                    new DodafProp("a_survivalState", "存活状态", PropType.STRING, List.of()),
+                    new DodafProp("a_maneuverDepth", "机动高度", PropType.INTEGER, List.of()),
+                    new DodafProp("a_maneuverRadius", "机动半径", PropType.STRING, List.of()),
+                    new DodafProp("a_maneuverRotation", "机动角度", PropType.STRING, List.of()),
+                    new DodafProp("a_maneuverSpeed", "机动速度", PropType.INTEGER, List.of()),
+                    new DodafProp("platformStatus", "平台状态", PropType.STRING, List.of()),
+                    new DodafProp("load_dAcousticResistanceScope", "声抗器材作用范围", PropType.STRING, List.of()),
+                    new DodafProp("load_dDeceptionDeviceScope", "诱骗器材作用范围", PropType.STRING, List.of()),
+                    new DodafProp("load_maneuverNoiseRange", "载荷机动噪音范围", PropType.STRING, List.of()),
+                    new DodafProp("load_mOutletSpeed", "出管速度", PropType.STRING, List.of()),
+                    new DodafProp("load_mWorkDepthRange", "载荷工作深度范围", PropType.STRING, List.of()),
+                    new DodafProp("pla_launchAttitude", "发射姿态", PropType.STRING, List.of()),
+                    new DodafProp("pla_launchDepth", "发射深度", PropType.STRING, List.of()),
+                    new DodafProp("pla_launchLoadNumber", "发射载荷数量", PropType.STRING, List.of()),
+                    new DodafProp("pla_launchLoadType", "发射载荷类型", PropType.STRING, List.of()),
+                    new DodafProp("pla_launchSpeed", "发射速度", PropType.STRING, List.of()),
+                    new DodafProp("pla_lEnvironmentCondition", "发射环境条件", PropType.STRING, List.of()),
+                    new DodafProp("pla_lTransientNoise", "发射瞬态噪声", PropType.STRING, List.of()),
+                    new DodafProp("communicationPerformance", "通信性能", PropType.REF, List.of()),
+                    new DodafProp("defensePerformance", "防御性能", PropType.REF, List.of()),
+                    new DodafProp("detectionPerformance", "探测性能", PropType.REF, List.of()),
+                    new DodafProp("loadPerformance", "载荷发控性能", PropType.REF, List.of()),
+                    new DodafProp("maneuverPerformance_load", "载荷机动性能", PropType.REF, List.of()),
+                    new DodafProp("maneuverPerformance_platform", "平台机动性能", PropType.REF, List.of()),
+                    new DodafProp("strikePerformance", "打击性能", PropType.REF, List.of()),
+                    new DodafProp("supportPerformance", "保障性能", PropType.REF, List.of())),
+            // === DIV 数据模型实体 ===
+            entry("ConceptEntity",
+                    new DodafProp("composition_ref", "组合", PropType.REF, List.of())),
+            entry("LogicalEntity",
+                    new DodafProp("composition_logical", "逻辑组合", PropType.REF, List.of()),
+                    new DodafProp("realizes_ref", "实现", PropType.REF, List.of())),
+            entry("PlatformEntity",
+                    new DodafProp("composition_platform", "平台组合", PropType.REF, List.of()),
+                    new DodafProp("realizes_platform", "实现", PropType.REF, List.of())),
             // === DIV 特有属性 ===
             entry("MessageInformation",
                     new DodafProp("msgID", "报文ID", PropType.STRING, List.of()),
+                    new DodafProp("ID", "编号", PropType.STRING, List.of()),
+                    new DodafProp("packageHeadLength", "包头长度(bit)", PropType.INTEGER, List.of()),
+                    new DodafProp("packageLoadLength", "包载荷长度(bit)", PropType.INTEGER, List.of()),
+                    new DodafProp("aInformationUsage", "信息用途", PropType.STRING, List.of()),
+                    new DodafProp("bInformationSource", "信源信宿", PropType.STRING, List.of()),
+                    new DodafProp("cInformationTransmissionMethod", "信息发送方式", PropType.STRING, List.of()),
+                    new DodafProp("dInformationDescription", "信息描述", PropType.STRING, List.of()),
+                    new DodafProp("propertyList", "属性列表", PropType.REF, List.of()),
+                    new DodafProp("eElementList", "要素列表", PropType.REF, List.of())),
+            entry("InformationElement",
+                    new DodafProp("aInformationElementType", "信息要素类型", PropType.STRING, List.of()),
+                    new DodafProp("bInformationElementDescription", "信息要素说明", PropType.STRING, List.of())),
+            entry("InformationTransmissionPattern",
+                    new DodafProp("a_identification", "标识", PropType.STRING, List.of()),
+                    new DodafProp("b_sendingRate", "发送速率(bps)", PropType.INTEGER, List.of()),
+                    new DodafProp("c_timeDelay", "引导头时延(s)", PropType.FLOAT, List.of()),
+                    new DodafProp("d_parallelTransmission", "非并传/并传", PropType.STRING, List.of()),
+                    new DodafProp("e_guardInterval", "保护间隔(s)", PropType.FLOAT, List.of()),
+                    new DodafProp("f_singlePackageTime", "单包时长(s)", PropType.FLOAT, List.of()),
+                    new DodafProp("g_parallelTransmissionTime", "并传间隔时间(s)", PropType.FLOAT, List.of()),
+                    new DodafProp("specification", "说明", PropType.STRING, List.of())),
+            entry("Information",
+                    new DodafProp("msgID", "报文ID", PropType.STRING, List.of()),
+                    new DodafProp("ID", "编号", PropType.STRING, List.of()),
                     new DodafProp("packageHeadLength", "包头长度(bit)", PropType.INTEGER, List.of()),
                     new DodafProp("packageLoadLength", "包载荷长度(bit)", PropType.INTEGER, List.of()),
                     new DodafProp("aInformationUsage", "信息用途", PropType.STRING, List.of()),
                     new DodafProp("bInformationSource", "信源信宿", PropType.STRING, List.of()),
                     new DodafProp("cInformationTransmissionMethod", "信息发送方式", PropType.STRING, List.of()),
                     new DodafProp("dInformationDescription", "信息描述", PropType.STRING, List.of())),
+            entry("MilitaryOrder",
+                    new DodafProp("aMilitaryOrderCode", "命令代码", PropType.STRING, List.of()),
+                    new DodafProp("bMilitaryOrderMeaning", "命令含义", PropType.STRING, List.of()),
+                    new DodafProp("cElementInformation", "须包含要素信息", PropType.STRING, List.of())),
             entry("InformationAssuranceProperties",
                     new DodafProp("accessControl", "使用权限", PropType.STRING, List.of()),
                     new DodafProp("availability", "可用性", PropType.STRING, List.of()),
                     new DodafProp("confidentiality", "机密", PropType.STRING, List.of()),
                     new DodafProp("disseminationControl", "传染控制", PropType.STRING, List.of()),
                     new DodafProp("integrityProp", "完整", PropType.STRING, List.of()),
+                    new DodafProp("integrity", "完整", PropType.STRING, List.of()),
                     new DodafProp("nonRepudiationConsumer", "不可抵赖消费者", PropType.STRING, List.of()),
                     new DodafProp("nonRepudiationProducer", "不可抵赖生产者", PropType.STRING, List.of())),
             entry("SecurityAttributes",
@@ -152,7 +372,13 @@ public final class DoDAFProperties {
                     new DodafProp("declassException", "解密异常", PropType.STRING, List.of()),
                     new DodafProp("declassEvent", "解密事件", PropType.STRING, List.of()),
                     new DodafProp("declassDate", "解密日期", PropType.DATE, List.of()),
-                    new DodafProp("derivedFrom", "派生自", PropType.STRING, List.of())),
+                    new DodafProp("derivedFrom", "派生自", PropType.STRING, List.of()),
+                    new DodafProp("DeclassManualReview", "解密手动审核", PropType.STRING, List.of()),
+                    new DodafProp("DisseminationControls", "传播控制", PropType.STRING, List.of()),
+                    new DodafProp("FGIsourceOpen", "FGI资源开放", PropType.STRING, List.of()),
+                    new DodafProp("FGIsourceProtected", "FGI资源保护", PropType.STRING, List.of()),
+                    new DodafProp("SARIdentifier", "SAR标识", PropType.STRING, List.of()),
+                    new DodafProp("SCIControls", "SCI控制", PropType.STRING, List.of())),
             entry("InformationElementProperties",
                     new DodafProp("scope", "范围", PropType.STRING, List.of()),
                     new DodafProp("content", "内容", PropType.STRING, List.of()),
@@ -165,13 +391,18 @@ public final class DoDAFProperties {
             // === 效能指标属性 ===
             entry("PerformanceIndicator",
                     new DodafProp("aIndicatorValue", "指标值", PropType.FLOAT, List.of()),
-                    new DodafProp("bExpression", "表达式", PropType.STRING, List.of())),
+                    new DodafProp("bExpression", "表达式", PropType.STRING, List.of()),
+                    new DodafProp("PerformanceIndicatorItems", "效能指标参数列表", PropType.REF, List.of())),
             entry("PerformanceIndicatorItem",
                     new DodafProp("defaultValue", "默认值", PropType.FLOAT, List.of()),
                     new DodafProp("upperValue", "上限值", PropType.FLOAT, List.of()),
                     new DodafProp("lowerValue", "下限值", PropType.FLOAT, List.of()),
                     new DodafProp("unit", "单位", PropType.STRING, List.of()),
-                    new DodafProp("actualValue", "实际值", PropType.FLOAT, List.of())));
+                    new DodafProp("actualValue", "实际值", PropType.FLOAT, List.of())),
+            // === PV ===
+            entry("ActualProjectMilestone",
+                    new DodafProp("description", "描述", PropType.STRING, List.of()),
+                    new DodafProp("resource", "资源", PropType.REF, List.of())));
 
     private DoDAFProperties() {
         // Utility class
@@ -183,8 +414,9 @@ public final class DoDAFProperties {
 
     /**
      * Returns the property list for the given DoDAF element, matched on its alias
-     * (case-insensitive contains). Falls back to the generic property set when the
-     * element type has no dedicated configuration.
+     * (without the {@code dodaf:} prefix, using contains — longer keys are declared
+     * first so they win). Falls back to the generic property set when the element
+     * type has no dedicated configuration.
      *
      * @param aliasIds the element alias ids
      * @return the ordered property list
@@ -192,10 +424,13 @@ public final class DoDAFProperties {
     public static List<DodafProp> propsFor(List<String> aliasIds) {
         for (var e : DODAF_PROPS.entrySet()) {
             for (String alias : aliasIds) {
-                if (alias != null && alias.toLowerCase().contains(e.getKey().toLowerCase())) {
-                    var props = new java.util.ArrayList<DodafProp>(e.getValue());
-                    props.addAll(GENERIC_PROPS);
-                    return List.copyOf(props);
+                if (alias != null && alias.startsWith("dodaf:")) {
+                    String name = alias.substring("dodaf:".length());
+                    if (name.contains(e.getKey())) {
+                        var props = new ArrayList<DodafProp>(e.getValue());
+                        props.addAll(GENERIC_PROPS);
+                        return List.copyOf(props);
+                    }
                 }
             }
         }

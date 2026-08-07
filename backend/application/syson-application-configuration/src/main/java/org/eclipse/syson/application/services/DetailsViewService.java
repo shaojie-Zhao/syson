@@ -439,6 +439,40 @@ public class DetailsViewService {
     }
 
     /**
+     * Reads a DoDAF property value from the {@code dodaf} EAnnotation by plain key.
+     *
+     * @param self the element
+     * @param key the property key
+     * @return the stored value, or {@code null} when absent
+     */
+    public Object getDodafPropValueByKey(Element self, String key) {
+        var annotation = self.getEAnnotation("dodaf");
+        if (annotation != null) {
+            return annotation.getDetails().get(key);
+        }
+        return null;
+    }
+
+    /**
+     * Stores a DoDAF property value in the {@code dodaf} EAnnotation by plain key.
+     *
+     * @param self the element
+     * @param key the property key
+     * @param value the value to store
+     * @return the stored value
+     */
+    public Object setDodafPropValueByKey(Element self, String key, Object value) {
+        var annotation = self.getEAnnotation("dodaf");
+        if (annotation == null) {
+            annotation = EcoreFactory.eINSTANCE.createEAnnotation();
+            annotation.setSource("dodaf");
+            self.getEAnnotations().add(annotation);
+        }
+        annotation.getDetails().put(key, String.valueOf(value));
+        return value;
+    }
+
+    /**
      * Reads a DoDAF property value from the {@code dodaf} EAnnotation.
      *
      * @param self the element
@@ -506,6 +540,108 @@ public class DetailsViewService {
     /** Whether the property is a date (date-time picker). */
     public boolean isDodafDateProp(Element self, DoDAFProperties.DodafProp prop) {
         return prop.type() == DoDAFProperties.PropType.DATE;
+    }
+
+    /** Whether the property is a reference (multi-select of model elements). */
+    public boolean isDodafRefProp(Element self, DoDAFProperties.DodafProp prop) {
+        return prop.type() == DoDAFProperties.PropType.REF;
+    }
+
+    /**
+     * Reference candidates: every other project element (library elements excluded)
+     * reachable in the same resource set.
+     *
+     * @param self the DoDAF element
+     * @return all model elements (excluding the element itself and library elements)
+     */
+    public List<Element> getDoDAFReferenceCandidates(Element self) {
+        List<Element> result = new ArrayList<>();
+        if (self.eResource() != null && self.eResource().getResourceSet() != null) {
+            var it = self.eResource().getResourceSet().getAllContents();
+            while (it.hasNext()) {
+                Object o = it.next();
+                if (o instanceof Element e && e != self && !e.isIsLibraryElement()) {
+                    result.add(e);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Display label of a reference candidate (avoids AQL service lookup issues).
+     *
+     * @param candidate the referenced element
+     * @return the element name, or its class label when unnamed
+     */
+    public String getDoDAFRefCandidateLabel(Element self, Element candidate) {
+        String name = candidate.getName();
+        if (name == null || name.isBlank()) {
+            return candidate.getDeclaredName() != null ? candidate.getDeclaredName() : candidate.eClass().getName();
+        }
+        return name;
+    }
+
+    /**
+     * Resolves the referenced elements stored in the {@code dodaf} EAnnotation for a
+     * REF property (stored as comma-separated element IDs).
+     *
+     * @param self the element
+     * @param prop the property definition
+     * @return the referenced elements
+     */
+    public List<Element> getDoDAFRefValue(Element self, DoDAFProperties.DodafProp prop) {
+        List<Element> result = new ArrayList<>();
+        var annotation = self.getEAnnotation("dodaf");
+        if (annotation == null || self.eResource() == null || self.eResource().getResourceSet() == null) {
+            return result;
+        }
+        String raw = annotation.getDetails().get(prop.key());
+        if (raw == null || raw.isBlank()) {
+            return result;
+        }
+        var ids = List.of(raw.split(","));
+        var it = self.eResource().getResourceSet().getAllContents();
+        while (it.hasNext()) {
+            Object o = it.next();
+            if (o instanceof Element e && e.getElementId() != null && ids.contains(e.getElementId())) {
+                result.add(e);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Stores the referenced element IDs in the {@code dodaf} EAnnotation for a REF property.
+     *
+     * @param self the element
+     * @param prop the property definition
+     * @param value the selected elements
+     * @return the stored value
+     */
+    @SuppressWarnings("unchecked")
+    public Object setDoDAFRefValue(Element self, DoDAFProperties.DodafProp prop, Object value) {
+        var annotation = self.getEAnnotation("dodaf");
+        if (annotation == null) {
+            annotation = EcoreFactory.eINSTANCE.createEAnnotation();
+            annotation.setSource("dodaf");
+            self.getEAnnotations().add(annotation);
+        }
+        String ids = "";
+        if (value instanceof Collection<?> coll) {
+            var sb = new StringBuilder();
+            for (Object o : coll) {
+                if (o instanceof Element e && e.getElementId() != null) {
+                    if (!sb.isEmpty()) {
+                        sb.append(",");
+                    }
+                    sb.append(e.getElementId());
+                }
+            }
+            ids = sb.toString();
+        }
+        annotation.getDetails().put(prop.key(), ids);
+        return value;
     }
 
     /** Enum candidates for a DoDAF enum property. */
