@@ -922,7 +922,7 @@
             var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);});
             var pid = targetObjId || editingCtxId;
             var body = JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:pid,childCreationDescriptionId:desc}}});
-            fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] edge createChild:',JSON.stringify(d));__seqMsgCtx=null;});
+            fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] edge createChild:',JSON.stringify(d));__seqMsgCtx=null;if(typeof loadSeqMessageTypes==='function')loadSeqMessageTypes();});
           };
           dlg.onclick = function(e) { if (e.target === dlg) dlg.remove(); };
         }
@@ -1795,13 +1795,20 @@
       //   AsynchronousCallMessage / SendSignalMessage → 实线空心箭头
       //   ResumeMessage → 虚线空心箭头（唤醒）
       var __seqMsgTypes = null;
+      var __seqMsgTypesByLabel = {};
+      var __seqMsgTypesByST = {};
       var __seqMsgCtx = null;
       var __actHeights = {}; // {edgeId:side: height} localStorage 持久化
       // editingCtxId / getRepId live inside the right-click-menu IIFE; resolve the project
-      // id from the URL here instead (same rule as getCtxAndTarget).
+      // id from the URL here instead (same rule as getCtxAndTarget). Robust to several
+      // URL shapes: /projects/{pid}/edit, /projects/{pid}, bare /{pid}, ?selection={pid}.
       function seqCtxId() {
-        var m = window.location.pathname.match(/\/projects\/([^/]+)\/edit/);
-        return m ? m[1] : null;
+        var m = window.location.pathname.match(/\/projects\/([^/]+)(?:\/edit)?/);
+        if (m) return m[1];
+        var seg = window.location.pathname.split('/').filter(Boolean);
+        if (seg.length >= 1 && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(seg[seg.length - 1])) return seg[seg.length - 1];
+        var s = window.location.search.match(/[?&]selection=([^&]+)/);
+        return s ? s[1] : null;
       }
       (function initActHeights() {
         try {
@@ -1813,22 +1820,74 @@
           }
         } catch (e) {}
       })();
-      function loadSeqMessageTypes() {
-        var ctxId = seqCtxId();
-        if (!ctxId || __seqMsgCtx === ctxId) return;
-        fetch('/api/sequence/edges?ctxId=' + encodeURIComponent(ctxId))
+      function seqRepId() {
+        var m = window.location.search.match(/[?&]representation=([^&]+)/);
+        return m ? m[1] : (window.location.pathname.split('/').pop() || 'default-matrix');
+      }
+      // 后端 getRSByEcId 直接 findById，不做 project→editingContext 转换（getRS 才转换）。
+      // URL 里的是 project id，必须经 target-object-id 接口换回真实 editingContextId，
+      // 否则 /api/sequence/edges 查不到 ResourceSet 返回空列表。
+      function seqEditingCtxId(pid, cb) {
+        var rid = seqRepId();
+        fetch('/api/matrix/' + encodeURIComponent(rid) + '/target-object-id?ctxId=' + encodeURIComponent(pid) + '&tableOnly=false')
           .then(function(r){ return r.json(); })
-          .then(function(d){
-            var m = {};
-            (d.edges || []).forEach(function(ed){ m[ed.id] = ed.messageType; });
-            __seqMsgTypes = m;
-            __seqMsgCtx = ctxId;
-          })
-          .catch(function(){});
+          .then(function(d){ cb((d && d.editingContextId) || pid); })
+          .catch(function(){ cb(pid); });
+      }
+      function loadSeqMessageTypes() {
+        var pid = seqCtxId();
+        if (!pid) {
+          console.log('[DoDAF] seq ctx NOT resolved:', window.location.pathname, window.location.search);
+          return;
+        }
+        if (__seqMsgCtx === pid) return;
+        console.log('[DoDAF] seq ctx resolved:', pid, 'path=', window.location.pathname, 'search=', window.location.search);
+        seqEditingCtxId(pid, function(ecId) {
+          fetch('/api/sequence/edges?ctxId=' + encodeURIComponent(ecId))
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+              var m = {};
+              var byLabel = {};
+              var byST = {};
+              (d.edges || []).forEach(function(ed){
+                m[ed.id] = ed.messageType;
+                if (ed.label) byLabel[ed.label] = ed.messageType;
+                if (ed.source && ed.target) byST[ed.source + '>' + ed.target] = ed.messageType;
+              });
+              __seqMsgTypes = m;
+              __seqMsgTypesByLabel = byLabel;
+              __seqMsgTypesByST = byST;
+              __seqMsgCtx = pid;
+              console.log('[DoDAF] seq edges loaded:', Object.keys(m).length, 'types for ctx', pid);
+            })
+            .catch(function(){});
+        });
+      }
+      // 消息类型三级匹配（任一命中即可）：
+      //   1) React Flow 边 id == 后端 URI fragment；
+      //   2) 边整体文本（含 label）== 后端 label（declaredName，已剥离 @ 后缀）；
+      //   3) 由路径端点坐标定位源/目标生命线节点名 == 后端 source/target。
+      // 后端接口返回 {id, messageType, label, source, target}，前端三种 key 都建了索引。
+      function seqMsgTypeOf(g) {
+        var mt = __seqMsgTypes[g.getAttribute('data-id')];
+        if (mt) return mt;
+        var txt = (g.textContent || '').trim();
+        if (txt && __seqMsgTypesByLabel[txt]) return __seqMsgTypesByLabel[txt];
+        var pts = parsePathEnds(g.querySelector('.react-flow__edge-path')?.getAttribute('d') || '');
+        if (pts) {
+          var srcDash = seqFindDashAt(pts.x1, pts.y1);
+          var tgtDash = seqFindDashAt(pts.x2, pts.y2);
+          var src = srcDash ? seqNodeName(srcDash.closest('.react-flow__node')) : '';
+          var tgt = tgtDash ? seqNodeName(tgtDash.closest('.react-flow__node')) : '';
+          if (src && tgt) return __seqMsgTypesByST[src + '>' + tgt] || null;
+        }
+        return null;
       }
       function seqMsgStyle(mt) {
+        // 虚线只用于 ResumeMessage（唤醒）；其余一律实线
         if (mt === 'ResumeMessage') return { dash: true, filled: false };
         if (mt === 'AsynchronousCallMessage' || mt === 'SendSignalMessage') return { dash: false, filled: false };
+        // OperationalMessage（作战消息基类）/ 同步 / 交互 / 创建 / 删除 / 外部触发 → 实线实心箭头
         return { dash: false, filled: true };
       }
       function parsePathEnds(d) {
@@ -1859,14 +1918,37 @@
         if (!defs) { defs = document.createElementNS(ns, 'defs'); svg.insertBefore(defs, svg.firstChild); }
         defs.appendChild(m);
       }
+      var __seqStyleDiag = false;
+      // CSS !important 控制消息边线型：React Flow 通过 inline style 设置
+      // strokeDasharray（每次重渲染都会覆盖 setAttribute），CSS !important 优先级
+      // 更高且 data-seq-* 属性不会被 React 移除（React 只更新它管理的属性），
+      // 因此实线/虚线能稳定保持。箭头 marker 用 inline style + attribute 双写。
+      (function injectSeqCss() {
+        var id = 'seq-msg-css';
+        if (document.getElementById(id)) return;
+        var st = document.createElement('style');
+        st.id = id;
+        st.textContent = 'g.react-flow__edge[data-seq-message="1"] .react-flow__edge-path { stroke: #334155 !important; stroke-width: 1.5px !important; fill: none !important; }' +
+          'g.react-flow__edge[data-seq-dash="1"] .react-flow__edge-path { stroke-dasharray: 6 4 !important; }' +
+          'g.react-flow__edge[data-seq-solid="1"] .react-flow__edge-path { stroke-dasharray: none !important; }';
+        document.head.appendChild(st);
+      })();
       // 消息边样式：直线 + 按类型的线型/箭头 + 标签居中
       function styleSequenceMessages() {
         if (!__seqMsgTypes) { loadSeqMessageTypes(); return; }
         var edges = document.querySelectorAll('.react-flow__edge');
+        if (!__seqStyleDiag) {
+          __seqStyleDiag = true;
+          for (var di = 0; di < edges.length; di++) {
+            var dg = edges[di];
+            console.log('[DoDAF] diag edge eid=', dg.getAttribute('data-id'), 'text=', (dg.textContent || '').trim().slice(0, 60), 'mt=', seqMsgTypeOf(dg));
+          }
+          console.log('[DoDAF] diag byLabel keys=', Object.keys(__seqMsgTypesByLabel), 'byST keys=', Object.keys(__seqMsgTypesByST));
+        }
         for (var i = 0; i < edges.length; i++) {
           var g = edges[i];
-          var eid = g.getAttribute('data-id');
-          var mt = eid ? __seqMsgTypes[eid] : null;
+          var eid = g.getAttribute('data-id') || '';
+          var mt = seqMsgTypeOf(g);
           if (!mt) continue;
           var path = g.querySelector('.react-flow__edge-path');
           if (!path) continue;
@@ -1885,15 +1967,20 @@
               path.setAttribute('d', 'M' + pts.x1 + ' ' + pts.y1 + ' L' + pts.x2 + ' ' + pts.y2);
             }
           }
+          // 线型/颜色：CSS !important 控制（优先级高于 React Flow inline style）
+          g.setAttribute('data-seq-message', '1');
+          g.setAttribute(style.dash ? 'data-seq-dash' : 'data-seq-solid', '1');
+          g.removeAttribute(style.dash ? 'data-seq-solid' : 'data-seq-dash');
           path.setAttribute('stroke', color);
           path.setAttribute('stroke-width', '1.5');
-          path.setAttribute('stroke-dasharray', style.dash ? '6 4' : '');
           path.setAttribute('fill', 'none');
           var svg = path.ownerSVGElement;
           if (svg) {
             var mid = 'msg' + eid.replace(/[^a-zA-Z0-9]/g, '') + (style.filled ? 'f' : 'o');
             ensureMsgMarker(svg, mid, style.filled, color);
+            // 箭头：inline style + attribute 双写（React Flow 覆盖后 300ms 轮询恢复）
             path.setAttribute('marker-end', 'url(#' + mid + ')');
+            path.style.markerEnd = 'url(#' + mid + ')';
             path.removeAttribute('marker-start');
           }
           var lbl = g.querySelector('.react-flow__edge-text');
@@ -1929,73 +2016,79 @@
         if (mt === 'AsynchronousCallMessage' || mt === 'SendSignalMessage' || mt === 'ResumeMessage') return false;
         return true;
       }
+      // 消息端点（图坐标）归属的生命线虚线容器：命中节点矩形范围 + 水平最近。
+      function seqViewportZoom() {
+        var vp = document.querySelector('.react-flow__viewport');
+        if (!vp) return 1;
+        var m = (vp.style.transform || '').match(/scale\(([\d.]+)\)/);
+        return m ? parseFloat(m[1]) : 1;
+      }
+      function seqNodeGraphPos(nd) {
+        var m = (nd.style.transform || '').match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+        if (!m) return null;
+        return { x: parseFloat(m[1]), y: parseFloat(m[2]) };
+      }
+      function seqDashTopOf(dash) {
+        var nd = dash.closest('.react-flow__node');
+        if (!nd) return null;
+        var gp = seqNodeGraphPos(nd);
+        if (!gp) return null;
+        var zoom = seqViewportZoom() || 1;
+        var off = (dash.getBoundingClientRect().top - nd.getBoundingClientRect().top) / zoom;
+        return gp.y + off;
+      }
+      function seqFindDashAt(x, y) {
+        var best = null, bestD = 1e9;
+        document.querySelectorAll('.react-flow__node').forEach(function(nd) {
+          var dash = nd.querySelector('[data-lifeline-dashed="1"]');
+          if (!dash) return;
+          var gp = seqNodeGraphPos(nd);
+          if (!gp) return;
+          var nw = nd.offsetWidth, nh = nd.offsetHeight;
+          if (x < gp.x - 8 || x > gp.x + nw + 8 || y < gp.y - 8 || y > gp.y + nh + 8) return;
+          var dcx = gp.x + nw / 2;
+          var d = Math.abs(x - dcx);
+          if (d < bestD) { bestD = d; best = dash; }
+        });
+        return best;
+      }
+      function addAct(byNode, x, y, key) {
+        var dash = seqFindDashAt(x, y);
+        if (!dash) return;
+        var nd = dash.closest('.react-flow__node');
+        var nodeId = nd ? nd.getAttribute('data-id') : null;
+        if (!nodeId) return;
+        var dashTop = seqDashTopOf(dash);
+        if (dashTop === null) return;
+        var h = __actHeights[key] || 60;
+        if (!byNode[nodeId]) byNode[nodeId] = [];
+        byNode[nodeId].push({ key: key, top: y - dashTop, height: h });
+      }
       function renderActivations() {
         if (!__seqMsgTypes) return;
+        var byNode = {};
         var edges = document.querySelectorAll('.react-flow__edge');
-        var drawn = {};
         for (var i = 0; i < edges.length; i++) {
           var g = edges[i];
-          var eid = g.getAttribute('data-id');
-          var mt = eid ? __seqMsgTypes[eid] : null;
+          var mt = seqMsgTypeOf(g);
           if (!mt) continue;
           var path = g.querySelector('.react-flow__edge-path');
           if (!path) continue;
           var pts = parsePathEnds(path.getAttribute('d') || '');
           if (!pts) continue;
-          var svg = path.ownerSVGElement;
-          if (!svg) continue;
-          var targets = [];
-          if (seqMsgNeedsActivationAtSource(mt)) targets.push({ x: pts.x1, y: pts.y1, side: 's' });
-          targets.push({ x: pts.x2, y: pts.y2, side: 't' });
-          targets.forEach(function(tp) {
-            var key = eid + ':' + tp.side;
-            if (drawn[key]) return;
-            drawn[key] = true;
-            var old = svg.querySelector('[data-act="' + key + '"]');
-            if (old) {
-              // 已存在则保持（用户可能已拖拽调整）
-              return;
-            }
-            var h = __actHeights[key] || 60;
-            var ns = 'http://www.w3.org/2000/svg';
-            var rect = document.createElementNS(ns, 'rect');
-            rect.setAttribute('data-act', key);
-            rect.setAttribute('x', (tp.x - 4).toFixed(1));
-            rect.setAttribute('y', tp.y.toFixed(1));
-            rect.setAttribute('width', '8');
-            rect.setAttribute('height', h.toFixed(1));
-            rect.setAttribute('fill', '#cbd5e1');
-            rect.setAttribute('stroke', '#94a3b8');
-            rect.setAttribute('stroke-width', '1');
-            rect.setAttribute('rx', '1');
-            rect.style.cursor = 'ns-resize';
-            rect.setAttribute('data-act-x', tp.x.toFixed(1));
-            rect.setAttribute('data-act-y', tp.y.toFixed(1));
-            // 底部拖拽调高
-            (function(rc, k) {
-              var dragging = null;
-              rc.addEventListener('pointerdown', function(ev) {
-                ev.preventDefault(); ev.stopPropagation();
-                dragging = { y: ev.clientY, h: parseFloat(rc.getAttribute('height')) };
-                rc.setPointerCapture(ev.pointerId);
-              });
-              rc.addEventListener('pointermove', function(ev) {
-                if (!dragging) return;
-                var dy = ev.clientY - dragging.y;
-                var nh = Math.max(20, dragging.h + dy);
-                rc.setAttribute('height', nh.toFixed(1));
-              });
-              rc.addEventListener('pointerup', function() {
-                if (!dragging) return;
-                dragging = null;
-                __actHeights[k] = parseFloat(rc.getAttribute('height'));
-                try { localStorage.setItem('syson_seq_act_' + k, __actHeights[k]); } catch (e) {}
-              });
-            })(rect, key);
-            svg.appendChild(rect);
-          });
+          var eid = g.getAttribute('data-id') || '';
+          if (seqMsgNeedsActivationAtSource(mt)) addAct(byNode, pts.x1, pts.y1, eid + ':s');
+          addAct(byNode, pts.x2, pts.y2, eid + ':t');
         }
+        // 派发到各生命线节点（SysMLLifelineNode 监听渲染 rect + handle）
+        Object.keys(byNode).forEach(function(nodeId) {
+          window.dispatchEvent(new CustomEvent('seq-activations', { detail: { nodeId: nodeId, acts: byNode[nodeId] } }));
+        });
       }
+      // 组件拖拽激活条高度后同步回 index.html 缓存，避免下次轮询覆盖
+      window.addEventListener('seq-act-height', function(ev) {
+        if (ev.detail && ev.detail.key) __actHeights[ev.detail.key] = ev.detail.height;
+      });
       setInterval(renderActivations, 300);
 
       // ===== OV-6c：拖拽创建消息（从生命线虚线 handle 拖到目标生命线）=====
@@ -2037,7 +2130,9 @@
         var h = ev.target && ev.target.closest ? ev.target.closest('.react-flow__handle') : null;
         if (!h) return;
         var hid = h.getAttribute('data-handleid') || '';
-        if (hid.indexOf('lls-') !== 0 && hid.indexOf('llt-') !== 0) return;
+        // lls-/llt-：生命线虚线 handle；act-s-/act-t-：激活条顶部 handle。
+        // 两者都进入自定义拖拽创建（弹消息类型选择），而不是 React Flow 默认连接。
+        if (hid.indexOf('lls-') !== 0 && hid.indexOf('llt-') !== 0 && hid.indexOf('act-') !== 0) return;
         var nd = h.closest('.react-flow__node');
         if (!nd) return;
         var srcName = seqNodeName(nd);
@@ -2109,7 +2204,7 @@
           variables: { i: { id: u, editingContextId: ctxId, objectId: pid, childCreationDescriptionId: desc } } });
         fetch('/api/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body })
           .then(function(r) { return r.json(); })
-          .then(function(d) { console.log('[DoDAF] drag-create message:', JSON.stringify(d)); __seqMsgCtx = null; });
+          .then(function(d) { console.log('[DoDAF] drag-create message:', JSON.stringify(d)); __seqMsgCtx = null; if (typeof loadSeqMessageTypes === 'function') loadSeqMessageTypes(); });
       }
 
       // ===== OV-6c：一键自动布局（生命线 X 均分，触发时覆盖手动位置）=====
