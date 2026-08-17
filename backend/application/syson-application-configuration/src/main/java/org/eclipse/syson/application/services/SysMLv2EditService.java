@@ -343,12 +343,27 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                 this.tagDoDAFAlias(created, childCreationDescriptionId);
             }
             if (initName != null && !initName.isEmpty() && eObject instanceof Dependency dep && initName.contains("@")) {
-                // OV-6c message edge: "MessageName@SourceLifeline@TargetLifeline"
-                String[] parts = initName.split("@");
+                // OV-6c message edge: "MessageName@SourceLifeline@TargetLifeline[@MessageType]"
+                // split("@", 4) caps the split: the first 3 fields (name, source, target) are
+                // positional; anything from the 4th '@' on is folded into the messageType field
+                // and rejected by the whitelist below (falls back to OperationalMessage).
+                String[] parts = initName.split("@", 4);
                 if (parts.length >= 3) {
                     String depName = parts[0];
                     String srcName = parts[1];
                     String tgtName = parts[2];
+                    String messageType = parts.length >= 4 && !parts[3].isBlank() ? parts[3].trim() : "OperationalMessage";
+                    // Whitelist: only the known UML/DoDAF message kinds are persisted,
+                    // anything else falls back to the base OperationalMessage.
+                    java.util.Set<String> knownTypes = java.util.Set.of("OperationalMessage", "SynchronousCallMessage", "AsynchronousCallMessage",
+                            "SendSignalMessage", "CreateMessage", "InteractionMessage", "ExternalTriggerMessage", "DeleteMessage", "ResumeMessage");
+                    if (!knownTypes.contains(messageType)) {
+                        messageType = "OperationalMessage";
+                    }
+                    // Always strip the @-suffix from the declared name once parsed, even if
+                    // the source/target lifelines cannot be resolved (avoids persisting the
+                    // raw "name@src@tgt@type" garbage string into the model).
+                    initName = depName;
                     Element srcEl = null;
                     Element tgtEl = null;
                     if (dep.eResource() != null) {
@@ -356,16 +371,47 @@ public class SysMLv2EditService implements IEditServiceDelegate {
                         while (it.hasNext()) {
                             Object o = it.next();
                             if (o instanceof Element e) {
-                                if (srcName.equals(e.getName())) srcEl = e;
-                                if (tgtName.equals(e.getName())) tgtEl = e;
+                                if (!srcName.isEmpty() && srcName.equals(e.getName())) srcEl = e;
+                                if (!tgtName.isEmpty() && tgtName.equals(e.getName())) tgtEl = e;
                             }
+                        }
+                    }
+                    // CreateMessage: the target lifeline does not exist yet — create it
+                    // automatically (UML "object creation" semantics) and connect to it.
+                    // Only when the source lifeline has a real container, otherwise the new
+                    // lifeline would be nested inside the source element itself.
+                    if ("CreateMessage".equals(messageType) && tgtEl == null && srcEl != null && srcEl.eContainer() != null) {
+                        var lifeline = SysmlFactory.eINSTANCE.createPartDefinition();
+                        lifeline.setDeclaredName(tgtName);
+                        setAlias(lifeline, "dodaf:Lifeline");
+                        EObject mount = srcEl;
+                        EObject parent = srcEl.eContainer();
+                        while (parent != null) {
+                            mount = parent;
+                            parent = parent.eContainer();
+                        }
+                        if (mount instanceof Element topEl) {
+                            var membership = SysmlFactory.eINSTANCE.createMembership();
+                            membership.getOwnedRelatedElement().add(lifeline);
+                            topEl.getOwnedRelationship().add(membership);
+                            System.err.println("=== CREATE-CHILD CreateMessage: auto-created lifeline " + tgtName + " under " + topEl.getName());
+                            tgtEl = lifeline;
+                        } else {
+                            // The top-most container is not an Element (extremely rare): do not
+                            // nest the new lifeline inside the source lifeline — just skip the link.
+                            System.err.println("=== CREATE-CHILD CreateMessage: cannot mount lifeline " + tgtName + ", top container is not an Element");
                         }
                     }
                     if (srcEl != null && tgtEl != null) {
                         dep.getClient().add(srcEl);
                         dep.getSupplier().add(tgtEl);
-                        initName = depName;
-                        System.err.println("=== CREATE-CHILD Dependency edge: " + depName + " " + srcName + "->" + tgtName);
+                        // Persist the UML message kind so the frontend can render the right
+                        // line/arrow style after refresh (EAnnotation matches the DoDAF panel).
+                        org.eclipse.emf.ecore.EAnnotation annotation = org.eclipse.emf.ecore.EcoreFactory.eINSTANCE.createEAnnotation();
+                        annotation.setSource("dodaf");
+                        annotation.getDetails().put("messageType", messageType);
+                        dep.getEAnnotations().add(annotation);
+                        System.err.println("=== CREATE-CHILD Dependency edge: " + depName + " " + srcName + "->" + tgtName + " type=" + messageType);
                         try {
                             var adapter = org.eclipse.emf.ecore.util.EcoreUtil.getAdapter(srcEl.eAdapters(), org.eclipse.syson.util.SysONEContentAdapter.class);
                             System.err.println("=== DIAG2 srcEl has adapter: " + (adapter != null));

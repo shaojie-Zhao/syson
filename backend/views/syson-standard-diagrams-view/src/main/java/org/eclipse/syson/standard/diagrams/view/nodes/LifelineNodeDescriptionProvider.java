@@ -25,7 +25,6 @@ public class LifelineNodeDescriptionProvider extends AbstractNodeDescriptionProv
 
     @Override
     public NodeDescription create() {
-        System.err.println("=== LifelineNodeDescriptionProvider.create() called");
         return this.diagramBuilderHelper.newNodeDescription()
                 .collapsible(false)
                 .defaultHeightExpression("150")
@@ -55,12 +54,37 @@ public class LifelineNodeDescriptionProvider extends AbstractNodeDescriptionProv
     @Override
     public void link(DiagramDescription diagramDescription, IViewDiagramElementFinder cache) {
         cache.getNodeDescription(NAME).ifPresent(nd -> {
-            nd.setPalette(this.diagramBuilderHelper.newNodePalette().build());
+            nd.setPalette(this.createLifelinePalette());
             // Register the Lifeline node description in the diagram so edges can connect
             // to it and its size (head + dashed tail) is honored by the layout.
             if (!diagramDescription.getNodeDescriptions().contains(nd)) {
                 diagramDescription.getNodeDescriptions().add(nd);
             }
         });
+    }
+
+    /**
+     * Palette with the standard label edit (rename) and delete tools so lifelines can be
+     * renamed with a double-click and removed from the diagram (SDVDiagramDescriptionTests
+     * enforces both tools on every node description).
+     */
+    private org.eclipse.sirius.components.view.diagram.NodePalette createLifelinePalette() {
+        var deleteChangeContext = this.viewBuilderHelper.newChangeContext()
+                .expression(ServiceMethod.of0(org.eclipse.syson.services.DeleteService::deleteFromModel).aqlSelf());
+        var deleteTool = this.diagramBuilderHelper.newDeleteTool()
+                .name("Delete from Model")
+                .body(deleteChangeContext.build());
+
+        var callEditService = this.viewBuilderHelper.newChangeContext()
+                .expression(ServiceMethod.of1(org.eclipse.syson.diagram.services.aql.DiagramMutationAQLService::directEdit).aqlSelf("newLabel"));
+        var editTool = this.diagramBuilderHelper.newLabelEditTool()
+                .name("Edit")
+                .initialDirectEditLabelExpression(ServiceMethod.of0(org.eclipse.syson.diagram.services.aql.DiagramQueryAQLService::getDefaultInitialDirectEditLabel).aqlSelf())
+                .body(callEditService.build());
+
+        return this.diagramBuilderHelper.newNodePalette()
+                .deleteTool(deleteTool.build())
+                .labelEditTool(editTool.build())
+                .build();
     }
 }

@@ -880,10 +880,10 @@
           var dlg = document.createElement('div');
           dlg.id = 'rel-dialog';
           dlg.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6)';
-          var srcOpts = lifelines.map(function(l) { return '<option value="' + l + '">' + l + '</option>'; }).join('');
-          var tgtOpts = lifelines.map(function(l) { return '<option value="' + l + '">' + l + '</option>'; }).join('');
+          var srcOpts = lifelines.map(function(l) { var e = escapeHtml(l); return '<option value="' + e + '">' + e + '</option>'; }).join('');
+          var tgtOpts = lifelines.map(function(l) { var e = escapeHtml(l); return '<option value="' + e + '">' + e + '</option>'; }).join('');
           dlg.innerHTML = '<div style="background:#1e293b;border-radius:12px;padding:24px;min-width:360px;box-shadow:0 8px 30px rgba(0,0,0,0.5);color:#e2e8f0;font:13px system-ui,sans-serif">' +
-            '<h3 style="margin:0 0 16px;font-size:16px">' + name + '</h3>' +
+            '<h3 style="margin:0 0 16px;font-size:16px">' + escapeHtml(name) + '</h3>' +
             '<div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:#94a3b8">Source</label><select id="rel-src" style="width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:#e2e8f0;padding:8px;font-size:13px">' + srcOpts + '</select></div>' +
             '<div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:#94a3b8">Target</label><select id="rel-tgt" style="width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:#e2e8f0;padding:8px;font-size:13px">' + tgtOpts + '</select></div>' +
             '<div style="display:flex;gap:8px;justify-content:flex-end"><button id="rel-cancel" style="background:#334155;color:#cbd5e1;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:12px">Cancel</button><button id="rel-ok" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 18px;cursor:pointer;font-size:12px">OK</button></div></div>';
@@ -911,16 +911,18 @@
             var repId = getRepId();
             console.log('[RelDialog] src='+src+' tgt='+tgt);
             // Create a real Dependency edge via createChild (collaborative mutation).
-            // Format: "MessageName@SourceLifeline@TargetLifeline" — the backend parses it
-            // and sets Dependency.client/supplier. Being a collaborative mutation, it
-            // persists the change AND triggers the diagram semantic refresh, so the
-            // synchronized Dependency edge appears between the two Lifelines.
-            var fullName = nextName(name) + '@' + src + '@' + tgt;
+            // Format: "MessageName@SourceLifeline@TargetLifeline@MessageType" — the
+            // backend parses it, sets Dependency.client/supplier and stores the UML
+            // message kind in a "dodaf" EAnnotation (messageType).
+            var mt = '';
+            var mtMatch = name.match(/\(([A-Za-z]+)\)/);
+            if (mtMatch) mt = mtMatch[1];
+            var fullName = nextName(name) + '@' + src + '@' + tgt + '@' + mt;
             var desc = 'SysMLv2EditService-Dependency:' + fullName;
             var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);});
             var pid = targetObjId || editingCtxId;
             var body = JSON.stringify({query:'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',variables:{i:{id:u,editingContextId:editingCtxId,objectId:pid,childCreationDescriptionId:desc}}});
-            fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] edge createChild:',JSON.stringify(d))});
+            fetch('/api/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(r){return r.json()}).then(function(d){console.log('[DoDAF] edge createChild:',JSON.stringify(d));__seqMsgCtx=null;});
           };
           dlg.onclick = function(e) { if (e.target === dlg) dlg.remove(); };
         }
@@ -1784,6 +1786,391 @@
         }
       }
       setInterval(styleLifelines, 300);
+
+      // ===== OV-6c 时序图：UML 消息边类型化渲染 =====
+      // 消息边 = Dependency + "dodaf" EAnnotation(messageType)。类型映射（后端
+      // createChild 解析 "名字@源@目标@类型" 写入）：
+      //   OperationalMessage / SynchronousCallMessage / InteractionMessage /
+      //   CreateMessage / DeleteMessage / ExternalTriggerMessage → 实线实心箭头
+      //   AsynchronousCallMessage / SendSignalMessage → 实线空心箭头
+      //   ResumeMessage → 虚线空心箭头（唤醒）
+      var __seqMsgTypes = null;
+      var __seqMsgCtx = null;
+      var __actHeights = {}; // {edgeId:side: height} localStorage 持久化
+      // editingCtxId / getRepId live inside the right-click-menu IIFE; resolve the project
+      // id from the URL here instead (same rule as getCtxAndTarget).
+      function seqCtxId() {
+        var m = window.location.pathname.match(/\/projects\/([^/]+)\/edit/);
+        return m ? m[1] : null;
+      }
+      (function initActHeights() {
+        try {
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k && k.indexOf('syson_seq_act_') === 0) {
+              __actHeights[k.substring('syson_seq_act_'.length)] = parseFloat(localStorage.getItem(k));
+            }
+          }
+        } catch (e) {}
+      })();
+      function loadSeqMessageTypes() {
+        var ctxId = seqCtxId();
+        if (!ctxId || __seqMsgCtx === ctxId) return;
+        fetch('/api/sequence/edges?ctxId=' + encodeURIComponent(ctxId))
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            var m = {};
+            (d.edges || []).forEach(function(ed){ m[ed.id] = ed.messageType; });
+            __seqMsgTypes = m;
+            __seqMsgCtx = ctxId;
+          })
+          .catch(function(){});
+      }
+      function seqMsgStyle(mt) {
+        if (mt === 'ResumeMessage') return { dash: true, filled: false };
+        if (mt === 'AsynchronousCallMessage' || mt === 'SendSignalMessage') return { dash: false, filled: false };
+        return { dash: false, filled: true };
+      }
+      function parsePathEnds(d) {
+        var m1 = d.match(/M\s*([-\d.]+)[,\s]+([-\d.]+)/);
+        if (!m1) return null;
+        var last = d.match(/([-\d.]+)[,\s]+([-\d.]+)\s*$/);
+        if (!last) return null;
+        return { x1: parseFloat(m1[1]), y1: parseFloat(m1[2]), x2: parseFloat(last[1]), y2: parseFloat(last[2]) };
+      }
+      function ensureMsgMarker(svg, id, filled, color) {
+        if (svg.querySelector('marker#' + id)) return;
+        var ns = 'http://www.w3.org/2000/svg';
+        var m = document.createElementNS(ns, 'marker');
+        m.setAttribute('id', id);
+        m.setAttribute('viewBox', '0 0 10 10');
+        m.setAttribute('refX', filled ? '9' : '9.5');
+        m.setAttribute('refY', '5');
+        m.setAttribute('markerWidth', '7');
+        m.setAttribute('markerHeight', '7');
+        m.setAttribute('orient', 'auto-start-reverse');
+        var p = document.createElementNS(ns, 'path');
+        p.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+        p.setAttribute('fill', filled ? color : 'none');
+        p.setAttribute('stroke', color);
+        p.setAttribute('stroke-width', '1');
+        m.appendChild(p);
+        var defs = svg.querySelector('defs');
+        if (!defs) { defs = document.createElementNS(ns, 'defs'); svg.insertBefore(defs, svg.firstChild); }
+        defs.appendChild(m);
+      }
+      // 消息边样式：直线 + 按类型的线型/箭头 + 标签居中
+      function styleSequenceMessages() {
+        if (!__seqMsgTypes) { loadSeqMessageTypes(); return; }
+        var edges = document.querySelectorAll('.react-flow__edge');
+        for (var i = 0; i < edges.length; i++) {
+          var g = edges[i];
+          var eid = g.getAttribute('data-id');
+          var mt = eid ? __seqMsgTypes[eid] : null;
+          if (!mt) continue;
+          var path = g.querySelector('.react-flow__edge-path');
+          if (!path) continue;
+          var style = seqMsgStyle(mt);
+          var color = '#334155';
+          var d = path.getAttribute('d') || '';
+          var pts = parsePathEnds(d);
+          if (pts) {
+            if (Math.abs(pts.x1 - pts.x2) < 6 && Math.abs(pts.y1 - pts.y2) > 6) {
+              // 自调用（同生命线）：U 型折线
+              var bend = 40;
+              var dir = (pts.y2 > pts.y1 ? 1 : -1);
+              path.setAttribute('d', 'M' + pts.x1 + ' ' + pts.y1 + ' L' + (pts.x1 + bend) + ' ' + pts.y1 +
+                ' L' + (pts.x1 + bend) + ' ' + pts.y2 + ' L' + pts.x2 + ' ' + pts.y2);
+            } else {
+              path.setAttribute('d', 'M' + pts.x1 + ' ' + pts.y1 + ' L' + pts.x2 + ' ' + pts.y2);
+            }
+          }
+          path.setAttribute('stroke', color);
+          path.setAttribute('stroke-width', '1.5');
+          path.setAttribute('stroke-dasharray', style.dash ? '6 4' : '');
+          path.setAttribute('fill', 'none');
+          var svg = path.ownerSVGElement;
+          if (svg) {
+            var mid = 'msg' + eid.replace(/[^a-zA-Z0-9]/g, '') + (style.filled ? 'f' : 'o');
+            ensureMsgMarker(svg, mid, style.filled, color);
+            path.setAttribute('marker-end', 'url(#' + mid + ')');
+            path.removeAttribute('marker-start');
+          }
+          var lbl = g.querySelector('.react-flow__edge-text');
+          if (lbl) {
+            lbl.setAttribute('text-anchor', 'middle');
+            lbl.style.fill = '#1e293b';
+            lbl.style.fontSize = '11px';
+          }
+          // ExternalTriggerMessage：源端标注「外部」(外部 Actor 输入)
+          if (mt === 'ExternalTriggerMessage' && pts) {
+            var ext = g.querySelector('[data-seq-ext]');
+            if (!ext) {
+              var ns2 = 'http://www.w3.org/2000/svg';
+              ext = document.createElementNS(ns2, 'text');
+              ext.setAttribute('data-seq-ext', '1');
+              ext.setAttribute('x', pts.x1 - 6);
+              ext.setAttribute('y', pts.y1 - 6);
+              ext.setAttribute('text-anchor', 'end');
+              ext.setAttribute('font-size', '9');
+              ext.setAttribute('fill', '#b45309');
+              ext.textContent = '«ext»';
+              g.appendChild(ext);
+            }
+          }
+        }
+      }
+      setInterval(styleSequenceMessages, 300);
+
+      // ===== OV-6c 激活条（Activation）：随消息自动生成，底部可拖拽调高 =====
+      // 同步类消息两端生成激活条；异步/信号/恢复仅目标端生成。激活条是纯视觉
+      // SVG rect（叠加在消息边所在 SVG 中），高度存 localStorage 按边持久化。
+      function seqMsgNeedsActivationAtSource(mt) {
+        if (mt === 'AsynchronousCallMessage' || mt === 'SendSignalMessage' || mt === 'ResumeMessage') return false;
+        return true;
+      }
+      function renderActivations() {
+        if (!__seqMsgTypes) return;
+        var edges = document.querySelectorAll('.react-flow__edge');
+        var drawn = {};
+        for (var i = 0; i < edges.length; i++) {
+          var g = edges[i];
+          var eid = g.getAttribute('data-id');
+          var mt = eid ? __seqMsgTypes[eid] : null;
+          if (!mt) continue;
+          var path = g.querySelector('.react-flow__edge-path');
+          if (!path) continue;
+          var pts = parsePathEnds(path.getAttribute('d') || '');
+          if (!pts) continue;
+          var svg = path.ownerSVGElement;
+          if (!svg) continue;
+          var targets = [];
+          if (seqMsgNeedsActivationAtSource(mt)) targets.push({ x: pts.x1, y: pts.y1, side: 's' });
+          targets.push({ x: pts.x2, y: pts.y2, side: 't' });
+          targets.forEach(function(tp) {
+            var key = eid + ':' + tp.side;
+            if (drawn[key]) return;
+            drawn[key] = true;
+            var old = svg.querySelector('[data-act="' + key + '"]');
+            if (old) {
+              // 已存在则保持（用户可能已拖拽调整）
+              return;
+            }
+            var h = __actHeights[key] || 60;
+            var ns = 'http://www.w3.org/2000/svg';
+            var rect = document.createElementNS(ns, 'rect');
+            rect.setAttribute('data-act', key);
+            rect.setAttribute('x', (tp.x - 4).toFixed(1));
+            rect.setAttribute('y', tp.y.toFixed(1));
+            rect.setAttribute('width', '8');
+            rect.setAttribute('height', h.toFixed(1));
+            rect.setAttribute('fill', '#cbd5e1');
+            rect.setAttribute('stroke', '#94a3b8');
+            rect.setAttribute('stroke-width', '1');
+            rect.setAttribute('rx', '1');
+            rect.style.cursor = 'ns-resize';
+            rect.setAttribute('data-act-x', tp.x.toFixed(1));
+            rect.setAttribute('data-act-y', tp.y.toFixed(1));
+            // 底部拖拽调高
+            (function(rc, k) {
+              var dragging = null;
+              rc.addEventListener('pointerdown', function(ev) {
+                ev.preventDefault(); ev.stopPropagation();
+                dragging = { y: ev.clientY, h: parseFloat(rc.getAttribute('height')) };
+                rc.setPointerCapture(ev.pointerId);
+              });
+              rc.addEventListener('pointermove', function(ev) {
+                if (!dragging) return;
+                var dy = ev.clientY - dragging.y;
+                var nh = Math.max(20, dragging.h + dy);
+                rc.setAttribute('height', nh.toFixed(1));
+              });
+              rc.addEventListener('pointerup', function() {
+                if (!dragging) return;
+                dragging = null;
+                __actHeights[k] = parseFloat(rc.getAttribute('height'));
+                try { localStorage.setItem('syson_seq_act_' + k, __actHeights[k]); } catch (e) {}
+              });
+            })(rect, key);
+            svg.appendChild(rect);
+          });
+        }
+      }
+      setInterval(renderActivations, 300);
+
+      // ===== OV-6c：拖拽创建消息（从生命线虚线 handle 拖到目标生命线）=====
+      // 在 capture 阶段拦截生命线 handle 的 pointerdown，阻止 React Flow 默认连接，
+      // 自绘跟随线，松手后弹 9 种消息类型选择菜单再走 createChild 创建。
+      // 生命线 handle 前缀 lls-/llt- 定义于 syson-components
+      // SysMLLifelineNode.tsx（沿虚线百分比分布的隐藏 source/target handle）。
+      var __dragCreate = null; // {srcName, lineEl, startX, startY}
+      var __msgTypeList = [
+        { n: 'OperationalMessage', l: '作战消息' },
+        { n: 'SynchronousCallMessage', l: '同步调用消息' },
+        { n: 'AsynchronousCallMessage', l: '异步调用消息' },
+        { n: 'SendSignalMessage', l: '发送信号消息' },
+        { n: 'CreateMessage', l: '创建消息' },
+        { n: 'InteractionMessage', l: '交互消息' },
+        { n: 'ExternalTriggerMessage', l: '外部触发消息' },
+        { n: 'DeleteMessage', l: '删除消息' },
+        { n: 'ResumeMessage', l: '恢复消息' }
+      ];
+      function seqNodeName(nd) {
+        var lb = nd.querySelector('[data-testid*="Label content"]');
+        if (!lb) return '';
+        var parts = lb.textContent.trim().split('\n');
+        return parts[parts.length - 1].trim();
+      }
+      function showDragConnectLine(x1, y1, x2, y2) {
+        var old = document.getElementById('seq-drag-line');
+        if (old) old.remove();
+        var ln = document.createElement('div');
+        ln.id = 'seq-drag-line';
+        var len = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+        var ang = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+        ln.style.cssText = 'position:fixed;z-index:99998;height:0;border-top:1.5px dashed #3b82f6;' +
+          'transform-origin:0 0;left:' + x1 + 'px;top:' + y1 + 'px;width:' + len + 'px;' +
+          'transform:rotate(' + ang + 'deg);pointer-events:none';
+        document.body.appendChild(ln);
+      }
+      document.addEventListener('pointerdown', function(ev) {
+        var h = ev.target && ev.target.closest ? ev.target.closest('.react-flow__handle') : null;
+        if (!h) return;
+        var hid = h.getAttribute('data-handleid') || '';
+        if (hid.indexOf('lls-') !== 0 && hid.indexOf('llt-') !== 0) return;
+        var nd = h.closest('.react-flow__node');
+        if (!nd) return;
+        var srcName = seqNodeName(nd);
+        if (!srcName) return;
+        // 接管拖拽：阻止 React Flow 默认连接处理
+        if (ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+        if (ev.preventDefault) ev.preventDefault();
+        __dragCreate = { srcName: srcName, startX: ev.clientX, startY: ev.clientY };
+      }, true);
+      document.addEventListener('pointermove', function(ev) {
+        if (!__dragCreate) return;
+        showDragConnectLine(__dragCreate.startX, __dragCreate.startY, ev.clientX, ev.clientY);
+      }, true);
+      document.addEventListener('pointerup', function(ev) {
+        if (!__dragCreate) return;
+        var old = document.getElementById('seq-drag-line');
+        if (old) old.remove();
+        var srcName = __dragCreate.srcName;
+        __dragCreate = null;
+        var t = ev.target;
+        var nd = t && t.closest ? t.closest('.react-flow__node') : null;
+        if (!nd) return;
+        var tgtName = seqNodeName(nd);
+        if (!tgtName || tgtName === srcName) return;
+        showMsgTypeDialog(srcName, tgtName);
+      }, true);
+      // 消息类型选择弹窗（拖拽创建用）
+      function escapeHtml(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+      function showMsgTypeDialog(srcName, tgtName) {
+        var old = document.getElementById('msg-type-dialog');
+        if (old) old.remove();
+        var dlg = document.createElement('div');
+        dlg.id = 'msg-type-dialog';
+        dlg.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6)';
+        var items = __msgTypeList.map(function(m) {
+          return '<div class="mt-item" data-mt="' + m.n + '" style="padding:8px 14px;cursor:pointer;border-radius:6px;font-size:13px">' + m.l + '</div>';
+        }).join('');
+        dlg.innerHTML = '<div style="background:#1e293b;border-radius:12px;padding:20px;min-width:300px;box-shadow:0 8px 30px rgba(0,0,0,0.5);color:#e2e8f0;font:13px system-ui,sans-serif">' +
+          '<h3 style="margin:0 0 6px;font-size:15px">选择消息类型</h3>' +
+          '<div style="margin-bottom:12px;color:#94a3b8;font-size:12px">' + escapeHtml(srcName) + ' → ' + escapeHtml(tgtName) + '</div>' +
+          '<div id="mt-list" style="display:flex;flex-direction:column;gap:2px;max-height:300px;overflow-y:auto">' + items + '</div>' +
+          '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button id="mt-cancel" style="background:#334155;color:#cbd5e1;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:12px">取消</button></div></div>';
+        document.body.appendChild(dlg);
+        dlg.querySelectorAll('.mt-item').forEach(function(it) {
+          it.onmouseenter = function() { this.style.background = '#102334'; };
+          it.onmouseleave = function() { this.style.background = 'transparent'; };
+          it.onclick = function() {
+            var mt = it.getAttribute('data-mt');
+            dlg.remove();
+            createSeqMessage(srcName, tgtName, mt);
+          };
+        });
+        dlg.querySelector('#mt-cancel').onclick = function() { dlg.remove(); };
+        dlg.onclick = function(e) { if (e.target === dlg) dlg.remove(); };
+      }
+      // 通过 createChild 创建消息边（与右键菜单同一链路）
+      function createSeqMessage(srcName, tgtName, mt) {
+        var msgName = '消息' + Math.floor(Math.random() * 1000);
+        var fullName = msgName + '@' + srcName + '@' + tgtName + '@' + mt;
+        var desc = 'SysMLv2EditService-Dependency:' + fullName;
+        var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          var r = Math.random() * 16 | 0; return (c === 'x' ? r : r & 0x3 | 0x8).toString(16);
+        });
+        var pid = seqCtxId();
+        var ctxId = pid;
+        var body = JSON.stringify({ query: 'mutation c($i:CreateChildInput!){createChild(input:$i){__typename ... on CreateChildSuccessPayload{object{id label}}... on ErrorPayload{message}}}',
+          variables: { i: { id: u, editingContextId: ctxId, objectId: pid, childCreationDescriptionId: desc } } });
+        fetch('/api/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body })
+          .then(function(r) { return r.json(); })
+          .then(function(d) { console.log('[DoDAF] drag-create message:', JSON.stringify(d)); __seqMsgCtx = null; });
+      }
+
+      // ===== OV-6c：一键自动布局（生命线 X 均分，触发时覆盖手动位置）=====
+      var __seqLayoutBtn = null;
+      function ensureAutoLayoutBtn() {
+        var hasLifeline = false;
+        document.querySelectorAll('.react-flow__node').forEach(function(nd) {
+          var lb = nd.querySelector('[data-testid*="Label content"]');
+          if (lb && lb.textContent.indexOf('Lifeline') >= 0) hasLifeline = true;
+        });
+        var btn = document.getElementById('seq-auto-layout');
+        if (hasLifeline) {
+          if (!btn) {
+            btn = document.createElement('div');
+            btn.id = 'seq-auto-layout';
+            btn.textContent = '自动布局';
+            btn.style.cssText = 'position:fixed;z-index:99990;right:24px;top:64px;background:#3b82f6;color:#fff;' +
+              'padding:6px 14px;border-radius:6px;font:12px system-ui,sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)';
+            btn.onclick = function() { autoLayoutSequence(); };
+            document.body.appendChild(btn);
+          }
+        } else if (btn) {
+          btn.remove();
+        }
+      }
+      function autoLayoutSequence() {
+        var lifelines = [];
+        document.querySelectorAll('.react-flow__node').forEach(function(nd) {
+          var lb = nd.querySelector('[data-testid*="Label content"]');
+          if (!lb || lb.textContent.indexOf('Lifeline') < 0) return;
+          var r = nd.getBoundingClientRect();
+          lifelines.push({ el: nd, cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width });
+        });
+        if (lifelines.length < 2) return;
+        lifelines.sort(function(a, b) { return a.cx - b.cx; });
+        var minX = lifelines[0].cx;
+        var maxX = lifelines[lifelines.length - 1].cx;
+        var gap = (maxX - minX) / (lifelines.length - 1);
+        lifelines.forEach(function(li, i) {
+          var tx = minX + i * gap;
+          simulateNodeDrag(li.el, tx, li.cy);
+        });
+      }
+      // 模拟真实拖拽事件序列，让 React Flow 接管并持久化节点位置
+      function simulateNodeDrag(node, targetScreenX, targetScreenY) {
+        var r = node.getBoundingClientRect();
+        var sx = r.left + r.width / 2, sy = r.top + r.height / 2;
+        var pid = 500 + Math.floor(Math.random() * 1000);
+        function pe(type, x, y, buttons) {
+          return new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: pid, isPrimary: true, button: 0, buttons: buttons, pointerType: 'mouse', clientX: x, clientY: y });
+        }
+        node.dispatchEvent(pe('pointerdown', sx, sy, 1));
+        var steps = 8;
+        for (var i = 1; i <= steps; i++) {
+          var cx = sx + (targetScreenX - sx) * i / steps;
+          var cy = sy + (targetScreenY - sy) * i / steps;
+          node.dispatchEvent(pe('pointermove', cx, cy, 1));
+        }
+        node.dispatchEvent(pe('pointerup', targetScreenX, targetScreenY, 0));
+      }
+      setInterval(ensureAutoLayoutBtn, 400);
 
       // Replace Lifeline icon in Explorer tree
       function fixLifelineTreeIcons() {

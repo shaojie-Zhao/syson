@@ -41,7 +41,7 @@ public class DoDAFSequenceEdgeController {
             }
             // Search for elements by name (from Lifeline label) rather than fragment ID
             Element src = null, tgt = null;
-            System.out.println("Searching for srcName=" + req.sourceElementId + " tgtName=" + req.targetElementId);
+            log.info("Searching for srcName={} tgtName={}", req.sourceElementId, req.targetElementId);
             for (Resource r : rs.getResources()) {
                 var it = r.getAllContents();
                 while (it.hasNext()) {
@@ -105,6 +105,47 @@ public class DoDAFSequenceEdgeController {
             }
         } catch (Exception e) {
             log.error("Edge create failed: {}", e.getMessage(), e);
+            result.put("error", e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * Returns every OV-6c message edge (Dependency with a "dodaf" EAnnotation) of the
+     * editing context, so the frontend can render the right UML message style (solid/dashed
+     * line, filled/empty arrow) after a refresh. React Flow edge ids match the EMF URI
+     * fragment of the Dependency element.
+     */
+    @GetMapping("/edges")
+    public Map<String, Object> getEdges(@RequestParam("ctxId") String ctxId) {
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> edges = new ArrayList<>();
+        try {
+            var rs = dataService.getRSByEcId(ctxId);
+            if (rs == null) {
+                result.put("edges", edges);
+                return result;
+            }
+            var it = rs.getAllContents();
+            while (it.hasNext()) {
+                Object o = it.next();
+                if (o instanceof Dependency dep && dep.eResource() != null) {
+                    var annotation = dep.getEAnnotation("dodaf");
+                    if (annotation != null && annotation.getDetails().get("messageType") != null) {
+                        Map<String, Object> edge = new HashMap<>();
+                        edge.put("id", dep.eResource().getURIFragment(dep));
+                        edge.put("messageType", annotation.getDetails().get("messageType"));
+                        edge.put("label", dep.getDeclaredName() != null ? dep.getDeclaredName() : "");
+                        edge.put("source", dep.getClient().isEmpty() ? "" : dep.getClient().get(0).getName());
+                        edge.put("target", dep.getSupplier().isEmpty() ? "" : dep.getSupplier().get(0).getName());
+                        edges.add(edge);
+                    }
+                }
+            }
+            result.put("edges", edges);
+            log.info("GET /api/sequence/edges: {} message edges for {}", edges.size(), ctxId);
+        } catch (Exception e) {
+            log.error("GET /api/sequence/edges failed: {}", e.getMessage(), e);
             result.put("error", e.getMessage());
         }
         return result;

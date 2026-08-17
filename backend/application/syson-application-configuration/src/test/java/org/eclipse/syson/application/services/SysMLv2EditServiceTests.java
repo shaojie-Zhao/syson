@@ -45,7 +45,13 @@ import org.eclipse.sirius.web.domain.boundedcontexts.library.Library;
 import org.eclipse.sirius.web.domain.boundedcontexts.library.services.api.ILibrarySearchService;
 import org.eclipse.sirius.web.domain.boundedcontexts.semanticdata.SemanticData;
 import org.eclipse.syson.services.api.ISysONResourceService;
+import org.eclipse.syson.sysml.Dependency;
+import org.eclipse.syson.sysml.Element;
+import org.eclipse.syson.sysml.Membership;
 import org.eclipse.syson.sysml.Namespace;
+import org.eclipse.syson.sysml.Package;
+import org.eclipse.syson.sysml.PartDefinition;
+import org.eclipse.syson.sysml.SysmlFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
@@ -289,5 +295,89 @@ public class SysMLv2EditServiceTests {
         this.sysMLv2EditService.createRootObject(this.editingContext, this.documentIdForNonSysMLResource,
                 "http://www.eclipse.org/sirius-web/domain", "other");
         Assertions.assertThat(methodCreateRootObjectWasCalled.get()).isTrue();
+    }
+
+    /**
+     * Builds a SysML package resource containing two lifelines named {@code a} and {@code b} (PartDefinition with
+     * {@code dodaf:Lifeline} alias) so the OV-6c message-edge resolution can find them by name.
+     */
+    private Package createPackageWithLifelines(String a, String b) {
+        var pkg = SysmlFactory.eINSTANCE.createPackage();
+        pkg.setDeclaredName("root");
+        var l1 = SysmlFactory.eINSTANCE.createPartDefinition();
+        l1.setDeclaredName(a);
+        l1.getAliasIds().add("dodaf:Lifeline");
+        var m1 = SysmlFactory.eINSTANCE.createMembership();
+        m1.getOwnedRelatedElement().add(l1);
+        pkg.getOwnedRelationship().add(m1);
+        var l2 = SysmlFactory.eINSTANCE.createPartDefinition();
+        l2.setDeclaredName(b);
+        l2.getAliasIds().add("dodaf:Lifeline");
+        var m2 = SysmlFactory.eINSTANCE.createMembership();
+        m2.getOwnedRelatedElement().add(l2);
+        pkg.getOwnedRelationship().add(m2);
+        return pkg;
+    }
+
+    @Test
+    public void testCreateChildMessageEdgeWithMessageType() {
+        var pkg = createPackageWithLifelines("A", "B");
+        ((org.eclipse.sirius.web.application.editingcontext.EditingContext) this.editingContext).getDomain().getResourceSet().getResources().get(0).getContents().add(pkg);
+        var result = this.sysMLv2EditService.createChild(this.editingContext, pkg,
+                "SysMLv2EditService-Dependency:Msg@A@B@SynchronousCallMessage");
+        Assertions.assertThat(result).isPresent();
+        Assertions.assertThat(result.get()).isInstanceOf(Dependency.class);
+        var dep = (Dependency) result.get();
+        // The @-suffix must be stripped from the declared name.
+        Assertions.assertThat(dep.getDeclaredName()).isEqualTo("Msg");
+        Assertions.assertThat(dep.getClient()).extracting(Element::getName).containsExactly("A");
+        Assertions.assertThat(dep.getSupplier()).extracting(Element::getName).containsExactly("B");
+        var annotation = dep.getEAnnotation("dodaf");
+        Assertions.assertThat(annotation).isNotNull();
+        Assertions.assertThat(annotation.getDetails().get("messageType")).isEqualTo("SynchronousCallMessage");
+    }
+
+    @Test
+    public void testCreateChildMessageEdgeUnknownTypeFallsBackToOperational() {
+        var pkg = createPackageWithLifelines("A", "B");
+        ((org.eclipse.sirius.web.application.editingcontext.EditingContext) this.editingContext).getDomain().getResourceSet().getResources().get(0).getContents().add(pkg);
+        var result = this.sysMLv2EditService.createChild(this.editingContext, pkg,
+                "SysMLv2EditService-Dependency:Msg@A@B@NotARealType");
+        Assertions.assertThat(result).isPresent();
+        var dep = (Dependency) result.get();
+        Assertions.assertThat(dep.getDeclaredName()).isEqualTo("Msg");
+        Assertions.assertThat(dep.getEAnnotation("dodaf").getDetails().get("messageType")).isEqualTo("OperationalMessage");
+    }
+
+    @Test
+    public void testCreateChildMessageEdgeUnresolvedLifelinesStillStripSuffix() {
+        // Regression: when the source/target lifelines cannot be resolved, the declared name
+        // must still be stripped (no "name@src@tgt@type" garbage persisted).
+        var pkg = createPackageWithLifelines("A", "B");
+        ((org.eclipse.sirius.web.application.editingcontext.EditingContext) this.editingContext).getDomain().getResourceSet().getResources().get(0).getContents().add(pkg);
+        var result = this.sysMLv2EditService.createChild(this.editingContext, pkg,
+                "SysMLv2EditService-Dependency:Msg@Missing@B@SynchronousCallMessage");
+        Assertions.assertThat(result).isPresent();
+        var dep = (Dependency) result.get();
+        Assertions.assertThat(dep.getDeclaredName()).isEqualTo("Msg");
+        Assertions.assertThat(dep.getClient()).isEmpty();
+        Assertions.assertThat(dep.getEAnnotation("dodaf")).isNull();
+    }
+
+    @Test
+    public void testCreateChildCreateMessageAutoCreatesTargetLifeline() {
+        // CreateMessage with an unknown target name: the target lifeline must be created
+        // automatically and connected as supplier.
+        var pkg = createPackageWithLifelines("A", "B");
+        ((org.eclipse.sirius.web.application.editingcontext.EditingContext) this.editingContext).getDomain().getResourceSet().getResources().get(0).getContents().add(pkg);
+        var result = this.sysMLv2EditService.createChild(this.editingContext, pkg,
+                "SysMLv2EditService-Dependency:Msg@A@NewLifeline@CreateMessage");
+        Assertions.assertThat(result).isPresent();
+        var dep = (Dependency) result.get();
+        Assertions.assertThat(dep.getDeclaredName()).isEqualTo("Msg");
+        Assertions.assertThat(dep.getSupplier()).hasSize(1);
+        Assertions.assertThat(dep.getSupplier().get(0).getName()).isEqualTo("NewLifeline");
+        Assertions.assertThat(dep.getSupplier().get(0).getAliasIds()).contains("dodaf:Lifeline");
+        Assertions.assertThat(dep.getEAnnotation("dodaf").getDetails().get("messageType")).isEqualTo("CreateMessage");
     }
 }
