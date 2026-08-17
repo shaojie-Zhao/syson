@@ -92,6 +92,7 @@
             wrap.querySelector('span:first-child').textContent = il ? '浅色' : '深色';
             wrap.style.color = il ? '#333' : '#e2e8f0';
             applyGanttTheme();
+            if (typeof applySeqTheme === 'function') applySeqTheme();
           };
           bar.appendChild(wrap);
         }, 1000);
@@ -917,6 +918,8 @@
             var mt = '';
             var mtMatch = name.match(/\(([A-Za-z]+)\)/);
             if (mtMatch) mt = mtMatch[1];
+            // name 即 data-n（类型名），无括号时直接用它，避免类型落空回退 OperationalMessage
+            if (!mt) mt = name;
             var fullName = nextName(name) + '@' + src + '@' + tgt + '@' + mt;
             var desc = 'SysMLv2EditService-Dependency:' + fullName;
             var u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:r&0x3|0x8).toString(16);});
@@ -1768,10 +1771,13 @@
           // Auto-expand node width for long labels (skip if user manually resized)
           var lblEl = n.querySelector('[data-testid*="Label content"]');
           if (lblEl) {
-            var txtLen = (lblEl.textContent || '').length;
+            // 名称行（最后一行，剔除 stereotype 前缀），避免节点被 stereotype 撑宽
+            var txtAll = (lblEl.textContent || '').trim();
+            var txtLines = txtAll.split('\n');
+            var nameLen = (txtLines[txtLines.length - 1] || '').trim().length;
             var parent = n.closest('[data-id]');
-            if (parent && txtLen > 10) {
-              var autoW = 120 + (txtLen - 10) * 5;
+            if (parent && nameLen > 10) {
+              var autoW = 120 + (nameLen - 10) * 5;
               var lastW = parent.getAttribute('data-autow');
               if (lastW === null) {
                 parent.style.width = autoW + 'px';
@@ -1794,11 +1800,31 @@
       //   CreateMessage / DeleteMessage / ExternalTriggerMessage → 实线实心箭头
       //   AsynchronousCallMessage / SendSignalMessage → 实线空心箭头
       //   ResumeMessage → 虚线空心箭头（唤醒）
+      // 主题适配：时序图颜色全部走 CSS 变量（--seq-*），浅色/深色主题切换时
+      // applySeqTheme 重设变量，组件与轮询样式即时生效。
+      function applySeqTheme() {
+        var isLight = document.body.classList.contains('theme-light');
+        var vars = isLight ? {
+          '--seq-edge': '#334155', '--seq-label': '#1e293b', '--seq-line': '#334155',
+          '--seq-edge-w': '1.5px',
+          '--seq-head-bg': '#e2e8f0', '--seq-head-bd': '#64748b', '--seq-head-fg': '#1e293b',
+          '--seq-act-bg': '#cbd5e1', '--seq-act-bd': '#94a3b8'
+        } : {
+          '--seq-edge': '#cbd5e1', '--seq-label': '#e2e8f0', '--seq-line': '#94a3b8',
+          '--seq-edge-w': '1.5px',
+          '--seq-head-bg': '#ffffff', '--seq-head-bd': '#94a3b8', '--seq-head-fg': '#1e293b',
+          '--seq-act-bg': '#475569', '--seq-act-bd': '#94a3b8'
+        };
+        var st = document.body.style;
+        Object.keys(vars).forEach(function(k) { st.setProperty(k, vars[k]); });
+      }
+      applySeqTheme();
       var __seqMsgTypes = null;
       var __seqMsgTypesByLabel = {};
       var __seqMsgTypesByST = {};
       var __seqMsgCtx = null;
       var __actHeights = {}; // {edgeId:side: height} localStorage 持久化
+      var __actTops = {};    // {edgeId:side: top(相对虚线容器)} 激活条拖动后持久化
       // editingCtxId / getRepId live inside the right-click-menu IIFE; resolve the project
       // id from the URL here instead (same rule as getCtxAndTarget). Robust to several
       // URL shapes: /projects/{pid}/edit, /projects/{pid}, bare /{pid}, ?selection={pid}.
@@ -1814,7 +1840,9 @@
         try {
           for (var i = 0; i < localStorage.length; i++) {
             var k = localStorage.key(i);
-            if (k && k.indexOf('syson_seq_act_') === 0) {
+            if (k && k.indexOf('syson_seq_act_top_') === 0) {
+              __actTops[k.substring('syson_seq_act_top_'.length)] = parseFloat(localStorage.getItem(k));
+            } else if (k && k.indexOf('syson_seq_act_') === 0) {
               __actHeights[k.substring('syson_seq_act_'.length)] = parseFloat(localStorage.getItem(k));
             }
           }
@@ -1851,8 +1879,18 @@
               var byST = {};
               (d.edges || []).forEach(function(ed){
                 m[ed.id] = ed.messageType;
-                if (ed.label) byLabel[ed.label] = ed.messageType;
-                if (ed.source && ed.target) byST[ed.source + '>' + ed.target] = ed.messageType;
+                var lb = ed.label ? String(ed.label).trim() : '';
+                if (lb) {
+                  // 索引原始 label + 清洗后 label（去 stereotype/空白），双保险
+                  byLabel[lb] = ed.messageType;
+                  var clean = seqCleanLabel(lb);
+                  if (clean && clean !== lb) byLabel[clean] = ed.messageType;
+                }
+                if (ed.source && ed.target) {
+                  var stKey = String(ed.source) + '>' + String(ed.target);
+                  if (!byST[stKey]) byST[stKey] = [];
+                  byST[stKey].push(ed.messageType);
+                }
               });
               __seqMsgTypes = m;
               __seqMsgTypesByLabel = byLabel;
@@ -1863,15 +1901,49 @@
             .catch(function(){});
         });
       }
+      // 清洗边文本/后端 label：去掉 stereotype（«...»/<<...>>）与多余空白，得到消息名
+      function seqCleanLabel(txt) {
+        if (!txt) return '';
+        var t = String(txt);
+        t = t.replace(/«[^»]*»/g, '').replace(/<<[^>]*>>/g, '').replace(/[«»]/g, '');
+        t = t.replace(/\s+/g, ' ').trim();
+        // 若清洗后仍含分隔符，取最后一段（名称通常在末尾）
+        var segs = t.split(/[|:\n]/);
+        return segs[segs.length - 1].trim();
+      }
+      // 从 React Flow 独立 label 层（.react-flow__edgelabel-renderer）取该边的消息名：
+      // label div 有 data-testid="Label content - {text}"，且与边同处 viewport 变换下，
+      // 用屏幕坐标最近匹配（边路径包围盒中心 ↔ label div 中心）。
+      function seqLabelOf(g) {
+        var path = g.querySelector('.react-flow__edge-path');
+        if (!path) return '';
+        var pr = path.getBoundingClientRect();
+        var mx = pr.left + pr.width / 2, my = pr.top + pr.height / 2;
+        var best = '', bestD = 1e9;
+        var labels = document.querySelectorAll('.react-flow__edgelabel-renderer [data-testid^="Label content - "]');
+        for (var li = 0; li < labels.length; li++) {
+          var ld = labels[li];
+          var lr = ld.getBoundingClientRect();
+          var dx = (lr.left + lr.width / 2) - mx;
+          var dy = (lr.top + lr.height / 2) - my;
+          var d = Math.sqrt(dx * dx + dy * dy);
+          if (d < bestD) {
+            bestD = d;
+            best = (ld.getAttribute('data-testid') || '').replace(/^Label content - /, '').trim();
+          }
+        }
+        return best;
+      }
       // 消息类型三级匹配（任一命中即可）：
-      //   1) React Flow 边 id == 后端 URI fragment；
-      //   2) 边整体文本（含 label）== 后端 label（declaredName，已剥离 @ 后缀）；
-      //   3) 由路径端点坐标定位源/目标生命线节点名 == 后端 source/target。
-      // 后端接口返回 {id, messageType, label, source, target}，前端三种 key 都建了索引。
+      //   1) React Flow 边 id == 后端 URI fragment（fragment 即 elementId，但 Diagram
+      //      边 id 是独立 UUID，通常匹配不上，仅作兜底）；
+      //   2) 边标签文本（消息名，从独立 label 层取）== 后端 label（declaredName）；
+      //   3) 源/目标生命线名 == 后端 source/target（仅唯一对应时使用，防串扰）。
       function seqMsgTypeOf(g) {
-        var mt = __seqMsgTypes[g.getAttribute('data-id')];
+        var did = g.getAttribute('data-id') || '';
+        var mt = did ? __seqMsgTypes[did] : null;
         if (mt) return mt;
-        var txt = (g.textContent || '').trim();
+        var txt = seqCleanLabel(seqLabelOf(g) || (g.textContent || '').trim());
         if (txt && __seqMsgTypesByLabel[txt]) return __seqMsgTypesByLabel[txt];
         var pts = parsePathEnds(g.querySelector('.react-flow__edge-path')?.getAttribute('d') || '');
         if (pts) {
@@ -1879,16 +1951,21 @@
           var tgtDash = seqFindDashAt(pts.x2, pts.y2);
           var src = srcDash ? seqNodeName(srcDash.closest('.react-flow__node')) : '';
           var tgt = tgtDash ? seqNodeName(tgtDash.closest('.react-flow__node')) : '';
-          if (src && tgt) return __seqMsgTypesByST[src + '>' + tgt] || null;
+          if (src && tgt) {
+            var stList = __seqMsgTypesByST[src + '>' + tgt];
+            if (stList && stList.length === 1) return stList[0];
+            // 同源同目标多条：不精确匹配，返回 null 避免整图类型串扰
+          }
         }
         return null;
       }
       function seqMsgStyle(mt) {
-        // 虚线只用于 ResumeMessage（唤醒）；其余一律实线
-        if (mt === 'ResumeMessage') return { dash: true, filled: false };
-        if (mt === 'AsynchronousCallMessage' || mt === 'SendSignalMessage') return { dash: false, filled: false };
-        // OperationalMessage（作战消息基类）/ 同步 / 交互 / 创建 / 删除 / 外部触发 → 实线实心箭头
-        return { dash: false, filled: true };
+        // 样式规则（用户确认）：
+        //   虚线：CreateMessage / ResumeMessage；其余实线
+        //   实心箭头：SynchronousCallMessage / CreateMessage / DeleteMessage；其余空心
+        var dash = (mt === 'CreateMessage' || mt === 'ResumeMessage');
+        var filled = (mt === 'SynchronousCallMessage' || mt === 'CreateMessage' || mt === 'DeleteMessage');
+        return { dash: dash, filled: filled };
       }
       function parsePathEnds(d) {
         var m1 = d.match(/M\s*([-\d.]+)[,\s]+([-\d.]+)/);
@@ -1910,7 +1987,10 @@
         m.setAttribute('orient', 'auto-start-reverse');
         var p = document.createElementNS(ns, 'path');
         p.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
-        p.setAttribute('fill', filled ? color : 'none');
+        // 颜色走 CSS 变量（随主题），style 属性支持 var()
+        p.style.fill = filled ? 'var(--seq-edge, #334155)' : 'none';
+        p.style.stroke = 'var(--seq-edge, #334155)';
+        p.setAttribute('stroke-width', '1');
         p.setAttribute('stroke', color);
         p.setAttribute('stroke-width', '1');
         m.appendChild(p);
@@ -1928,9 +2008,11 @@
         if (document.getElementById(id)) return;
         var st = document.createElement('style');
         st.id = id;
-        st.textContent = 'g.react-flow__edge[data-seq-message="1"] .react-flow__edge-path { stroke: #334155 !important; stroke-width: 1.5px !important; fill: none !important; }' +
+        st.textContent = 'g.react-flow__edge[data-seq-message="1"] .react-flow__edge-path { stroke: var(--seq-edge, #334155) !important; stroke-width: var(--seq-edge-w, 1.5px) !important; fill: none !important; }' +
           'g.react-flow__edge[data-seq-dash="1"] .react-flow__edge-path { stroke-dasharray: 6 4 !important; }' +
-          'g.react-flow__edge[data-seq-solid="1"] .react-flow__edge-path { stroke-dasharray: none !important; }';
+          'g.react-flow__edge[data-seq-solid="1"] .react-flow__edge-path { stroke-dasharray: none !important; }' +
+          'g.react-flow__edge[data-seq-message="1"] .react-flow__edge-text { fill: var(--seq-label, #1e293b) !important; font-size: 12px !important; font-weight: 600 !important; }' +
+          'div[data-seq-head="1"], div[data-seq-head="1"] * { color: var(--seq-head-fg, #1e293b) !important; fill: var(--seq-head-fg, #1e293b) !important; }';
         document.head.appendChild(st);
       })();
       // 消息边样式：直线 + 按类型的线型/箭头 + 标签居中
@@ -1941,9 +2023,9 @@
           __seqStyleDiag = true;
           for (var di = 0; di < edges.length; di++) {
             var dg = edges[di];
-            console.log('[DoDAF] diag edge eid=', dg.getAttribute('data-id'), 'text=', (dg.textContent || '').trim().slice(0, 60), 'mt=', seqMsgTypeOf(dg));
+            console.log('[DoDAF] diag edge eid=', dg.getAttribute('data-id'), 'raw=', (dg.textContent || '').trim().slice(0, 40), 'clean=', seqCleanLabel(dg.textContent || ''), 'mt=', seqMsgTypeOf(dg));
           }
-          console.log('[DoDAF] diag byLabel keys=', Object.keys(__seqMsgTypesByLabel), 'byST keys=', Object.keys(__seqMsgTypesByST));
+          console.log('[DoDAF] diag eidKeys=', Object.keys(__seqMsgTypes).slice(0, 6), 'byLabel keys=', Object.keys(__seqMsgTypesByLabel), 'byST keys=', Object.keys(__seqMsgTypesByST));
         }
         for (var i = 0; i < edges.length; i++) {
           var g = edges[i];
@@ -1957,14 +2039,21 @@
           var d = path.getAttribute('d') || '';
           var pts = parsePathEnds(d);
           if (pts) {
-            if (Math.abs(pts.x1 - pts.x2) < 6 && Math.abs(pts.y1 - pts.y2) > 6) {
+            // 激活条拖动后：端点 Y 跟随激活条 top（图坐标 = 虚线容器图 top + 相对 top）
+            var srcDash = seqFindDashAt(pts.x1, pts.y1);
+            var tgtDash = seqFindDashAt(pts.x2, pts.y2);
+            var sTopG = (srcDash && typeof __actTops[eid + ':s'] === 'number') ? seqDashTopOf(srcDash) + __actTops[eid + ':s'] : null;
+            var tTopG = (tgtDash && typeof __actTops[eid + ':t'] === 'number') ? seqDashTopOf(tgtDash) + __actTops[eid + ':t'] : null;
+            var y1 = sTopG != null ? sTopG : pts.y1;
+            var y2 = tTopG != null ? tTopG : pts.y2;
+            if (Math.abs(pts.x1 - pts.x2) < 6 && Math.abs(y1 - y2) > 6) {
               // 自调用（同生命线）：U 型折线
               var bend = 40;
-              var dir = (pts.y2 > pts.y1 ? 1 : -1);
-              path.setAttribute('d', 'M' + pts.x1 + ' ' + pts.y1 + ' L' + (pts.x1 + bend) + ' ' + pts.y1 +
-                ' L' + (pts.x1 + bend) + ' ' + pts.y2 + ' L' + pts.x2 + ' ' + pts.y2);
+              var dir = (y2 > y1 ? 1 : -1);
+              path.setAttribute('d', 'M' + pts.x1 + ' ' + y1 + ' L' + (pts.x1 + bend) + ' ' + y1 +
+                ' L' + (pts.x1 + bend) + ' ' + y2 + ' L' + pts.x2 + ' ' + y2);
             } else {
-              path.setAttribute('d', 'M' + pts.x1 + ' ' + pts.y1 + ' L' + pts.x2 + ' ' + pts.y2);
+              path.setAttribute('d', 'M' + pts.x1 + ' ' + y1 + ' L' + pts.x2 + ' ' + y2);
             }
           }
           // 线型/颜色：CSS !important 控制（优先级高于 React Flow inline style）
@@ -2004,6 +2093,36 @@
               ext.textContent = '«ext»';
               g.appendChild(ext);
             }
+          }
+          // DeleteMessage：目标端「叉」标记（销毁生命线，X 截断语义）
+          if (mt === 'DeleteMessage' && pts) {
+            var dg = g.querySelector('[data-seq-delx]');
+            if (!dg) {
+              var ns3 = 'http://www.w3.org/2000/svg';
+              dg = document.createElementNS(ns3, 'g');
+              dg.setAttribute('data-seq-delx', '1');
+              var l1 = document.createElementNS(ns3, 'line');
+              var l2 = document.createElementNS(ns3, 'line');
+              l1.setAttribute('stroke', 'var(--seq-edge, #334155)');
+              l1.setAttribute('stroke-width', '1.5');
+              l2.setAttribute('stroke', 'var(--seq-edge, #334155)');
+              l2.setAttribute('stroke-width', '1.5');
+              dg.appendChild(l1);
+              dg.appendChild(l2);
+              g.appendChild(dg);
+            }
+            // 叉中心在目标端点，随激活条/直线化后的端点移动
+            var xc = pts.x2, yc = y2 != null ? y2 : pts.y2;
+            var s = 5;
+            dg.querySelectorAll('line').forEach(function(ln, li) {
+              if (li === 0) {
+                ln.setAttribute('x1', (xc - s).toFixed(1)); ln.setAttribute('y1', (yc - s).toFixed(1));
+                ln.setAttribute('x2', (xc + s).toFixed(1)); ln.setAttribute('y2', (yc + s).toFixed(1));
+              } else {
+                ln.setAttribute('x1', (xc - s).toFixed(1)); ln.setAttribute('y1', (yc + s).toFixed(1));
+                ln.setAttribute('x2', (xc + s).toFixed(1)); ln.setAttribute('y2', (yc - s).toFixed(1));
+              }
+            });
           }
         }
       }
@@ -2061,8 +2180,10 @@
         var dashTop = seqDashTopOf(dash);
         if (dashTop === null) return;
         var h = __actHeights[key] || 60;
+        // 激活条 top：优先用拖动持久化的值（相对虚线容器），否则用消息端点
+        var top = typeof __actTops[key] === 'number' ? __actTops[key] : (y - dashTop);
         if (!byNode[nodeId]) byNode[nodeId] = [];
-        byNode[nodeId].push({ key: key, top: y - dashTop, height: h });
+        byNode[nodeId].push({ key: key, top: top, height: h });
       }
       function renderActivations() {
         if (!__seqMsgTypes) return;
@@ -2085,9 +2206,12 @@
           window.dispatchEvent(new CustomEvent('seq-activations', { detail: { nodeId: nodeId, acts: byNode[nodeId] } }));
         });
       }
-      // 组件拖拽激活条高度后同步回 index.html 缓存，避免下次轮询覆盖
+      // 组件拖拽激活条（上下移动 / 调高度）后同步回 index.html 缓存，避免下次轮询覆盖
       window.addEventListener('seq-act-height', function(ev) {
-        if (ev.detail && ev.detail.key) __actHeights[ev.detail.key] = ev.detail.height;
+        if (ev.detail && ev.detail.key) {
+          if (ev.detail.height) __actHeights[ev.detail.key] = ev.detail.height;
+          if (typeof ev.detail.top === 'number') __actTops[ev.detail.key] = ev.detail.top;
+        }
       });
       setInterval(renderActivations, 300);
 
@@ -2126,7 +2250,15 @@
           'transform:rotate(' + ang + 'deg);pointer-events:none';
         document.body.appendChild(ln);
       }
+      var __msgEdgeDrag = null; // {x, y} 消息边上按下的指针起点（区分点击与拖动）
       document.addEventListener('pointerdown', function(ev) {
+        // 时序消息边：不阻断 pointerdown（让点击选中正常，用于修改属性）；
+        // 仅在 pointermove 检测到真实拖动时阻断（见下方 pointermove 处理）。
+        var msgEdge = ev.target && ev.target.closest ? ev.target.closest('.react-flow__edge[data-seq-message]') : null;
+        if (msgEdge) {
+          __msgEdgeDrag = { x: ev.clientX, y: ev.clientY };
+          return;
+        }
         var h = ev.target && ev.target.closest ? ev.target.closest('.react-flow__handle') : null;
         if (!h) return;
         var hid = h.getAttribute('data-handleid') || '';
@@ -2143,10 +2275,21 @@
         __dragCreate = { srcName: srcName, startX: ev.clientX, startY: ev.clientY };
       }, true);
       document.addEventListener('pointermove', function(ev) {
+        // 消息边拖动阻断：从消息边按下的指针一旦移动超阈值，阻断 React Flow 的重连拖动
+        if (__msgEdgeDrag) {
+          var mdx = ev.clientX - __msgEdgeDrag.x;
+          var mdy = ev.clientY - __msgEdgeDrag.y;
+          if (Math.abs(mdx) > 3 || Math.abs(mdy) > 3) {
+            if (ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+            if (ev.preventDefault) ev.preventDefault();
+          }
+          return;
+        }
         if (!__dragCreate) return;
         showDragConnectLine(__dragCreate.startX, __dragCreate.startY, ev.clientX, ev.clientY);
       }, true);
       document.addEventListener('pointerup', function(ev) {
+        __msgEdgeDrag = null;
         if (!__dragCreate) return;
         var old = document.getElementById('seq-drag-line');
         if (old) old.remove();

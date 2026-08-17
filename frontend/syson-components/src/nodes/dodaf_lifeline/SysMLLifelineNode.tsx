@@ -9,9 +9,10 @@ import React, { Fragment, memo, useEffect, useRef, useState } from 'react';
 import { LifelineNodeData, NodeComponentsMap } from './SysMLLifelineNode.types';
 
 const rootStyle = (theme: Theme, style: React.CSSProperties, selected: boolean, hovered: boolean, faded: boolean): React.CSSProperties => ({
-  display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0px',
-  width: '100%', height: '100%', position: 'relative', overflow: 'visible',
+  padding: '0px', position: 'relative', overflow: 'visible',
   opacity: faded ? '0.4' : '', ...style, border: 'none', backgroundColor: 'transparent',
+  // 布局关键属性放最后：确保头部占满 + 居中不被 data.style 干扰
+  display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%',
   ...(selected || hovered ? { outline: `${theme.palette.selected} solid 1px` } : {}),
 });
 
@@ -33,7 +34,7 @@ export const SysMLLifelineNode: NodeComponentsMap['dodafLifelineNode'] = memo(
     // handles remain as the fallback connection points.
     type Activation = { top: number; height: number };
     const [activations, setActivations] = useState<Record<string, Activation>>({});
-    const dragRef = useRef<{ key: string; y: number; h: number } | null>(null);
+    const dragRef = useRef<{ key: string; y: number; top: number; height: number } | null>(null);
 
     useEffect(() => {
       function onSeqActivations(ev: Event) {
@@ -51,19 +52,21 @@ export const SysMLLifelineNode: NodeComponentsMap['dodafLifelineNode'] = memo(
       return () => window.removeEventListener('seq-activations', onSeqActivations);
     }, [id]);
 
-    // Height drag: pointermove/up on window so the drag survives outside the bar.
+    // Activation bar drag: move the bar vertically (message edge Y follows via the
+    // 'seq-act-height' event carrying the new top, dispatched to index.html).
     useEffect(() => {
       function onMove(ev: PointerEvent) {
         const dr = dragRef.current;
         if (!dr) return;
-        const nh = Math.max(20, dr.h + (ev.clientY - dr.y));
+        const dy = ev.clientY - dr.y;
+        const newTop = Math.max(0, dr.top + dy);
         setActivations((prev) => {
           const cur = prev[dr.key];
           if (!cur) return prev;
-          const next = { ...prev, [dr.key]: { ...cur, height: nh } };
+          const next = { ...prev, [dr.key]: { ...cur, top: newTop } };
           try {
-            localStorage.setItem('syson_seq_act_' + dr.key, String(nh));
-            window.dispatchEvent(new CustomEvent('seq-act-height', { detail: { key: dr.key, height: nh } }));
+            localStorage.setItem('syson_seq_act_top_' + dr.key, String(newTop));
+            window.dispatchEvent(new CustomEvent('seq-act-height', { detail: { key: dr.key, top: newTop, height: cur.height } }));
           } catch (e) {}
           return next;
         });
@@ -71,11 +74,13 @@ export const SysMLLifelineNode: NodeComponentsMap['dodafLifelineNode'] = memo(
       function onUp() {
         const dr = dragRef.current;
         if (dr) {
-          const h = activations[dr.key]?.height ?? 60;
-          try {
-            localStorage.setItem('syson_seq_act_' + dr.key, String(h));
-            window.dispatchEvent(new CustomEvent('seq-act-height', { detail: { key: dr.key, height: h } }));
-          } catch (e) {}
+          const cur = activations[dr.key];
+          if (cur) {
+            try {
+              localStorage.setItem('syson_seq_act_top_' + dr.key, String(cur.top));
+              window.dispatchEvent(new CustomEvent('seq-act-height', { detail: { key: dr.key, top: cur.top, height: cur.height } }));
+            } catch (e) {}
+          }
         }
         dragRef.current = null;
       }
@@ -92,7 +97,7 @@ export const SysMLLifelineNode: NodeComponentsMap['dodafLifelineNode'] = memo(
       e.preventDefault();
       e.stopPropagation();
       const cur = activations[key];
-      dragRef.current = { key, y: e.clientY, h: cur ? cur.height : 60 };
+      dragRef.current = { key, y: e.clientY, top: cur ? cur.top : 0, height: cur ? cur.height : 60 };
     }
 
     // Dense hidden handles distributed along the whole dashed lifeline (percentage
@@ -110,17 +115,19 @@ export const SysMLLifelineNode: NodeComponentsMap['dodafLifelineNode'] = memo(
           {/* Head rectangle: contains stereotype + name, sized to its content (UML style) */}
           <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            width: 'fit-content', maxWidth: '100%', minHeight: '42px', padding: '4px 10px', boxSizing: 'border-box',
-            background: data.style.background ?? '#e2e8f0', border: '1px solid #64748b', borderRadius: '3px',
+            // 占满节点容器宽度（与选中外框一致、无两侧留白）；名称在框内居中
+            width: '100%', minHeight: '42px', padding: '4px 10px', boxSizing: 'border-box',
             ...connectionFeedbackStyle, ...dropFeedbackStyle, ...connectionLineActiveNodeStyle,
-          }} data-svg="rect">
+            // 强制使用主题背景色（data.style.background 常为 transparent 会盖住）
+            background: 'var(--seq-head-bg, #e2e8f0)', border: '1px solid var(--seq-head-bd, #64748b)', borderRadius: '3px',
+          }} data-svg="rect" data-seq-head="1">
             {data.insideLabel ? <Label diagramElementId={id} label={data.insideLabel} faded={data.faded} /> : null}
           </div>
           {/* Vertical dashed lifeline filling remaining node height */}
           <div style={{
-            position: 'relative', width: '2px', margin: '0 auto', flex: 1, alignSelf: 'stretch',
+            position: 'relative', width: '2px', margin: '0 auto', flex: 1, alignSelf: 'center',
             minHeight: '90px',
-            background: 'repeating-linear-gradient(to bottom, #334155 0 4px, transparent 4px 8px)',
+            background: 'repeating-linear-gradient(to bottom, var(--seq-line, #334155) 0 4px, transparent 4px 8px)',
           }} data-lifeline-dashed="1">
             {handlePercent.map((p) => (
               <Fragment key={p}>
@@ -172,8 +179,8 @@ export const SysMLLifelineNode: NodeComponentsMap['dodafLifelineNode'] = memo(
                   data-act-node={key}
                   style={{
                     position: 'absolute', top: a.top, left: -4, width: 8,
-                    height: Math.max(12, a.height), background: '#cbd5e1',
-                    border: '1px solid #94a3b8', borderRadius: 1, zIndex: 3,
+                    height: Math.max(12, a.height), background: 'var(--seq-act-bg, #cbd5e1)',
+                    border: '1px solid var(--seq-act-bd, #94a3b8)', borderRadius: 1, zIndex: 3,
                     cursor: 'ns-resize', boxSizing: 'border-box',
                   }}
                   onPointerDown={(e) => startActDrag(e, key)}
