@@ -73,12 +73,11 @@ public class NoDerivedCrossReferencer extends UsageCrossReferencer {
     public <T> ECrossReferenceEList<T> createECrossReferenceEList(EObject eObject) {
         EList<EStructuralFeature> eAllStructuralFeatures = eObject.eClass().getEAllStructuralFeatures();
         EStructuralFeature[] eStructuralFeatures = ((EClassImpl.FeatureSubsetSupplier) eAllStructuralFeatures).crossReferences();
-        var nonDerivedStructuralFeatures = Arrays.stream(eStructuralFeatures).filter(eSF -> !eSF.isDerived()).toArray(EStructuralFeature[]::new);
-        if (nonDerivedStructuralFeatures == null) {
+        if (eStructuralFeatures == null) {
             return ECrossReferenceEList.<T> emptyCrossReferenceEList();
-        } else {
-            return new ECrossReferenceEList<>(eObject, nonDerivedStructuralFeatures) {
-            };
         }
+        var nonDerivedStructuralFeatures = Arrays.stream(eStructuralFeatures).filter(eSF -> !eSF.isDerived()).toArray(EStructuralFeature[]::new);
+        return new ECrossReferenceEList<>(eObject, nonDerivedStructuralFeatures) {
+        };
     }
 }

@@ -118,4 +118,44 @@ public class DeleteServiceTest {
         this.deleteService.deleteFromModel(pkg1);
         assertThat(this.resource.getContents()).isEmpty();
     }
+
+    @DisplayName("GIVEN a lifeline referenced by a DoDAF message Dependency with a dodaf EAnnotation, WHEN the lifeline is deleted, THEN the deletion completes without error")
+    @Test
+    void testDeleteLifelineWithMessageDependency() {
+        var pkg1 = SysmlFactory.eINSTANCE.createPackage();
+        pkg1.setDeclaredName("Pkg1");
+        this.resource.getContents().add(pkg1);
+
+        var lifelineAMembership = SysmlFactory.eINSTANCE.createOwningMembership();
+        pkg1.getOwnedRelationship().add(lifelineAMembership);
+        var lifelineA = SysmlFactory.eINSTANCE.createPartDefinition();
+        lifelineA.setDeclaredName("LifelineA");
+        lifelineA.getAliasIds().add("dodaf:Lifeline");
+        lifelineAMembership.getOwnedRelatedElement().add(lifelineA);
+
+        var lifelineBMembership = SysmlFactory.eINSTANCE.createOwningMembership();
+        pkg1.getOwnedRelationship().add(lifelineBMembership);
+        var lifelineB = SysmlFactory.eINSTANCE.createPartDefinition();
+        lifelineB.setDeclaredName("LifelineB");
+        lifelineB.getAliasIds().add("dodaf:Lifeline");
+        lifelineBMembership.getOwnedRelatedElement().add(lifelineB);
+
+        var dependencyMembership = SysmlFactory.eINSTANCE.createOwningMembership();
+        pkg1.getOwnedRelationship().add(dependencyMembership);
+        var dependency = SysmlFactory.eINSTANCE.createDependency();
+        dependency.setDeclaredName("msg@LifelineA@LifelineB@SynchronousCallMessage");
+        dependency.getClient().add(lifelineA);
+        dependency.getSupplier().add(lifelineB);
+        EAnnotation annotation = EcoreFactory.eINSTANCE.createEAnnotation();
+        annotation.setSource("dodaf");
+        annotation.getDetails().put("messageType", "SynchronousCallMessage");
+        dependency.getEAnnotations().add(annotation);
+        dependencyMembership.getOwnedRelatedElement().add(dependency);
+
+        this.resource.getResourceSet().eAdapters().add(new ECrossReferenceAdapter());
+
+        assertThat(pkg1.getMember()).hasSize(3);
+        this.deleteService.deleteFromModel(lifelineA);
+        assertThat(pkg1.getMember()).hasSize(1).contains(lifelineB);
+    }
 }
